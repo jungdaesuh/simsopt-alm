@@ -17,16 +17,16 @@ from unittest.mock import patch
 
 import numpy as np
 
-import simsopt.solve.alm as alm
-from simsopt.solve.alm import control as alm_control
-from simsopt.solve.alm.history import ALMHistoryRecorder
+import simsopt_alm as alm
+from simsopt_alm import control as alm_control
+from simsopt_alm.history import ALMHistoryRecorder
 
-GOLDEN_DIR = Path(__file__).resolve().parents[1] / "test_files" / "alm_golden"
+GOLDEN_DIR = Path(__file__).resolve().parent / "alm_golden"
 if str(GOLDEN_DIR) not in sys.path:
     sys.path.insert(0, str(GOLDEN_DIR))
 import alm_golden_scenarios as golden  # noqa: E402
 
-PACKAGE_ROOT = Path(__file__).resolve().parents[2] / "src" / "simsopt" / "solve" / "alm"
+PACKAGE_ROOT = Path(alm.__file__).resolve().parent
 
 
 @contextmanager
@@ -239,8 +239,8 @@ class AlmLibraryWithoutRecorderTests(unittest.TestCase):
     def test_package_import_does_not_load_the_history_plugin(self):
         probe = (
             "import sys\n"
-            "import simsopt.solve.alm\n"
-            "sys.exit(1 if 'simsopt.solve.alm.history' in sys.modules else 0)\n"
+            "import simsopt_alm\n"
+            "sys.exit(1 if 'simsopt_alm.history' in sys.modules else 0)\n"
         )
         completed = subprocess.run(
             [sys.executable, "-c", probe], capture_output=True, text=True, check=False

@@ -40,9 +40,9 @@ from dataclasses import dataclass
 
 import numpy as np
 
-from simsopt.solve.alm import ALMSettings, augmented_inequality_objective, minimize_alm
-from simsopt.solve.alm.checkpoint import alm_checkpointing
-from simsopt.solve.alm.history import ALMHistoryRecorder
+from simsopt_alm import ALMSettings, augmented_inequality_objective, minimize_alm
+from simsopt_alm.checkpoint import alm_checkpointing
+from simsopt_alm.history import ALMHistoryRecorder
 
 CONSTRAINT_NAMES = ["sum_at_most_two"]
 SETTINGS = ALMSettings(max_outer_iterations=12, history_max_entries=64)

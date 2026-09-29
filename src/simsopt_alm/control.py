@@ -7,8 +7,8 @@ math from :mod:`.core`, its decisions from the continuation policy
 (:mod:`.continuation`, :mod:`.policy`), one inner solve from :mod:`.inner`,
 the evaluation contract from :mod:`.evaluation`, and publishes the carriers
 of :mod:`.events` and :mod:`.boundary`. The opt-in plugins are the history
-recorder (:mod:`simsopt.solve.alm.history`) and checkpoint/resume
-(:mod:`simsopt.solve.alm.checkpoint`); this module imports neither.
+recorder (:mod:`simsopt_alm.history`) and checkpoint/resume
+(:mod:`simsopt_alm.checkpoint`); this module imports neither.
 """
 
 from __future__ import annotations

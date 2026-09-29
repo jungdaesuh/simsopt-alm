@@ -3,8 +3,9 @@ r"""
 Single-stage quasi-axisymmetry (QA) optimization of the NCSX coils with the
 augmented Lagrangian (ALM) solver.
 
-This is the problem of ``boozerQA.py`` (same coils, same Boozer surface), with
-its penalty terms replaced by constraints ``g_i(x) <= 0``:
+This is the problem of simsopt's ``examples/2_Intermediate/boozerQA.py`` (same
+coils, same Boozer surface), with its penalty terms replaced by constraints
+``g_i(x) <= 0``:
 
     minimize    ( \int_S B_nonQA**2 dS )/(\int_S B_QA dS)
     subject to  IOTA_TARGET - iota                           <= 0
@@ -58,11 +59,11 @@ from simsopt.field import BiotSavart
 from simsopt.geo import (BoozerSurface, CurveLength, Iotas, MajorRadius, MeanSquaredCurvature,
                          NonQuasiSymmetricRatio, SurfaceXYZTensorFourier, Volume, boozer_surface_residual,
                          curves_to_vtk)
-from simsopt.geo.signed_constraints import (smooth_max_curvature_signed_constraint,
-                                            smooth_min_curve_curve_signed_constraint)
-from simsopt.solve.alm import (ALMSettings, augmented_inequality_objective, minimize_alm,
-                               signed_lower_bound, signed_upper_bound)
 from simsopt.util import in_github_actions
+from simsopt_alm import (ALMSettings, augmented_inequality_objective, minimize_alm,
+                         signed_lower_bound, signed_upper_bound)
+from simsopt_alm.signed_constraints import (smooth_max_curvature_signed_constraint,
+                                            smooth_min_curve_curve_signed_constraint)
 
 # Thresholds taken from boozerQA_ls_mpi.py. The distance and curvature rows are
 # smooth (log-sum-exp) bounds on the true extremum, so they are conservative:
@@ -290,7 +291,7 @@ def build_problem():
 def main():
     """Run the optimization; return its initial and final objective and
     feasibility, and the final surface's iota and major radius."""
-    print("Running 2_Intermediate/boozerQA_alm.py")
+    print("Running boozerQA_alm.py")
     print("======================================")
     problem = build_problem()
     os.makedirs(OUT_DIR, exist_ok=True)
@@ -332,7 +333,7 @@ def main():
     curves_to_vtk(problem.curves, OUT_DIR + "curves_opt_alm")
     problem.boozer_surface.surface.to_vtk(OUT_DIR + "surf_opt_alm")
 
-    print("End of 2_Intermediate/boozerQA_alm.py")
+    print("End of boozerQA_alm.py")
     print("======================================")
     return {
         "initial_objective": float(initial_evaluation["base_value"]),

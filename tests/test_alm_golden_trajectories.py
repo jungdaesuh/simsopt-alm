@@ -1,6 +1,6 @@
 """Golden ALM trajectories: ``minimize_alm`` must replay bit for bit.
 
-Each scenario in ``tests/test_files/alm_golden/alm_golden_scenarios.py`` drives
+Each scenario in ``tests/alm_golden/alm_golden_scenarios.py`` drives
 the library solver with a deterministic synthetic evaluator. Its golden holds
 every ``ALMResult`` field, the history entries, every call the solver makes into
 caller code in order, and every outer-boundary checkpoint.
@@ -36,7 +36,7 @@ from pathlib import Path
 from types import MappingProxyType
 from unittest.mock import patch
 
-GOLDEN_DIR = Path(__file__).resolve().parents[1] / "test_files" / "alm_golden"
+GOLDEN_DIR = Path(__file__).resolve().parent / "alm_golden"
 if str(GOLDEN_DIR) not in sys.path:
     sys.path.insert(0, str(GOLDEN_DIR))
 import alm_golden_scenarios as golden  # noqa: E402

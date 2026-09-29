@@ -16,7 +16,7 @@ from weakref import WeakKeyDictionary
 import numpy as np
 from scipy.spatial import cKDTree
 
-from .._core.derivative import Derivative
+from simsopt._core.derivative import Derivative
 
 __all__ = [
     "smooth_max_curvature_signed_constraint",

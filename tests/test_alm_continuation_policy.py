@@ -3,7 +3,7 @@
 The loop measures the iterate, runs L-BFGS-B, keeps the books and executes
 decisions. An ``ALMContinuationPolicy`` makes the decisions that differ between
 users (``inner_plan``, ``retry_stalled_trial``, ``before_inner``,
-``after_inner``); ``DefaultContinuationPolicy`` (``simsopt.solve.alm.policy``)
+``after_inner``); ``DefaultContinuationPolicy`` (``simsopt_alm.policy``)
 is the library default.
 
 Every library call the golden scenarios make is intercepted and given the
@@ -24,12 +24,12 @@ from unittest.mock import patch
 
 import numpy as np
 
-import simsopt.solve.alm as alm
-from simsopt.solve.alm import control as alm_control
-from simsopt.solve.alm import inner as alm_inner
-from simsopt.solve.alm import core as alm_core
-from simsopt.solve.alm import policy as alm_policy
-from simsopt.solve.alm.continuation import (
+import simsopt_alm as alm
+from simsopt_alm import control as alm_control
+from simsopt_alm import inner as alm_inner
+from simsopt_alm import core as alm_core
+from simsopt_alm import policy as alm_policy
+from simsopt_alm.continuation import (
     ALMContinue,
     ALMConverge,
     ALMDualUpdateStep,
@@ -43,14 +43,14 @@ from simsopt.solve.alm.continuation import (
     ALMStalledTrialView,
     ALMStop,
 )
-from simsopt.solve.alm.policy import DefaultContinuationPolicy
+from simsopt_alm.policy import DefaultContinuationPolicy
 
-GOLDEN_DIR = Path(__file__).resolve().parents[1] / "test_files" / "alm_golden"
+GOLDEN_DIR = Path(__file__).resolve().parent / "alm_golden"
 if str(GOLDEN_DIR) not in sys.path:
     sys.path.insert(0, str(GOLDEN_DIR))
 import alm_golden_scenarios as golden  # noqa: E402
 
-PACKAGE_ROOT = Path(__file__).resolve().parents[2] / "src" / "simsopt" / "solve" / "alm"
+PACKAGE_ROOT = Path(alm.__file__).resolve().parent
 
 @contextmanager
 def library_policy(policy):

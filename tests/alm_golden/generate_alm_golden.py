@@ -1,13 +1,14 @@
 #!/usr/bin/env python3
 """Record the ALM golden trajectories of ``alm_golden_scenarios.py``.
 
-Regenerate from the repository root, and only for a reviewed change that is
-meant to alter ALM behavior (a refactor that needs new goldens has changed
-behavior), in the recording environment (``RECORDING_ENVIRONMENT_VARIABLES``:
-one thread per library and OpenBLAS's Haswell kernels)::
+Regenerate from the package directory (``packages/simsopt-alm``), and only
+for a reviewed change that is meant to alter ALM behavior (a refactor that
+needs new goldens has changed behavior), in the recording environment
+(``RECORDING_ENVIRONMENT_VARIABLES``: one thread per library and OpenBLAS's
+Haswell kernels)::
 
     OMP_NUM_THREADS=1 OPENBLAS_NUM_THREADS=1 OPENBLAS_CORETYPE=Haswell \
-        python tests/test_files/alm_golden/generate_alm_golden.py
+        python tests/alm_golden/generate_alm_golden.py
 
 ``--output-dir DIR`` writes the fixtures and manifest to ``DIR`` instead, in
 any environment, e.g. to compare the trajectories two environments or two
@@ -32,7 +33,7 @@ For each scenario in ``alm_golden_scenarios.SCENARIOS`` this script:
 3. writes ``<scenario>.json`` (the encoded trajectory plus its outcomes) and
    ``manifest.json`` (fixture digests, the Python, numpy and SciPy versions
    and the machine the replay needs for bitwise equality, the git blob ids of
-   the ``simsopt.solve.alm`` sources that produced them and of the scripts
+   the ``simsopt_alm`` solver sources that produced them and of the scripts
    whose rules judge a replay, and the outcome union).
 """
 
@@ -50,7 +51,7 @@ import numpy as np
 import scipy
 
 import alm_golden_scenarios as golden
-import simsopt.solve.alm as alm
+import simsopt_alm as alm
 
 # The environment the goldens and their sensitivity are recorded in: one
 # thread per library and OpenBLAS's Haswell (AVX2) kernels, which every x86_64
@@ -91,7 +92,7 @@ def require_recording_environment(script: str) -> None:
     if differing or kernels != RECORDING_ENVIRONMENT_VARIABLES["OPENBLAS_CORETYPE"]:
         raise SystemExit(
             f"run in the recording environment: {RECORDING_COMMAND_PREFIX} python "
-            f"tests/test_files/alm_golden/{script} (this process: {differing or 'variables set'}, "
+            f"tests/alm_golden/{script} (this process: {differing or 'variables set'}, "
             f"OpenBLAS kernels {kernels!r})"
         )
 
@@ -196,16 +197,21 @@ PROVENANCE_SCRIPTS = (
 )
 
 
+# The package module the solver never imports: simsopt geometry rows for
+# evaluators, which no golden scenario uses.
+EVALUATOR_SIDE_MODULES = ("signed_constraints.py",)
+
+
 def alm_source_blob_ids() -> dict[str, str]:
-    """Git blob ids of the imported ``simsopt.solve.alm`` sources and of
-    ``PROVENANCE_SCRIPTS``, which ``manifest.json`` and ``sensitivity.json``
-    record."""
+    """Git blob ids of the imported ``simsopt_alm`` solver sources (every
+    module but ``EVALUATOR_SIDE_MODULES``) and of ``PROVENANCE_SCRIPTS``, which
+    ``manifest.json`` and ``sensitivity.json`` record."""
     package_dir = Path(alm.__file__).resolve().parent
-    paths = sorted(package_dir.glob("*.py")) + [
-        golden.FIXTURE_DIR / script for script in PROVENANCE_SCRIPTS
-    ]
+    paths = sorted(
+        path for path in package_dir.glob("*.py") if path.name not in EVALUATOR_SIDE_MODULES
+    ) + [golden.FIXTURE_DIR / script for script in PROVENANCE_SCRIPTS]
     return {
-        (f"simsopt/solve/alm/{path.name}" if path.parent == package_dir else path.name):
+        (f"simsopt_alm/{path.name}" if path.parent == package_dir else path.name):
         _git_blob_id(path.read_bytes())
         for path in paths
     }
@@ -283,7 +289,7 @@ def main() -> None:
             "format": golden.FIXTURE_FORMAT,
             "regenerate": (
                 f"{RECORDING_COMMAND_PREFIX} python "
-                "tests/test_files/alm_golden/generate_alm_golden.py"
+                "tests/alm_golden/generate_alm_golden.py"
             ),
             "environment": recording_environment(),
             "source_blob_ids": alm_source_blob_ids(),

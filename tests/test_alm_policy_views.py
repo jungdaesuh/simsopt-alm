@@ -19,11 +19,11 @@ from pathlib import Path
 
 import numpy as np
 
-import simsopt.solve.alm as alm
-from simsopt.solve.alm import continuation as alm_continuation
-from simsopt.solve.alm.policy import ALMContinuationPolicy, DefaultContinuationPolicy
+import simsopt_alm as alm
+from simsopt_alm import continuation as alm_continuation
+from simsopt_alm.policy import ALMContinuationPolicy, DefaultContinuationPolicy
 
-GOLDEN_DIR = Path(__file__).resolve().parents[1] / "test_files" / "alm_golden"
+GOLDEN_DIR = Path(__file__).resolve().parent / "alm_golden"
 if str(GOLDEN_DIR) not in sys.path:
     sys.path.insert(0, str(GOLDEN_DIR))
 import alm_golden_scenarios as golden  # noqa: E402

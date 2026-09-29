@@ -1,4 +1,4 @@
-"""``simsopt.solve.alm.hybrid``: the signal-mismatch arms, reachable only with
+"""``simsopt_alm.hybrid``: the signal-mismatch arms, reachable only with
 the hybrid quartet.
 
 The hybrid module owns what a hard-feasible step does while the surrogate and
@@ -18,14 +18,14 @@ from pathlib import Path
 from typing import List, Set
 from unittest.mock import patch
 
-from simsopt.solve.alm import hybrid
+from simsopt_alm import hybrid
 
-GOLDEN_DIR = Path(__file__).resolve().parents[1] / "test_files" / "alm_golden"
+GOLDEN_DIR = Path(__file__).resolve().parent / "alm_golden"
 if str(GOLDEN_DIR) not in sys.path:
     sys.path.insert(0, str(GOLDEN_DIR))
 import alm_golden_scenarios as golden  # noqa: E402
 
-PACKAGE_ROOT = Path(__file__).resolve().parents[2] / "src" / "simsopt" / "solve" / "alm"
+PACKAGE_ROOT = Path(hybrid.__file__).resolve().parent
 
 # Goldens whose evaluators return no hybrid quartet.
 NON_HYBRID_GOLDENS = (

@@ -5,14 +5,15 @@ import numpy as np
 
 from simsopt.geo.curveobjectives import CurveCurveDistance, CurveLength
 from simsopt.geo.curvexyzfourier import CurveXYZFourier
-from simsopt.geo.signed_constraints import smooth_min_curve_curve_signed_constraint
-from simsopt.solve.alm import augmented_inequality_objective
-from simsopt.solve.alm.problem import (
+
+from simsopt_alm import augmented_inequality_objective
+from simsopt_alm.problem import (
     alm_problem_physics,
     evaluate_alm_problem,
     signed_lower_bound,
     signed_upper_bound,
 )
+from simsopt_alm.signed_constraints import smooth_min_curve_curve_signed_constraint
 
 
 _HYBRID_SIGNAL_KEYS = frozenset(

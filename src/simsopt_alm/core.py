@@ -1,7 +1,7 @@
 """Bertsekas / Birgin–Martinez ALM math: L, dual project, routing, settings.
 
 Formula bodies only. Continuation and the inner L-BFGS-B loop live in
-:mod:`simsopt.solve.alm.control`.
+:mod:`simsopt_alm.control`.
 """
 
 from __future__ import annotations

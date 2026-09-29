@@ -13,9 +13,9 @@ import unittest
 
 import numpy as np
 
-import simsopt.solve.alm as alm
-from simsopt.solve.alm.boundary import ALMOuterBoundary
-from simsopt.solve.alm.checkpoint import (
+import simsopt_alm as alm
+from simsopt_alm.boundary import ALMOuterBoundary
+from simsopt_alm.checkpoint import (
     ALMFeasibleIncumbentSnapshot,
     _transition_json_value,
 )

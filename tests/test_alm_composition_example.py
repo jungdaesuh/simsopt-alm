@@ -1,4 +1,4 @@
-"""``examples/2_Intermediate/alm_composition_example.py`` runs and shows what it says.
+"""``examples/alm_composition_example.py`` runs and shows what it says.
 
 The example composes the library solver with the history recorder, checkpoint
 and resume, and a stateful evaluator's snapshot/restore. Its ``main()`` returns
@@ -14,7 +14,7 @@ import sys
 import unittest
 from pathlib import Path
 
-EXAMPLES_DIR = Path(__file__).resolve().parents[2] / "examples" / "2_Intermediate"
+EXAMPLES_DIR = Path(__file__).resolve().parents[1] / "examples"
 if str(EXAMPLES_DIR) not in sys.path:
     sys.path.insert(0, str(EXAMPLES_DIR))
 
@@ -53,7 +53,7 @@ class AlmCompositionExampleTests(unittest.TestCase):
         }
         self.assertEqual(
             sorted(simsopt_modules),
-            ["simsopt.solve.alm", "simsopt.solve.alm.checkpoint", "simsopt.solve.alm.history"],
+            ["simsopt_alm", "simsopt_alm.checkpoint", "simsopt_alm.history"],
         )
 
 

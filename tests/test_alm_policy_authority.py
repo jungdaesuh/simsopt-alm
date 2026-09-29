@@ -14,9 +14,9 @@ import unittest
 
 import numpy as np
 
-import simsopt.solve.alm as alm
-from simsopt.solve.alm.continuation import ALMConverge
-from simsopt.solve.alm.policy import ALMContinuationPolicy, DefaultContinuationPolicy
+import simsopt_alm as alm
+from simsopt_alm.continuation import ALMConverge
+from simsopt_alm.policy import ALMContinuationPolicy, DefaultContinuationPolicy
 
 
 class _ConvergeImmediately:
@@ -64,7 +64,7 @@ class AlmPolicyAuthorityTests(unittest.TestCase):
     def test_the_protocol_and_the_package_say_who_owns_the_guarantees(self):
         for owner, doc in (
             ("ALMContinuationPolicy", ALMContinuationPolicy.__doc__),
-            ("simsopt.solve.alm", alm.__doc__),
+            ("simsopt_alm", alm.__doc__),
         ):
             with self.subTest(owner=owner):
                 self.assertIn("keep its vetoes", " ".join(doc.split()))

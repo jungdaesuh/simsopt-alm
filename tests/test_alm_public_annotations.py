@@ -1,7 +1,7 @@
-"""Every public annotation of ``simsopt.solve.alm``, its opt-in plugins and the
+"""Every public annotation of ``simsopt_alm``, its opt-in plugins and the
 library examples resolves with ``typing.get_type_hints``.
 
-The library examples are the ALM example code ``tests/solve`` imports. A caller
+The library examples are the ALM example code these tests import. A caller
 that introspects the public API (a type checker, a ``TypedDict`` consumer,
 documentation tooling) needs every name in those annotations to exist at
 runtime, on every supported Python.
@@ -22,13 +22,15 @@ import typing
 import unittest
 from pathlib import Path
 
-import simsopt.solve.alm as alm
-from simsopt.solve.alm import checkpoint as alm_checkpoint
-from simsopt.solve.alm import continuation as alm_continuation
-from simsopt.solve.alm import history as alm_history
-from simsopt.solve.alm import policy as alm_policy
+import simsopt_alm as alm
+from simsopt_alm import checkpoint as alm_checkpoint
+from simsopt_alm import continuation as alm_continuation
+from simsopt_alm import history as alm_history
+from simsopt_alm import policy as alm_policy
 
-LIBRARY_EXAMPLES_DIR = Path(__file__).resolve().parents[2] / "examples" / "2_Intermediate"
+# The distribution: pyproject.toml, src/, examples/ and tests/.
+DISTRIBUTION_ROOT = Path(__file__).resolve().parents[1]
+LIBRARY_EXAMPLES_DIR = DISTRIBUTION_ROOT / "examples"
 if str(LIBRARY_EXAMPLES_DIR) not in sys.path:
     sys.path.insert(0, str(LIBRARY_EXAMPLES_DIR))
 
@@ -43,19 +45,17 @@ EXAMPLE_MODULES = (
 )
 
 
-REPO_ROOT = Path(__file__).resolve().parents[2]
+PACKAGE_DIR = Path(alm.__file__).resolve().parent
 PYTHON_FLOOR = (3, 8)
 PYTHON_FLOOR_SOURCES = (
-    *sorted((REPO_ROOT / "src" / "simsopt" / "solve" / "alm").glob("*.py")),
-    REPO_ROOT / "src" / "simsopt" / "geo" / "signed_constraints.py",
+    *sorted(PACKAGE_DIR.glob("*.py")),
     *(LIBRARY_EXAMPLES_DIR / name for name in (
         "stage_two_optimization_alm.py",
         "boozerQA_alm.py",
         "alm_composition_example.py",
         "alm_typed_evaluator_example.py",
     )),
-    *sorted((REPO_ROOT / "tests" / "solve").glob("test_alm*.py")),
-    REPO_ROOT / "tests" / "geo" / "test_signed_constraints.py",
+    *sorted((DISTRIBUTION_ROOT / "tests").glob("test_*.py")),
 )
 # Subscripting these is a runtime TypeError before Python 3.9 (PEP 585).
 _BUILTIN_GENERICS = frozenset({"dict", "frozenset", "list", "set", "tuple", "type"})
@@ -162,7 +162,7 @@ def _public_annotated_objects():
             if not (inspect.isclass(value) or inspect.isfunction(value)):
                 continue
             owner = getattr(value, "__module__", "")
-            if not (owner.startswith("simsopt.solve.alm") or owner in owners):
+            if not (owner.startswith("simsopt_alm") or owner in owners):
                 continue
             seen.add(id(value))
             yield f"{value.__module__}.{name}", value
@@ -179,9 +179,9 @@ class AlmPublicAnnotationTests(unittest.TestCase):
             with self.subTest(label=label):
                 typing.get_type_hints(value)
             labels.append(label)
-        self.assertIn("simsopt.solve.alm.control.minimize_alm", labels)
-        self.assertIn("simsopt.solve.alm.checkpoint.ALMTransitionSnapshot", labels)
-        self.assertIn("simsopt.solve.alm.history.ALMHistoryRecorder", labels)
+        self.assertIn("simsopt_alm.control.minimize_alm", labels)
+        self.assertIn("simsopt_alm.checkpoint.ALMTransitionSnapshot", labels)
+        self.assertIn("simsopt_alm.history.ALMHistoryRecorder", labels)
         self.assertIn("boozerQA_alm.BoozerQAProblem", labels)
 
 
@@ -193,7 +193,7 @@ class AlmPythonFloorTests(unittest.TestCase):
             source = path.read_text(encoding="utf-8")
             tree = ast.parse(source, filename=str(path), feature_version=PYTHON_FLOOR)
             violations.extend(
-                f"{path.relative_to(REPO_ROOT)}:{lineno}: {message}"
+                f"{path}:{lineno}: {message}"
                 for lineno, message in _python_floor_violations(tree)
             )
         self.assertEqual(violations, [], "\n" + "\n".join(sorted(set(violations))))
@@ -202,7 +202,7 @@ class AlmPythonFloorTests(unittest.TestCase):
         # On Python 3.8 a TypedDict subclass defined in another module resolves
         # inherited string annotations in that module's namespace, so the
         # ALMEvaluation schema must not use postponed annotations.
-        path = REPO_ROOT / "src" / "simsopt" / "solve" / "alm" / "evaluation.py"
+        path = PACKAGE_DIR / "evaluation.py"
         tree = ast.parse(path.read_text(encoding="utf-8"))
         self.assertFalse(any(
             isinstance(node, ast.ImportFrom) and node.module == "__future__"
@@ -210,7 +210,7 @@ class AlmPythonFloorTests(unittest.TestCase):
         ))
 
     def test_the_floor_matches_requires_python(self):
-        pyproject = (REPO_ROOT / "pyproject.toml").read_text(encoding="utf-8")
+        pyproject = (DISTRIBUTION_ROOT / "pyproject.toml").read_text(encoding="utf-8")
         self.assertIn('requires-python = ">=3.8"', pyproject)
 
     def test_the_rules_flag_each_construct(self):

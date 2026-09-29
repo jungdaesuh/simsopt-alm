@@ -1,4 +1,4 @@
-"""Opt-in checkpoint/resume for :func:`simsopt.solve.alm.minimize_alm`.
+"""Opt-in checkpoint/resume for :func:`simsopt_alm.minimize_alm`.
 
 The loop publishes an :class:`~.boundary.ALMOuterBoundary` after each completed
 outer iteration and once when it returns, and resumes from one. This module

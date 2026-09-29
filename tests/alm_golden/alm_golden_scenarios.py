@@ -1,17 +1,17 @@
-"""Deterministic golden trajectories of :func:`simsopt.solve.alm.minimize_alm`.
+"""Deterministic golden trajectories of :func:`simsopt_alm.minimize_alm`.
 
 Each scenario calls the library solver directly with a synthetic evaluator
 (numpy functions of ``x`` passed through ``augmented_inequality_objective``)
 and records what a caller can observe:
 
-* ``result``: every :class:`~simsopt.solve.alm.ALMResult` field;
-* ``history``: the :class:`~simsopt.solve.alm.history.ALMHistoryRecorder`
+* ``result``: every :class:`~simsopt_alm.ALMResult` field;
+* ``history``: the :class:`~simsopt_alm.history.ALMHistoryRecorder`
   entries, one per outer step (runs that pass ``on_outer_step``);
 * ``events``: the ordered calls the solver makes into caller code
   (``evaluate_problem``, ``inner_callback``, ``accepted_callback``,
   ``outer_state_callback``, ``on_outer_step``, the snapshot/restore pair of a
   stateful evaluator, ``on_outer_boundary``);
-* ``checkpoints``: the :class:`~simsopt.solve.alm.checkpoint.ALMTransitionSnapshot`
+* ``checkpoints``: the :class:`~simsopt_alm.checkpoint.ALMTransitionSnapshot`
   of every outer boundary (runs that pass ``on_outer_boundary``).
 
 Values are encoded exactly: a float becomes ``float.hex`` (``~inf``, ``~-inf``,
@@ -53,16 +53,16 @@ import scipy
 import scipy.linalg  # noqa: F401  (loads SciPy's OpenBLAS)
 from scipy.optimize import LbfgsInvHessProduct, OptimizeResult
 
-from simsopt.solve.alm import (
+from simsopt_alm import (
     ALMPhysics,
     ALMSettings,
     augmented_inequality_objective,
     cached_alm_evaluator,
 )
-from simsopt.solve.alm import control as alm_control
-from simsopt.solve.alm.checkpoint import alm_checkpointing
-from simsopt.solve.alm.control import ALMProcessBudgetExhausted
-from simsopt.solve.alm.history import ALMHistoryRecorder
+from simsopt_alm import control as alm_control
+from simsopt_alm.checkpoint import alm_checkpointing
+from simsopt_alm.control import ALMProcessBudgetExhausted
+from simsopt_alm.history import ALMHistoryRecorder
 
 FIXTURE_DIR = Path(__file__).resolve().parent
 FIXTURE_FORMAT = "alm_library_golden_trajectory_v1"

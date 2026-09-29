@@ -10,13 +10,17 @@ from typing import List
 
 import numpy as np
 
-import simsopt.solve.alm as alm
-from simsopt.solve.alm import control as alm_control
-from simsopt.solve.alm import core as alm_core
+import simsopt_alm as alm
+from simsopt_alm import control as alm_control
+from simsopt_alm import core as alm_core
 
 
-PACKAGE_ROOT = (
-    Path(__file__).resolve().parents[2] / "src" / "simsopt" / "solve" / "alm"
+PACKAGE_ROOT = Path(alm.__file__).resolve().parent
+# The one module that imports simsopt (for its ``Derivative``); importing
+# ``simsopt_alm`` does not load it.
+SIMSOPT_MODULE_FILE = "signed_constraints.py"
+SOLVER_MODULE_PATHS = tuple(
+    path for path in sorted(PACKAGE_ROOT.glob("*.py")) if path.name != SIMSOPT_MODULE_FILE
 )
 LIBRARY_MODULE_FILES = (
     "core.py",
@@ -70,7 +74,7 @@ ALLOWED_IMPORT_ROOTS = frozenset(
 
 class AlmPackageImportTests(unittest.TestCase):
     def test_package_imports_only_numpy_scipy_and_the_standard_library(self):
-        for path in sorted(PACKAGE_ROOT.glob("*.py")):
+        for path in SOLVER_MODULE_PATHS:
             with self.subTest(module=path.name):
                 roots = set()
                 for node in ast.walk(ast.parse(path.read_text(encoding="utf-8"))):
@@ -88,7 +92,7 @@ class AlmPackageImportTests(unittest.TestCase):
         # Fresh interpreter: other tests in this process may already have
         # imported a module the package forgot to import itself.
         probe = (
-            "import simsopt.solve.alm as alm\n"
+            "import simsopt_alm as alm\n"
             "alm.minimize_alm, alm.ALMSettings, alm.augmented_inequality_objective\n"
         )
         completed = subprocess.run(
@@ -100,8 +104,23 @@ class AlmPackageImportTests(unittest.TestCase):
         self.assertEqual(
             completed.returncode,
             0,
-            f"simsopt.solve.alm must import standalone: {completed.stdout}{completed.stderr}",
+            f"simsopt_alm must import standalone: {completed.stdout}{completed.stderr}",
         )
+
+    def test_importing_the_solver_loads_no_simsopt_module(self):
+        probe = (
+            "import json, sys\n"
+            "import simsopt_alm, simsopt_alm.checkpoint, simsopt_alm.history\n"
+            "print(json.dumps(sorted(name for name in sys.modules\n"
+            "                        if name == 'simsopt' or name.startswith('simsopt.'))))\n"
+        )
+        completed = subprocess.run(
+            [sys.executable, "-c", probe],
+            capture_output=True,
+            text=True,
+            check=True,
+        )
+        self.assertEqual(completed.stdout.strip(), "[]")
 
 
 def _solve_unit_halfspace_problem():

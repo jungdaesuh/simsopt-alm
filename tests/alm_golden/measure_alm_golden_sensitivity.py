@@ -49,13 +49,13 @@ scenario reaches an outcome outside ``observed_outcomes``: each recorded
 outcome set is closed under the held-out samples.
 
 The replay test sets each numeric tolerance to ``10 x max(spread, eps)``.
-Rerun from the repository root whenever the goldens or the ALM sources change
-(the test pins the source blob ids), in the environment the goldens were
-recorded in (the generator's ``RECORDING_ENVIRONMENT_VARIABLES``; the script
-exits otherwise)::
+Rerun from the package directory (``packages/simsopt-alm``) whenever the
+goldens or the ALM solver sources change (the test pins the source blob ids),
+in the environment the goldens were recorded in (the generator's
+``RECORDING_ENVIRONMENT_VARIABLES``; the script exits otherwise)::
 
     OMP_NUM_THREADS=1 OPENBLAS_NUM_THREADS=1 OPENBLAS_CORETYPE=Haswell \
-        python tests/test_files/alm_golden/measure_alm_golden_sensitivity.py
+        python tests/alm_golden/measure_alm_golden_sensitivity.py
 """
 
 from __future__ import annotations
@@ -237,7 +237,7 @@ def main() -> None:
         print(scenario.name, json.dumps(scenarios[scenario.name]), file=sys.stderr)
     payload = {
         "measure": f"{RECORDING_COMMAND_PREFIX} python "
-                   "tests/test_files/alm_golden/measure_alm_golden_sensitivity.py",
+                   "tests/alm_golden/measure_alm_golden_sensitivity.py",
         "noise": {
             "ulps": list(ULPS),
             "seeds": list(SEEDS),

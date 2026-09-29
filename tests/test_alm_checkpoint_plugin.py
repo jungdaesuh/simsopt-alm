@@ -1,4 +1,4 @@
-"""``simsopt.solve.alm.checkpoint``: checkpoint/resume is a plugin of the loop.
+"""``simsopt_alm.checkpoint``: checkpoint/resume is a plugin of the loop.
 
 The library ``minimize_alm`` publishes an :class:`ALMOuterBoundary` after each
 completed outer iteration and once when it returns (``on_outer_boundary``), and
@@ -23,16 +23,16 @@ from unittest.mock import patch
 
 import numpy as np
 
-import simsopt.solve.alm as alm
-from simsopt.solve.alm import checkpoint as alm_checkpoint
-from simsopt.solve.alm import control as alm_control
+import simsopt_alm as alm
+from simsopt_alm import checkpoint as alm_checkpoint
+from simsopt_alm import control as alm_control
 
-GOLDEN_DIR = Path(__file__).resolve().parents[1] / "test_files" / "alm_golden"
+GOLDEN_DIR = Path(__file__).resolve().parent / "alm_golden"
 if str(GOLDEN_DIR) not in sys.path:
     sys.path.insert(0, str(GOLDEN_DIR))
 import alm_golden_scenarios as golden  # noqa: E402
 
-PACKAGE_ROOT = Path(__file__).resolve().parents[2] / "src" / "simsopt" / "solve" / "alm"
+PACKAGE_ROOT = Path(alm.__file__).resolve().parent
 
 
 def _runs(trajectory: dict) -> List[dict]:
@@ -267,14 +267,14 @@ class AlmLoopOwnsNoCheckpointTests(unittest.TestCase):
             with self.subTest(name=name):
                 self.assertEqual(
                     getattr(alm_checkpoint, name).__module__,
-                    "simsopt.solve.alm.checkpoint",
+                    "simsopt_alm.checkpoint",
                 )
 
     def test_package_import_does_not_load_the_checkpoint_plugin(self):
         probe = (
             "import sys\n"
-            "import simsopt.solve.alm\n"
-            "sys.exit(1 if 'simsopt.solve.alm.checkpoint' in sys.modules else 0)\n"
+            "import simsopt_alm\n"
+            "sys.exit(1 if 'simsopt_alm.checkpoint' in sys.modules else 0)\n"
         )
         completed = subprocess.run(
             [sys.executable, "-c", probe], capture_output=True, text=True, check=False

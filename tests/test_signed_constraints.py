@@ -1,20 +1,21 @@
-import subprocess
-import sys
+import ast
 import unittest
+from pathlib import Path
 from unittest import mock
 
 import numpy as np
 
 from simsopt._core import Optimizable
-from simsopt.geo import signed_constraints
 from simsopt.geo.curveobjectives import CurveCurveDistance
 from simsopt.geo.curvexyzfourier import CurveXYZFourier
-from simsopt.geo.signed_constraints import (
+from simsopt.geo.surfacerzfourier import SurfaceRZFourier
+
+from simsopt_alm import signed_constraints
+from simsopt_alm.signed_constraints import (
     smooth_max_curvature_signed_constraint,
     smooth_min_curve_curve_signed_constraint,
     smooth_min_curve_surface_signed_constraint,
 )
-from simsopt.geo.surfacerzfourier import SurfaceRZFourier
 
 
 def _circle(radius, center_z, quadpoint_count=64):
@@ -402,29 +403,19 @@ class SelectionHelperTests(unittest.TestCase):
 
 
 class SignedConstraintsImportBoundaryTests(unittest.TestCase):
-    def test_import_does_not_load_the_alm_solver(self):
-        # Fresh interpreter: other tests in this process may already have
-        # imported the solver. The geometry rows serve any optimizer.
-        probe = (
-            "import sys\n"
-            "import simsopt.geo.signed_constraints\n"
-            "leaked = sorted(name for name in sys.modules\n"
-            "                if name.startswith('simsopt.solve.alm'))\n"
-            "print(leaked)\n"
-            "sys.exit(1 if leaked else 0)\n"
-        )
-        completed = subprocess.run(
-            [sys.executable, "-c", probe],
-            capture_output=True,
-            text=True,
-            check=False,
-        )
-        self.assertEqual(
-            completed.returncode,
-            0,
-            f"simsopt.geo.signed_constraints loaded the ALM solver: "
-            f"{completed.stdout}{completed.stderr}",
-        )
+    def test_the_rows_import_nothing_from_the_solver(self):
+        # The geometry rows serve any optimizer: the module imports simsopt,
+        # numpy, scipy and the standard library, and no solver module (the
+        # package's __init__ still runs, as for any submodule import).
+        tree = ast.parse(Path(signed_constraints.__file__).read_text(encoding="utf-8"))
+        roots = set()
+        for node in ast.walk(tree):
+            if isinstance(node, ast.Import):
+                roots.update(alias.name.split(".")[0] for alias in node.names)
+            elif isinstance(node, ast.ImportFrom):
+                self.assertEqual(node.level, 0, "signed_constraints imports a solver module")
+                roots.add(node.module.split(".")[0])
+        self.assertEqual(roots, {"numpy", "scipy", "simsopt", "threading", "weakref"})
 
 
 if __name__ == "__main__":

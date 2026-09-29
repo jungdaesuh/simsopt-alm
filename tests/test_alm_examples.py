@@ -1,4 +1,4 @@
-"""Tests for the ALM stock demos in ``examples/2_Intermediate``.
+"""Tests for the ALM stock demos in ``examples``.
 
 The smoke tests run each demo in a fresh interpreter with ``CI=true``, so
 ``in_github_actions`` shrinks it to its CI size, and in a scratch directory,
@@ -22,9 +22,9 @@ from unittest import mock
 
 import numpy as np
 
-REPO_ROOT = Path(__file__).resolve().parents[2]
-SRC_DIR = REPO_ROOT / "src"
-EXAMPLES_DIR = REPO_ROOT / "examples" / "2_Intermediate"
+import simsopt_alm
+
+EXAMPLES_DIR = Path(__file__).resolve().parents[1] / "examples"
 if str(EXAMPLES_DIR) not in sys.path:
     sys.path.insert(0, str(EXAMPLES_DIR))
 
@@ -33,7 +33,7 @@ import boozerQA_alm  # noqa: E402  (module scope builds no problem)
 PROBE_PREFIX = "ALM_DEMO_PROBE "
 _PROBE = (
     "import json, os\n"
-    "import simsopt\n"
+    "import simsopt_alm\n"
     "import {module}\n"
     "result_types = []\n"
     "library_minimize_alm = {module}.minimize_alm\n"
@@ -46,14 +46,14 @@ _PROBE = (
     "print({prefix!r} + json.dumps({{\n"
     "    **summary,\n"
     "    'result_types': result_types,\n"
-    "    'simsopt_file': os.path.realpath(simsopt.__file__),\n"
+    "    'simsopt_alm_file': os.path.realpath(simsopt_alm.__file__),\n"
     "}}))\n"
 )
 
 
 def _child_env():
-    """``CI=true``; this tree's ``src`` and the demo directory first on ``PYTHONPATH``."""
-    python_path = [str(SRC_DIR), str(EXAMPLES_DIR)]
+    """``CI=true``; the demo directory first on ``PYTHONPATH``."""
+    python_path = [str(EXAMPLES_DIR)]
     if os.environ.get("PYTHONPATH"):
         python_path.append(os.environ["PYTHONPATH"])
     return {**os.environ, "CI": "true", "PYTHONPATH": os.pathsep.join(python_path)}
@@ -92,14 +92,14 @@ class AlmDemoSmokeTests(unittest.TestCase):
         self.assertEqual(len(probe_lines), 1, completed.stdout[-4000:])
         summary = json.loads(probe_lines[0][len(PROBE_PREFIX):])
         print(f"{module}: {summary}, {elapsed_seconds:.1f} s")
-        self.assertTrue(
-            SRC_DIR.resolve() in Path(summary["simsopt_file"]).parents,
-            f"{module} imported simsopt from {summary['simsopt_file']}, "
-            f"not from this tree's {SRC_DIR.resolve()}",
+        self.assertEqual(
+            summary["simsopt_alm_file"],
+            os.path.realpath(simsopt_alm.__file__),
+            f"{module} imported another simsopt_alm than this test process",
         )
         self.assertEqual(
             summary["result_types"],
-            ["simsopt.solve.alm.control.ALMResult"],
+            ["simsopt_alm.control.ALMResult"],
             f"{module} must read the library's lean result",
         )
         self.assertLessEqual(

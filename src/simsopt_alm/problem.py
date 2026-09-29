@@ -3,7 +3,7 @@
 A constraint row is ``row(base_objective) -> (signed_value, grad, ...)`` at the dofs just
 set: ``signed_value <= 0`` is feasible, ``grad`` spans ``base_objective``'s free dofs, and
 trailing items are ignored. ``functools.partial(signed_upper_bound, objective, bound)`` and a
-:mod:`simsopt.geo.signed_constraints` kernel with its leading arguments bound are rows.
+:mod:`simsopt_alm.signed_constraints` kernel with its leading arguments bound are rows.
 
 :class:`ALMPhysics` is what an evaluation depends on besides the multipliers and the
 penalty; :func:`cached_alm_evaluator` reuses it when ``minimize_alm`` revisits an x.

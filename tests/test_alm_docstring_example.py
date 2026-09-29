@@ -1,4 +1,4 @@
-"""The toy example in the ``simsopt.solve.alm`` package docstring runs as shown.
+"""The toy example in the ``simsopt_alm`` package docstring runs as shown.
 
 ``_package_docstring_example`` is that example's code, written out here (the
 docstring is never executed); one test pins the docstring to this code, the
@@ -13,15 +13,15 @@ import textwrap
 import unittest
 
 import numpy as np
-from simsopt.solve.alm import (ALMPhysics, ALMSettings, cached_alm_evaluator,
-                               minimize_alm)
+from simsopt_alm import (ALMPhysics, ALMSettings, cached_alm_evaluator,
+                         minimize_alm)
 
-import simsopt.solve.alm as alm
+import simsopt_alm as alm
 
 EXAMPLE_IMPORTS = """\
 import numpy as np
-from simsopt.solve.alm import (ALMPhysics, ALMSettings, cached_alm_evaluator,
-                               minimize_alm)
+from simsopt_alm import (ALMPhysics, ALMSettings, cached_alm_evaluator,
+                         minimize_alm)
 """
 
 

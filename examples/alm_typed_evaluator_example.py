@@ -19,7 +19,7 @@ from __future__ import annotations
 
 import numpy as np
 
-from simsopt.solve.alm import (
+from simsopt_alm import (
     ALMEvaluation,
     ALMEvaluator,
     ALMResult,

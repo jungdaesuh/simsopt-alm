@@ -2,17 +2,18 @@
 the package it documents.
 
 Drift guards: every API name the skill's references, templates and scripts
-use resolves in ``simsopt.solve.alm`` or the module the skill names; the
+use resolves in ``simsopt_alm`` or the module the skill names; the
 termination reasons of ``references/termination.md`` are exactly those the
 package source can return (and ``success`` exactly its converge decisions);
 ``references/settings.md`` lists every ``ALMSettings`` field with its default;
-the Python floor and the branch base match upstream; and
-``docs/alm_setup_guide.md`` is what ``build_guide.py`` generates.
+the Python floor matches the package's ``pyproject.toml`` and the install
+commands its location in the repository; and ``docs/alm_setup_guide.md`` is
+what ``build_guide.py`` generates.
 
-Runs: the scripts and templates run in fresh interpreters, in scratch
-directories (a template's ``finish`` writes output), with this tree's ``src``
-first on ``PYTHONPATH``. A template runs as the skill generates it: copied to
-``alm_problem.py`` next to ``run_alm.py``.
+Runs: the scripts and templates run in fresh interpreters of this test's
+Python, which imports the installed ``simsopt_alm`` and simsopt, in scratch
+directories (a template's ``finish`` writes output). A template runs as the
+skill generates it: copied to ``alm_problem.py`` next to ``run_alm.py``.
 """
 
 from __future__ import annotations
@@ -32,13 +33,15 @@ from typing import Dict, List, Optional, Set
 
 import numpy as np
 
-import simsopt.geo.signed_constraints as signed_constraints
-import simsopt.solve.alm as alm
-from simsopt.solve.alm import ALMResult, ALMSettings, checkpoint, control, history, policy
+import simsopt_alm as alm
+import simsopt_alm.signed_constraints as signed_constraints
+from simsopt_alm import ALMResult, ALMSettings, checkpoint, control, history, policy
 
-REPO_ROOT = Path(__file__).resolve().parents[2]
-SRC_DIR = REPO_ROOT / "src"
-PACKAGE_DIR = SRC_DIR / "simsopt" / "solve" / "alm"
+# The package directory (pyproject.toml, src/, tests/) and the repository
+# around it, which holds the skill and the generated guide.
+DISTRIBUTION_ROOT = Path(__file__).resolve().parents[1]
+REPO_ROOT = DISTRIBUTION_ROOT.parents[1]
+PACKAGE_DIR = Path(alm.__file__).resolve().parent
 SKILL_DIR = REPO_ROOT / ".claude" / "skills" / "simsopt-alm-setup"
 SCRIPTS_DIR = SKILL_DIR / "scripts"
 TEMPLATES_DIR = SKILL_DIR / "templates"
@@ -51,12 +54,12 @@ import check_env  # noqa: E402
 
 # Every module the skill may name, keyed by its dotted path.
 MODULES = {
-    "simsopt.solve.alm": alm,
-    "simsopt.solve.alm.checkpoint": checkpoint,
-    "simsopt.solve.alm.control": control,
-    "simsopt.solve.alm.history": history,
-    "simsopt.solve.alm.policy": policy,
-    "simsopt.geo.signed_constraints": signed_constraints,
+    "simsopt_alm": alm,
+    "simsopt_alm.checkpoint": checkpoint,
+    "simsopt_alm.control": control,
+    "simsopt_alm.history": history,
+    "simsopt_alm.policy": policy,
+    "simsopt_alm.signed_constraints": signed_constraints,
 }
 TERMINATION_KEYWORDS = {"termination_reason", "restored_termination_reason", "max_outer_termination"}
 # Loop carriers whose string defaults are termination reasons.
@@ -73,7 +76,7 @@ from types import SimpleNamespace
 
 import numpy as np
 
-from simsopt.solve.alm import ALMPhysics
+from simsopt_alm import ALMPhysics
 
 MODE = MODE_VALUE
 
@@ -115,7 +118,7 @@ from types import SimpleNamespace
 
 import numpy as np
 
-from simsopt.solve.alm import ALMPhysics
+from simsopt_alm import ALMPhysics
 
 OBJECTIVE, ROWS = OBJECTIVE_VALUE, ROWS_VALUE
 
@@ -161,7 +164,7 @@ from types import SimpleNamespace
 
 import numpy as np
 
-from simsopt.solve.alm import ALMPhysics
+from simsopt_alm import ALMPhysics
 
 X0, ROWS = X0_VALUE, ROWS_VALUE
 
@@ -222,7 +225,7 @@ from types import SimpleNamespace
 
 import numpy as np
 
-from simsopt.solve.alm import ALMPhysics
+from simsopt_alm import ALMPhysics
 
 KIND, LEVEL, TRIAL = KIND_VALUE, LEVEL_VALUE, TRIAL_VALUE
 
@@ -255,7 +258,7 @@ from types import SimpleNamespace
 
 import numpy as np
 
-from simsopt.solve.alm import ALMPhysics
+from simsopt_alm import ALMPhysics
 
 CASE, N, A = CASE_VALUE, N_VALUE, A_VALUE
 
@@ -289,7 +292,7 @@ from types import SimpleNamespace
 
 import numpy as np
 
-from simsopt.solve.alm import ALMPhysics
+from simsopt_alm import ALMPhysics
 
 ROWS = ROWS_VALUE
 
@@ -323,7 +326,7 @@ from types import SimpleNamespace
 
 import numpy as np
 
-from simsopt.solve.alm import ALMPhysics
+from simsopt_alm import ALMPhysics
 
 ROWS = ROWS_VALUE
 
@@ -383,7 +386,7 @@ from types import SimpleNamespace
 
 import numpy as np
 
-from simsopt.solve.alm import ALMPhysics
+from simsopt_alm import ALMPhysics
 
 NAMES = NAMES_VALUE
 VALUES = VALUES_VALUE
@@ -485,7 +488,7 @@ def documented_imports(source: str) -> List[tuple]:
 
 
 def child_env(problem_dir: Optional[Path] = None, overrides: Optional[Dict[str, str]] = None) -> dict:
-    python_path = ([] if problem_dir is None else [str(problem_dir)]) + [str(SRC_DIR)]
+    python_path = [] if problem_dir is None else [str(problem_dir)]
     if os.environ.get("PYTHONPATH"):
         python_path.append(os.environ["PYTHONPATH"])
     return {**os.environ, "PYTHONPATH": os.pathsep.join(python_path), **(overrides or {})}
@@ -563,7 +566,7 @@ class SkillDocumentsThePackageTests(unittest.TestCase):
                         self.assertIn(identifier, package_names, f"{identifier} is not in the package")
                     if identifier in package_names:
                         self.assertIn(identifier, table, f"{identifier} is used but not in api.md's table")
-            for dotted in re.findall(r"`(simsopt(?:\.\w+)+)`", text):
+            for dotted in re.findall(r"`(simsopt(?:_alm(?:\.\w+)*|(?:\.\w+)+))`", text):
                 with self.subTest(source=source, name=dotted):
                     module_path, _, attribute = dotted.rpartition(".")
                     self.assertTrue(dotted in MODULES or (module_path in MODULES
@@ -614,12 +617,19 @@ class SkillDocumentsThePackageTests(unittest.TestCase):
                          package_success_reasons())
 
     def test_python_floor_matches_pyproject(self):
-        requires = re.search(r'^requires-python = ">=([\d.]+)"', (REPO_ROOT / "pyproject.toml").read_text(),
-                             re.MULTILINE).group(1)
+        requires = re.search(r'^requires-python = ">=([\d.]+)"',
+                             (DISTRIBUTION_ROOT / "pyproject.toml").read_text(), re.MULTILINE).group(1)
         self.assertEqual(check_env.MIN_PYTHON, tuple(int(part) for part in requires.split(".")))
 
-    def test_install_reference_names_the_branch_base(self):
-        self.assertIn(f"`{check_env.ALM_UPSTREAM_BASE[:9]}`", (REFERENCES_DIR / "install.md").read_text())
+    def test_install_commands_name_this_package(self):
+        self.assertEqual(REPO_ROOT / check_env.PACKAGE_SUBDIRECTORY, DISTRIBUTION_ROOT)
+        name = re.search(r'^name = "([\w-]+)"', (DISTRIBUTION_ROOT / "pyproject.toml").read_text(),
+                         re.MULTILINE).group(1)
+        self.assertEqual(check_env.DISTRIBUTION, name)
+        text = (REFERENCES_DIR / "install.md").read_text()
+        self.assertIn(f'install "{check_env.install_url("<fork-url>")}"', text)
+        self.assertIn(f"git clone -b {check_env.ALM_BRANCH} <fork-url> <clone>", text)
+        self.assertIn(f"install -e <clone>/{check_env.PACKAGE_SUBDIRECTORY.as_posix()}", text)
 
     def test_guide_is_generated_from_the_skill(self):
         self.assertTrue(build_guide.GUIDE_PATH.exists(), "docs/alm_setup_guide.md is missing")
@@ -663,150 +673,87 @@ class SkillDocumentsThePackageTests(unittest.TestCase):
 class CheckEnvRouteTests(unittest.TestCase):
     """``check_env.choose_route``: the first route whose condition holds."""
 
-    @staticmethod
-    def report(*, blockers=(), alm_importable=False, signed_importable=None, simsopt_importable=True,
-               checkout=None) -> dict:
-        signed_importable = alm_importable if signed_importable is None else signed_importable
-        return {"blockers": list(blockers), "simsopt": {"importable": simsopt_importable},
-                "alm": {"importable": alm_importable},
-                "signed_constraints": {"importable": signed_importable}, "checkout": checkout}
+    CLONE = Path("/clones/simsopt")
 
-    @staticmethod
-    def checkout(*, has_alm_sources=False, is_git=True, upstream_remotes_with_alm=()) -> dict:
-        git = {"is_git": is_git}
-        if is_git:
-            git["upstream_remotes_with_alm"] = list(upstream_remotes_with_alm)
-        return {"has_alm_sources": has_alm_sources, "is_simsopt_source": True, "git": git}
+    @classmethod
+    def report(cls, *, blockers=(), alm_file=None, checkout=False) -> dict:
+        return {"blockers": list(blockers),
+                "alm": {"importable": alm_file is not None, "file": alm_file},
+                "checkout": {"path": str(cls.CLONE),
+                             "package": str(cls.CLONE / check_env.PACKAGE_SUBDIRECTORY)} if checkout else None}
 
     def test_routes(self):
+        clone_file = str(self.CLONE / check_env.PACKAGE_SUBDIRECTORY / "src" / "simsopt_alm" / "__init__.py")
+        other_file = "/site-packages/simsopt_alm/__init__.py"
         cases = {
-            "blocked": self.report(blockers=["Python too old"], alm_importable=True),
-            "install": self.report(simsopt_importable=False, checkout=self.checkout()),
-            "ready": self.report(alm_importable=True, checkout=self.checkout()),
-            "reinstall": self.report(checkout=self.checkout(has_alm_sources=True)),
-            "upstream": self.report(checkout=self.checkout(upstream_remotes_with_alm=["upstream"])),
-            "merge-fork": self.report(checkout=self.checkout()),
-            "copy": self.report(checkout=None),
+            "blocked": self.report(blockers=["Python too old"], alm_file=other_file),
+            "ready": self.report(alm_file=other_file),
+            "ready with the clone's package": self.report(alm_file=clone_file, checkout=True),
+            "editable": self.report(checkout=True),
+            "editable over another install": self.report(alm_file=other_file, checkout=True),
+            "install": self.report(),
         }
-        for route, report in cases.items():
-            with self.subTest(route=route):
-                self.assertEqual(check_env.choose_route(report), route)
-        self.assertEqual(check_env.choose_route(self.report(checkout=self.checkout(is_git=False))), "copy")
+        for case, report in cases.items():
+            with self.subTest(case=case):
+                self.assertEqual(check_env.choose_route(report), case.split(" ")[0])
 
-    def test_a_missing_signed_constraints_module_is_not_ready(self):
-        """The generic template runs on the solver alone; the Stage-2 and
-        Boozer templates also import simsopt.geo.signed_constraints, so
-        ``ready`` needs both, and the install routes supply the missing one."""
-        cases = {
-            "reinstall": self.checkout(has_alm_sources=True),
-            "upstream": self.checkout(upstream_remotes_with_alm=["upstream"]),
-            "merge-fork": self.checkout(),
-            "copy": None,
-        }
-        for route, checkout in cases.items():
-            with self.subTest(route=route):
-                self.assertEqual(check_env.choose_route(self.report(
-                    alm_importable=True, signed_importable=False, checkout=checkout)), route)
-        self.assertEqual(check_env.template_readiness(self.report(alm_importable=True, signed_importable=False)),
+    def test_template_readiness_needs_the_signed_constraints_for_the_coil_templates(self):
+        def modules(alm_importable, signed_importable):
+            return {"alm": {"importable": alm_importable}, "signed_constraints": {"importable": signed_importable}}
+
+        self.assertEqual(check_env.template_readiness(modules(True, False)),
                          {"generic": True, "stage2": False, "boozer_single_stage": False})
-        self.assertEqual(set(check_env.template_readiness(self.report(alm_importable=True)).values()), {True})
-        self.assertEqual(set(check_env.template_readiness(self.report()).values()), {False})
+        self.assertEqual(set(check_env.template_readiness(modules(True, True)).values()), {True})
+        self.assertEqual(set(check_env.template_readiness(modules(False, False)).values()), {False})
 
     def test_template_readiness_names_each_templates_checked_imports(self):
         """``check_env.TEMPLATE_MODULES`` lists, for every problem template,
         exactly the checked modules (the solver, the signed constraints) it imports."""
         problem_templates = {path.stem for path in TEMPLATES_DIR.glob("*.py")} - {"run_alm"}
         self.assertEqual(set(check_env.TEMPLATE_MODULES), problem_templates)
-        checked = (check_env.ALM_MODULE, check_env.SIGNED_CONSTRAINTS_MODULE)
         for name in sorted(problem_templates):
             tree = ast.parse((TEMPLATES_DIR / f"{name}.py").read_text())
             imported = {node.module for node in ast.walk(tree) if isinstance(node, ast.ImportFrom)} | {
                 alias.name for node in ast.walk(tree) if isinstance(node, ast.Import) for alias in node.names}
             with self.subTest(template=name):
                 self.assertEqual(
-                    {module for module in checked
-                     if any(path == module or path.startswith(module + ".") for path in imported if path)},
+                    {module for module in check_env.ALM_MODULES if module in imported},
                     set(check_env.TEMPLATE_MODULES[name]))
 
-    def test_remote_urls_with_spaces_parse(self):
-        remotes = check_env.parse_remotes(
-            "origin\thttps://github.com/o/simsopt (fetch)\n"
-            "origin\thttps://github.com/o/simsopt (push)\n"
-            "local\t/data/my repos/simsopt (fetch)\n"
-            "local\t/data/my repos/simsopt (push)\n"
-            # git 2.53 annotates a partial clone's filter.
-            "upstream\thttps://github.com/hiddenSymmetries/simsopt.git (fetch) [blob:none]\n"
-            "upstream\thttps://github.com/hiddenSymmetries/simsopt.git (push)\n"
-            # A remote with no URL, and one with a push URL only (git 2.53).
-            "nourl\t\n"
-            "pushonly\t\n"
-            "pushonly\thttps://example.com/push.git (push)\n")
-        self.assertEqual(remotes, {"origin": "https://github.com/o/simsopt", "local": "/data/my repos/simsopt",
-                                   "upstream": "https://github.com/hiddenSymmetries/simsopt.git",
-                                   "nourl": None, "pushonly": None})
-
     def test_an_import_failure_names_the_missing_module_or_parent(self):
-        """Absent ALM package, absent parent package, and a broken import differ."""
-        module = "simsopt.solve.alm"
+        """Absent package, absent parent package, and a broken import differ."""
+        module = check_env.SIGNED_CONSTRAINTS_MODULE
         cases = {
-            "ModuleNotFoundError: No module named 'simsopt.solve.alm'": "simsopt.solve.alm",
-            "ModuleNotFoundError: No module named 'simsopt.solve'": "simsopt.solve",
-            "ModuleNotFoundError: No module named 'simsopt'": "simsopt",
+            "ModuleNotFoundError: No module named 'simsopt_alm.signed_constraints'": module,
+            "ModuleNotFoundError: No module named 'simsopt_alm'": "simsopt_alm",
+            "ModuleNotFoundError: No module named 'simsopt'": None,
             "ModuleNotFoundError: No module named 'scipy'": None,
-            "ModuleNotFoundError: No module named 'simsopt.solve.almanac'": None,
-            "ImportError: cannot import name 'nnls' from 'scipy.optimize'": None,
+            "ModuleNotFoundError: No module named 'simsopt_alm.signed_constraintsx'": None,
+            "ImportError: cannot import name 'Derivative' from 'simsopt._core.derivative'": None,
             "SyntaxError: invalid syntax": None,
         }
         for error, missing in cases.items():
             with self.subTest(error=error):
                 self.assertEqual(check_env.missing_import(error, module), missing)
 
-    def test_an_absent_parent_package_is_not_reported_as_a_broken_alm(self):
-        alm_module = check_env.ALM_MODULE
-        blocker = check_env.import_blocker(
-            {"importable": False, "error": "ModuleNotFoundError: No module named 'simsopt.solve'"}, alm_module)
-        self.assertIn("simsopt.solve", blocker)
-        self.assertNotIn("fails to import", blocker)
-        self.assertIn("fails to import", check_env.import_blocker(
-            {"importable": False, "error": "ImportError: cannot import name 'nnls' from 'scipy.optimize'"},
-            alm_module))
-        self.assertIsNone(check_env.import_blocker(
-            {"importable": False, "error": "ModuleNotFoundError: No module named 'simsopt.solve.alm'"},
-            alm_module))
-        self.assertIsNone(check_env.import_blocker({"importable": True, "error": None}, alm_module))
+    def test_an_absent_package_is_not_a_blocker_and_a_broken_one_is(self):
+        for module in check_env.ALM_MODULES:
+            with self.subTest(module=module):
+                self.assertIsNone(check_env.import_blocker(
+                    {"importable": False, "error": "ModuleNotFoundError: No module named 'simsopt_alm'"}, module))
+                self.assertIsNone(check_env.import_blocker({"importable": True, "error": None}, module))
+                self.assertIn(f"{module} exists but fails to import", check_env.import_blocker(
+                    {"importable": False, "error": "ImportError: cannot import name 'nnls' from 'scipy.optimize'"},
+                    module))
 
-    def test_a_broken_signed_constraints_module_blocks(self):
-        signed = check_env.SIGNED_CONSTRAINTS_MODULE
-        self.assertIsNone(check_env.import_blocker(
-            {"importable": False, "error": f"ModuleNotFoundError: No module named '{signed}'"}, signed))
-        self.assertIn(f"{signed} exists but fails to import", check_env.import_blocker(
-            {"importable": False, "error": "NameError: name 'Derivative' is not defined"}, signed))
-
-    def test_merging_routes_need_a_clean_tree(self):
-        dirty = {"git": {"dirty": True}}
-        clean = {"git": {"dirty": False}}
-        for route in ("upstream", "merge-fork"):
-            with self.subTest(route=route):
-                self.assertEqual(len(check_env.route_blockers(route, dirty)), 1)
-                self.assertEqual(check_env.route_blockers(route, clean), [])
-        self.assertEqual(check_env.route_blockers("copy", None), [])
-
-    def test_the_default_fork_is_the_published_alm_library_repository(self):
+    def test_the_default_install_is_the_published_alm_library_package(self):
         self.assertEqual(check_env.FORK_URL, "https://github.com/jungdaesuh/simsopt.git")
-        self.assertEqual(
-            check_env.normalized_repository(check_env.FORK_URL), "github.com/jungdaesuh/simsopt"
-        )
+        self.assertEqual(check_env.install_url(check_env.FORK_URL),
+                         "git+https://github.com/jungdaesuh/simsopt.git@alm-library#subdirectory=packages/simsopt-alm")
         for path in sorted(SKILL_DIR.rglob("*")) + [REPO_ROOT / "docs" / "alm_setup_guide.md"]:
             if path.is_file() and path.suffix in (".md", ".py"):
                 with self.subTest(path=path.name):
                     self.assertNotIn("<owner>", path.read_text(encoding="utf-8"))
-
-    def test_repository_urls_compare_by_host_owner_and_name(self):
-        for url in ("git@github.com:hiddenSymmetries/simsopt.git",
-                    "https://github.com/hiddenSymmetries/simsopt",
-                    "https://user@GitHub.com/hiddenSymmetries/simsopt.git/"):
-            with self.subTest(url=url):
-                self.assertEqual(check_env.normalized_repository(url), check_env.UPSTREAM_REPOSITORY)
 
 
 class SkillScriptsRunTests(unittest.TestCase):
@@ -815,60 +762,70 @@ class SkillScriptsRunTests(unittest.TestCase):
         self.addCleanup(scratch.cleanup)
         self.scratch = Path(scratch.name)
 
-    def test_check_env_reports_this_tree_ready(self):
-        completed = run_python([str(SCRIPTS_DIR / "check_env.py"), "--python", sys.executable,
-                                "--checkout", str(REPO_ROOT)], cwd=self.scratch)
-        report = result_line(completed, check_env.RESULT_PREFIX)
+    def check_env(self, python: str, *arguments: str) -> tuple:
+        completed = run_python([str(SCRIPTS_DIR / "check_env.py"), "--python", python, *arguments],
+                               cwd=self.scratch)
+        return completed, result_line(completed, check_env.RESULT_PREFIX)
+
+    def test_check_env_reports_this_interpreter_ready(self):
+        completed, report = self.check_env(sys.executable)
         self.assertEqual(report["route"], "ready", report)
         self.assertEqual(completed.returncode, 0)
+        self.assertEqual(report["blockers"], [])
         self.assertTrue(report["python"]["meets_floor"])
-        self.assertTrue(report["alm"]["importable"])
-        self.assertTrue(report["signed_constraints"]["importable"])
-        self.assertTrue(report["checkout"]["has_alm_sources"])
         self.assertEqual(report["templates"], {"generic": True, "stage2": True, "boozer_single_stage": True})
-        # Provenance: the checkout's HEAD (the installed version string is
-        # fixed at install time) and the files the imports resolve to.
+        # Provenance: the files the imports resolve to and the installed distribution.
+        alm_file = os.path.realpath(alm.__file__)
+        self.assertEqual(report["alm"]["file"], alm_file)
+        self.assertEqual(report["signed_constraints"]["file"], os.path.realpath(signed_constraints.__file__))
+        self.assertEqual(report["distribution"]["version"],
+                         re.search(r'^version = "([^"]+)"', (DISTRIBUTION_ROOT / "pyproject.toml").read_text(),
+                                   re.MULTILINE).group(1))
+        self.assertIn(f"import simsopt_alm: {alm_file}", completed.stdout.splitlines())
+
+    def test_check_env_with_this_clone_needs_its_editable_install(self):
+        """``--checkout`` names this repository: ``ready`` only when this
+        interpreter imports the clone's own package, else ``editable``."""
+        completed, report = self.check_env(sys.executable, "--checkout", str(REPO_ROOT))
+        imports_the_clone = (DISTRIBUTION_ROOT / "src").resolve() in PACKAGE_DIR.parents
+        self.assertEqual(report["route"], "ready" if imports_the_clone else "editable", report)
+        self.assertEqual(report["blockers"], [])
+        self.assertTrue(report["checkout"]["is_alm_clone"])
         head = subprocess.run(["git", "-C", str(REPO_ROOT), "rev-parse", "HEAD"], capture_output=True,
                               text=True, check=True).stdout.strip()
         self.assertEqual(report["checkout"]["git"]["head"], head)
-        alm_file = os.path.realpath(PACKAGE_DIR / "__init__.py")
-        self.assertEqual(report["alm"]["file"], alm_file)
-        self.assertEqual(report["simsopt"]["file"], os.path.realpath(SRC_DIR / "simsopt" / "__init__.py"))
-        printed = completed.stdout.splitlines()
-        self.assertIn(f"import simsopt.solve.alm: {alm_file}", printed)
-        self.assertTrue(any(line.startswith("checkout: ") and head in line for line in printed), printed)
+        self.assertTrue(any(line.startswith("checkout: ") and head in line
+                            for line in completed.stdout.splitlines()), completed.stdout)
 
     def isolated_python(self) -> Path:
-        """An interpreter without site-packages or PYTHONPATH: no simsopt, as
-        in a fresh environment."""
+        """An interpreter without site-packages or PYTHONPATH: no simsopt and
+        no package, as in a fresh environment."""
         wrapper = self.scratch / "fresh-python"
         wrapper.write_text(f'#!/bin/sh\nexec "{sys.executable}" -I -S "$@"\n')
         wrapper.chmod(0o755)
         return wrapper
 
-    def test_check_env_without_simsopt_offers_the_install_route(self):
-        """A fresh interpreter and a simsopt source checkout: install the
-        checkout (editable) and rerun, not a dead-end blocker."""
-        completed = run_python([str(SCRIPTS_DIR / "check_env.py"), "--python", str(self.isolated_python()),
-                                "--checkout", str(REPO_ROOT)], cwd=self.scratch)
-        report = result_line(completed, check_env.RESULT_PREFIX)
+    def test_check_env_in_a_fresh_interpreter_offers_the_install_routes(self):
+        fresh = str(self.isolated_python())
+        completed, report = self.check_env(fresh)
         self.assertEqual(report["route"], "install", report)
         self.assertEqual(report["blockers"], [])
         self.assertEqual(completed.returncode, 1)
-        self.assertTrue(report["checkout"]["is_simsopt_source"])
+        self.assertEqual(report["install_url"], check_env.install_url(check_env.FORK_URL))
         self.assertFalse(report["simsopt"]["importable"])
+        self.assertEqual(set(report["templates"].values()), {False})
+        self.assertTrue(any("only the generic template" in note for note in report["notes"]), report["notes"])
 
-    def test_check_env_without_simsopt_or_a_source_checkout_asks_for_one(self):
-        fresh = str(self.isolated_python())
-        (self.scratch / "not-simsopt").mkdir()
-        for arguments in ([], ["--checkout", str(self.scratch / "not-simsopt")]):
-            with self.subTest(arguments=arguments):
-                completed = run_python([str(SCRIPTS_DIR / "check_env.py"), "--python", fresh, *arguments],
-                                       cwd=self.scratch)
-                report = result_line(completed, check_env.RESULT_PREFIX)
-                self.assertEqual(report["route"], "blocked", report)
-                self.assertEqual(len(report["blockers"]), 1, report)
-                self.assertIn("--checkout", report["blockers"][0])
+        new_clone = self.scratch / "new-clone"
+        _completed, report = self.check_env(fresh, "--checkout", str(new_clone))
+        self.assertEqual(report["route"], "editable", report)
+        self.assertFalse(report["checkout"]["exists"])
+
+        (self.scratch / "not-a-clone").mkdir()
+        _completed, report = self.check_env(fresh, "--checkout", str(self.scratch / "not-a-clone"))
+        self.assertEqual(report["route"], "blocked", report)
+        self.assertEqual(len(report["blockers"]), 1, report)
+        self.assertIn("is not a clone of the alm-library branch", report["blockers"][0])
 
     def run_contract_probe(self, script: str, names: tuple, values: tuple) -> subprocess.CompletedProcess:
         source = (CONTRACT_PROBE_PROBLEM.replace("NAMES_VALUE", repr(names))

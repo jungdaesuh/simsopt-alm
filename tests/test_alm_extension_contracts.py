@@ -5,7 +5,6 @@ by inheritance, the rest optional; Python 3.9 has no ``Required``), and
 ``ALMEvaluator`` / ``CachedALMEvaluator`` the callables; ``minimize_alm`` and
 ``cached_alm_evaluator`` are annotated with them. The all-or-none hybrid
 quartet stays a runtime check: four optional keys cannot say "all or none".
-The generated API docs cover the plugin and policy modules.
 """
 
 import ast
@@ -20,13 +19,12 @@ from pathlib import Path
 
 import numpy as np
 
-import simsopt.solve.alm as alm
-from simsopt.solve.alm import boundary, checkpoint, continuation, control, core
-from simsopt.solve.alm import evaluation, events, history, hybrid, inner, policy
-from simsopt.solve.alm import problem, taylor
+import simsopt_alm as alm
+from simsopt_alm import boundary, checkpoint, continuation, control, core
+from simsopt_alm import evaluation, events, history, hybrid, inner, policy
+from simsopt_alm import problem, taylor
 
-DOCS_ALM_RST = Path(__file__).resolve().parents[2] / "docs" / "source" / "simsopt.solve.alm.rst"
-EXAMPLES_DIR = Path(__file__).resolve().parents[2] / "examples" / "2_Intermediate"
+EXAMPLES_DIR = Path(__file__).resolve().parents[1] / "examples"
 if str(EXAMPLES_DIR) not in sys.path:
     sys.path.insert(0, str(EXAMPLES_DIR))
 
@@ -309,7 +307,9 @@ class AlmEvaluationSchemaCompletenessTests(unittest.TestCase):
     application adds beyond these stay undeclared diagnostics."""
 
     def test_the_package_module_list_is_complete(self):
-        on_disk = {path.stem for path in Path(alm.__file__).parent.glob("*.py")}
+        # Every solver module; signed_constraints (simsopt geometry rows) is
+        # an evaluator-side module the solver never reads.
+        on_disk = {path.stem for path in Path(alm.__file__).parent.glob("*.py")} - {"signed_constraints"}
         scanned = {Path(module.__file__).stem for module in ALM_MODULES}
         self.assertEqual(scanned, on_disk)
 
@@ -394,7 +394,7 @@ class AlmEvaluationSchemaCompletenessTests(unittest.TestCase):
 
 
 class AlmTypedEvaluatorExampleTests(unittest.TestCase):
-    """``examples/2_Intermediate/alm_typed_evaluator_example.py``: an evaluator
+    """``examples/alm_typed_evaluator_example.py``: an evaluator
     typed against the schema, with optional keys and an application key
     declared by subclassing it."""
 
@@ -463,29 +463,6 @@ class AlmEvaluatorProtocolTests(unittest.TestCase):
         for name in ("ALMEvaluation", "ALMEvaluator", "CachedALMEvaluator"):
             with self.subTest(name=name):
                 self.assertIn(name, alm.__all__)
-
-
-class AlmApiDocumentationTests(unittest.TestCase):
-    def test_the_generated_docs_cover_the_extension_modules(self):
-        text = DOCS_ALM_RST.read_text(encoding="utf-8")
-        for module in (
-            "simsopt.solve.alm",
-            "simsopt.solve.alm.policy",
-            "simsopt.solve.alm.continuation",
-            "simsopt.solve.alm.events",
-            "simsopt.solve.alm.boundary",
-            "simsopt.solve.alm.evaluation",
-            "simsopt.solve.alm.problem",
-            "simsopt.solve.alm.history",
-            "simsopt.solve.alm.checkpoint",
-        ):
-            with self.subTest(module=module):
-                self.assertIn(f".. automodule:: {module}\n", text)
-
-    def test_the_solve_page_links_the_alm_page(self):
-        text = (DOCS_ALM_RST.parent / "simsopt.solve.rst").read_text(encoding="utf-8")
-        self.assertIn(".. toctree::", text)
-        self.assertIn("\n   simsopt.solve.alm\n", text)
 
 
 if __name__ == "__main__":

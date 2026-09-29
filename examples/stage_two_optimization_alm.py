@@ -2,9 +2,9 @@
 r"""
 Stage-II coil optimization with the augmented Lagrangian (ALM) solver.
 
-This is the problem of ``stage_two_optimization.py`` (same target equilibrium,
-same initial coils), but the coil-regularity terms are constraints
-``g_i(x) <= 0`` instead of weighted penalties:
+This is the problem of simsopt's ``examples/2_Intermediate/stage_two_optimization.py``
+(same target equilibrium, same initial coils), but the coil-regularity terms
+are constraints ``g_i(x) <= 0`` instead of weighted penalties:
 
     minimize    (1/2) \int |B dot n|^2 ds + LENGTH_WEIGHT * (sum CurveLength)
     subject to  CC_THRESHOLD - (min coil-to-coil distance)      <= 0
@@ -12,7 +12,7 @@ same initial coils), but the coil-regularity terms are constraints
                 max(curvature) - CURVATURE_THRESHOLD            <= 0   (each base coil)
                 MeanSquaredCurvature - MSC_THRESHOLD            <= 0   (each base coil)
 
-The distance and curvature rows come from ``simsopt.geo.signed_constraints``:
+The distance and curvature rows come from ``simsopt_alm.signed_constraints``:
 smooth (log-sum-exp) signed values that keep their slack when inactive, unlike
 the hinge objectives ``CurveCurveDistance`` or ``LpCurveCurvature``. They are
 conservative (the smoothed minimum distance is at most the true one, the
@@ -30,16 +30,17 @@ from pathlib import Path
 
 import numpy as np
 
+import simsopt_alm
 from simsopt.field import BiotSavart, Current, coils_via_symmetries
 from simsopt.geo import (SurfaceRZFourier, curves_to_vtk, create_equally_spaced_curves,
                          CurveLength, MeanSquaredCurvature)
-from simsopt.geo.signed_constraints import (smooth_max_curvature_signed_constraint,
+from simsopt.objectives import SquaredFlux
+from simsopt.util import in_github_actions
+from simsopt_alm import (ALMSettings, alm_problem_physics, cached_alm_evaluator,
+                         minimize_alm, run_directional_taylor_test, signed_upper_bound)
+from simsopt_alm.signed_constraints import (smooth_max_curvature_signed_constraint,
                                             smooth_min_curve_curve_signed_constraint,
                                             smooth_min_curve_surface_signed_constraint)
-from simsopt.objectives import SquaredFlux
-from simsopt.solve.alm import (ALMSettings, alm_problem_physics, cached_alm_evaluator,
-                               minimize_alm, run_directional_taylor_test, signed_upper_bound)
-from simsopt.util import in_github_actions
 
 # Coils and weights as in stage_two_optimization.py:
 ncoils = 4
@@ -69,9 +70,9 @@ CURVATURE_TEMPERATURE = 0.05
 MAXITER = 50 if in_github_actions else 400
 MAX_OUTER_ITERATIONS = 3 if in_github_actions else 10
 
-# File for the desired boundary magnetic surface:
-TEST_DIR = (Path(__file__).parent / ".." / ".." / "tests" / "test_files").resolve()
-filename = TEST_DIR / 'input.LandremanPaul2021_QA'
+# File for the desired boundary magnetic surface (the QA target of
+# stage_two_optimization.py, shipped with the package):
+filename = Path(simsopt_alm.__file__).parent / "data" / "input.LandremanPaul2021_QA"
 
 # Directory for output
 OUT_DIR = "./output/"

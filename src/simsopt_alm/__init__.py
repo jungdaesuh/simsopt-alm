@@ -33,7 +33,7 @@ Hybrid signals: an evaluator that smooths g returns all four of
 ``surrogate_signed_constraint_values``, ``hard_dual_update_values``, or none.
 L uses the surrogate g, the dual update uses the hard g, and a disagreement
 blocks ``success``. A missing member raises ``KeyError``. What a step does
-under a disagreement is in :mod:`simsopt.solve.alm.hybrid`, which no evaluator
+under a disagreement is in :mod:`simsopt_alm.hybrid`, which no evaluator
 without the quartet reaches.
 
 Stateful evaluators (e.g. warm-started inner solves) pass both
@@ -47,8 +47,8 @@ restore flag and reason, the final evaluation and the last inner result.
 A toy problem, min ||x||^2 s.t. 1 - x0 <= 0 (solution x = (1, 0))::
 
     import numpy as np
-    from simsopt.solve.alm import (ALMPhysics, ALMSettings, cached_alm_evaluator,
-                                   minimize_alm)
+    from simsopt_alm import (ALMPhysics, ALMSettings, cached_alm_evaluator,
+                             minimize_alm)
 
     def physics(x):
         return ALMPhysics(
@@ -109,7 +109,7 @@ need. It holds:
   counters, cap flags and the sufficient-decrease carrier), the content of a
   checkpoint. Accepted states inside it are the caller's own objects.
 
-History: the opt-in ``simsopt.solve.alm.history.ALMHistoryRecorder`` builds
+History: the opt-in ``simsopt_alm.history.ALMHistoryRecorder`` builds
 one entry per event (``recorder.record`` as ``on_outer_step``, then
 ``recorder.history()``, owned copies); ``ALMHistoryRecorder.from_settings``
 keeps ``settings.history_max_entries`` of them.
@@ -121,16 +121,16 @@ run can continue), the constraint names and blocks, the caller's accepted state
 at that x (``snapshot_accepted_state_fn()``, called only when a boundary is
 built), and ``state``, an :class:`ALMLoopState`. A resumable boundary restarts
 the run as ``minimize_alm(resume_from=boundary)`` with the same x0, names and
-blocks. The opt-in ``simsopt.solve.alm.checkpoint`` module turns boundaries
+blocks. The opt-in ``simsopt_alm.checkpoint`` module turns boundaries
 into ``ALMTransitionSnapshot`` checkpoints and back
 (``alm_checkpointing(inner_options, resume_state, completed_outer_callback)``
 returns the three ``minimize_alm`` arguments).
 
 Continuation policy: the loop measures, solves and executes; an
-``ALMContinuationPolicy`` (:mod:`simsopt.solve.alm.policy`) decides each step
+``ALMContinuationPolicy`` (:mod:`simsopt_alm.policy`) decides each step
 (inner-solve options, stalled-trial retries, convergence, dual update,
 penalty raise or hold, another subproblem, stop) from a read-only view of the
-measurements (:mod:`simsopt.solve.alm.continuation`).
+measurements (:mod:`simsopt_alm.continuation`).
 ``minimize_alm(continuation_policy=...)`` defaults to
 ``DefaultContinuationPolicy``. The loop executes a policy's convergence
 decision as given, so the success guarantees hold for

@@ -16,7 +16,7 @@ import unittest
 
 import numpy as np
 
-from simsopt.solve.alm import (
+from simsopt_alm import (
     ALMPhysics,
     ALMSettings,
     cached_alm_evaluator,

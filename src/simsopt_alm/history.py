@@ -6,7 +6,7 @@ drivers and artifact writers read: 52 shared keys per entry
 (`_build_alm_history_entry`), the conditioning metrics, the decision
 annotations, and per-constraint diagnostics that are materialized only for
 surviving entries, once, when a callback or ``history()`` first needs them.
-Importing :mod:`simsopt.solve.alm` does not load this module.
+Importing :mod:`simsopt_alm` does not load this module.
 """
 
 from __future__ import annotations

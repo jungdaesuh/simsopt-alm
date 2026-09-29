@@ -17,8 +17,8 @@ from types import MappingProxyType
 
 import numpy as np
 
-import simsopt.solve.alm as alm
-from simsopt.solve.alm import (
+import simsopt_alm as alm
+from simsopt_alm import (
     ALMPhysics,
     ALMSettings,
     augmented_inequality_objective,
