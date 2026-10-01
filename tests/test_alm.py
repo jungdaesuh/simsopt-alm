@@ -195,6 +195,26 @@ class AlmPublicApiTests(unittest.TestCase):
             with self.subTest(name=name):
                 self.assertTrue(hasattr(alm, name))
 
+    def test_import_binds_the_policy_facade_and_no_internal_module(self):
+        # 0.1.0's ``import simsopt_alm`` bound eleven submodules. ``policy`` is
+        # public: it stays bound (the policy facade, its 0.1.0 names included).
+        # core, control, inner, continuation, events, boundary, evaluation,
+        # hybrid, problem and taylor were internal and are gone. A fresh
+        # interpreter: this process may have imported the facade itself.
+        probe = (
+            "import json, types, simsopt_alm\n"
+            "policy = simsopt_alm.policy\n"
+            "policy.DefaultContinuationPolicy, policy.ALMContinuationPolicy\n"
+            "assert simsopt_alm.minimize_alm.__defaults__[-1] is policy.DEFAULT_CONTINUATION_POLICY\n"
+            "print(json.dumps(sorted(name for name, value in vars(simsopt_alm).items()\n"
+            "                        if isinstance(value, types.ModuleType))))\n"
+        )
+        completed = subprocess.run(
+            [sys.executable, "-c", probe], capture_output=True, text=True, check=False
+        )
+        self.assertEqual(completed.returncode, 0, completed.stdout + completed.stderr)
+        self.assertEqual(completed.stdout.strip(), '["_src", "policy"]')
+
 
 class AlmModuleOwnershipTests(unittest.TestCase):
     def test_the_math_module_owns_the_math(self):

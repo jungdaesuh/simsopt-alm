@@ -8,9 +8,11 @@
   public facades. Solver behavior is unchanged: every golden trajectory
   replays byte-identically.
 - Public imports: everything in `simsopt_alm.__all__` imports from
-  `simsopt_alm` as before. `simsopt_alm.policy` exports what a policy author
-  needs (the protocol, `DefaultContinuationPolicy`, the views, the decisions
-  and `ALMInnerPlan`); `simsopt_alm.checkpoint` exports checkpoint/resume
+  `simsopt_alm` as before, and `import simsopt_alm` still binds
+  `simsopt_alm.policy`. `simsopt_alm.policy` exports what a policy author
+  needs (the protocol, `DefaultContinuationPolicy` and its instance
+  `DEFAULT_CONTINUATION_POLICY`, the views, the decisions and
+  `ALMInnerPlan`); `simsopt_alm.checkpoint` exports checkpoint/resume
   (`alm_checkpointing`, the snapshot types, `transition_snapshot`,
   `resume_boundary`, `ALMOuterBoundary`) and `ALMProcessBudgetExhausted`;
   `simsopt_alm.history` exports `ALMHistoryRecorder`.

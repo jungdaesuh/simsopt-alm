@@ -2,7 +2,7 @@
 
 ``minimize_alm(continuation_policy=...)`` takes any object with the methods
 of :class:`ALMContinuationPolicy`; :class:`DefaultContinuationPolicy` is the
-default. A policy reads one view per call (:class:`ALMInnerPlanView`,
+default (its instance ``DEFAULT_CONTINUATION_POLICY``). A policy reads one view per call (:class:`ALMInnerPlanView`,
 :class:`ALMStalledTrialView`, :class:`ALMPreInnerView`,
 :class:`ALMPostInnerView`) and returns an :class:`ALMInnerPlan`, a retry
 radius, or a decision (:class:`ALMConverge`, :class:`ALMStop`,
@@ -21,11 +21,12 @@ from ._src.policy.decisions import (
     ALMStepDecision,
     ALMStop,
 )
-from ._src.policy.default import ALMContinuationPolicy, DefaultContinuationPolicy
+from ._src.policy.default import DEFAULT_CONTINUATION_POLICY, ALMContinuationPolicy, DefaultContinuationPolicy
 from ._src.policy.plan import ALMInnerPlan
 from ._src.policy.views import ALMInnerPlanView, ALMPostInnerView, ALMPreInnerView, ALMStalledTrialView
 
 __all__ = [
+    "DEFAULT_CONTINUATION_POLICY",
     "ALMContinuationPolicy",
     "ALMContinue",
     "ALMConverge",

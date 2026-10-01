@@ -159,6 +159,9 @@ initial value).
 
 from __future__ import annotations
 
+# The policy facade stays bound to the package, as in 0.1.0 (not in __all__);
+# the checkpoint and history plugins load only when imported.
+from . import policy as policy
 from ._src.alm_math import augmented_inequality_objective, normalize_alm_constraints
 from ._src.checkpoint.boundary import ALMOuterBoundary
 from ._src.loop.outer import ALMLastIterate, ALMResult, minimize_alm
