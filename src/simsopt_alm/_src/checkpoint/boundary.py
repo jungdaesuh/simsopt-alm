@@ -1,13 +1,13 @@
 """The ALM loop between two outer iterations, and the rules it obeys.
 
-:func:`~.control.minimize_alm` passes an :class:`ALMOuterBoundary` to
+:func:`~..loop.outer.minimize_alm` passes an :class:`ALMOuterBoundary` to
 ``on_outer_boundary`` after each completed outer iteration and once when it
 returns, and resumes from a non-terminal one (``resume_from``). The rules a
 boundary obeys (:func:`_validate_alm_boundary_fields`: finite typed vectors,
 nonnegative multipliers, positive penalty and tolerances, consistent names,
 blocks, cap indices, sufficient-decrease carriers and geometry identity) are
 checked in one place for both the checkpoint snapshot
-(:mod:`.checkpoint`) and ``resume_from`` (:func:`_validate_resume_boundary`).
+(:mod:`.snapshot`) and ``resume_from`` (:func:`_validate_resume_boundary`).
 """
 
 from __future__ import annotations
@@ -18,12 +18,8 @@ from typing import Generic, Mapping, Optional, Sequence, Tuple
 
 import numpy as np
 
-from .events import (
-    AcceptedStateT,
-    ALMLoopState,
-    _require_acyclic_containers,
-    _validate_geometry_identity_pair,
-)
+from ..loop.events import _require_acyclic_containers
+from ..state import AcceptedStateT, ALMLoopState, _validate_geometry_identity_pair
 
 @dataclass(frozen=True)
 class ALMOuterBoundary(Generic[AcceptedStateT]):

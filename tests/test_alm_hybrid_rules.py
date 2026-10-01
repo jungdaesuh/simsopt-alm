@@ -1,4 +1,4 @@
-"""``simsopt_alm.hybrid``: the signal-mismatch arms, reachable only with
+"""``simsopt_alm._src.policy.hybrid``: the signal-mismatch arms, reachable only with
 the hybrid quartet.
 
 The hybrid module owns what a hard-feasible step does while the surrogate and
@@ -17,14 +17,14 @@ from pathlib import Path
 from typing import List, Set
 from unittest.mock import patch
 
-from simsopt_alm import hybrid
+from simsopt_alm._src.policy import hybrid
 
 GOLDEN_DIR = Path(__file__).resolve().parent / "alm_golden"
 if str(GOLDEN_DIR) not in sys.path:
     sys.path.insert(0, str(GOLDEN_DIR))
 import alm_golden_scenarios as golden  # noqa: E402
 
-PACKAGE_ROOT = Path(hybrid.__file__).resolve().parent
+PACKAGE_ROOT = Path(hybrid.__file__).resolve().parents[2]
 
 # Goldens whose evaluators return no hybrid quartet.
 NON_HYBRID_GOLDENS = (
@@ -104,15 +104,16 @@ def _imports_hybrid(path: Path) -> bool:
 class AlmHybridImportBoundaryTests(unittest.TestCase):
     def test_only_the_default_policy_module_imports_hybrid(self):
         importers = sorted(
-            path.name
-            for path in PACKAGE_ROOT.glob("*.py")
+            path.relative_to(PACKAGE_ROOT).as_posix()
+            for path in PACKAGE_ROOT.rglob("*.py")
             if path.name != "hybrid.py" and _imports_hybrid(path)
         )
-        self.assertEqual(importers, ["policy.py"])
+        self.assertEqual(importers, ["_src/policy/default.py"])
 
     def test_hybrid_imports_neither_the_loop_nor_a_plugin(self):
-        imported = _imported_modules(PACKAGE_ROOT / "hybrid.py")
-        for forbidden in (".control", ".policy", ".history", ".checkpoint"):
+        imported = _imported_modules(PACKAGE_ROOT / "_src" / "policy" / "hybrid.py")
+        self.assertLessEqual({".decisions", ".views"}, imported)
+        for forbidden in ("..loop.outer", ".default", "..loop.history", "..checkpoint.snapshot"):
             with self.subTest(module=forbidden):
                 self.assertNotIn(forbidden, imported)
 

@@ -23,7 +23,7 @@ from unittest.mock import patch
 import numpy as np
 
 import simsopt_alm as alm
-from simsopt_alm import control as alm_control
+from simsopt_alm._src.loop import outer as alm_outer
 from simsopt_alm.history import ALMHistoryRecorder
 
 GOLDEN_DIR = Path(__file__).resolve().parent / "alm_golden"
@@ -47,7 +47,7 @@ def captured_library_runs():
     """Each library ``minimize_alm`` call in this block, as
     ``(settings, events, lean result)``."""
     runs: list = []
-    library_minimize_alm = alm_control.minimize_alm
+    library_minimize_alm = alm_outer.minimize_alm
 
     def observed_minimize_alm(*args, on_outer_step=None, **kwargs):
         settings = args[3] if len(args) > 3 else kwargs["settings"]
@@ -63,7 +63,7 @@ def captured_library_runs():
         runs[-1] = (settings, events, result)
         return result
 
-    with patch.object(alm_control, "minimize_alm", observed_minimize_alm):
+    with patch.object(alm_outer, "minimize_alm", observed_minimize_alm):
         yield runs
 
 
@@ -358,7 +358,8 @@ class AlmLibraryWithoutRecorderTests(unittest.TestCase):
         probe = (
             "import sys\n"
             "import simsopt_alm\n"
-            "sys.exit(1 if 'simsopt_alm.history' in sys.modules else 0)\n"
+            "plugin = ('simsopt_alm.history', 'simsopt_alm._src.loop.history')\n"
+            "sys.exit(1 if any(name in sys.modules for name in plugin) else 0)\n"
         )
         completed = subprocess.run(
             [sys.executable, "-c", probe], capture_output=True, text=True, check=False
@@ -379,8 +380,8 @@ class AlmLoopOwnsNoHistoryTests(unittest.TestCase):
         )
     )
 
-    def test_control_defines_no_history_builder(self):
-        tree = ast.parse((PACKAGE_ROOT / "control.py").read_text(encoding="utf-8"))
+    def test_the_outer_loop_defines_no_history_builder(self):
+        tree = ast.parse((PACKAGE_ROOT / "_src" / "loop" / "outer.py").read_text(encoding="utf-8"))
         defined = {
             node.name
             for node in tree.body
@@ -390,11 +391,11 @@ class AlmLoopOwnsNoHistoryTests(unittest.TestCase):
 
     def test_loop_state_and_entry_point_carry_no_history(self):
         self.assertNotIn(
-            "history", alm_control.ALMRunState.__dataclass_fields__
+            "history", alm_outer.ALMRunState.__dataclass_fields__
         )
         self.assertNotIn(
             "history_callback",
-            inspect.signature(alm_control.minimize_alm).parameters,
+            inspect.signature(alm_outer.minimize_alm).parameters,
         )
 
 

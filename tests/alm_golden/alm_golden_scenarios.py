@@ -59,9 +59,8 @@ from simsopt_alm import (
     augmented_inequality_objective,
     cached_alm_evaluator,
 )
-from simsopt_alm import control as alm_control
-from simsopt_alm.checkpoint import alm_checkpointing
-from simsopt_alm.control import ALMProcessBudgetExhausted
+from simsopt_alm._src.loop import outer as alm_outer
+from simsopt_alm.checkpoint import ALMProcessBudgetExhausted, alm_checkpointing
 from simsopt_alm.history import ALMHistoryRecorder
 
 FIXTURE_DIR = Path(__file__).resolve().parent
@@ -821,7 +820,7 @@ def execute(run: ScenarioRun) -> RunRecord:
     result = None
     try:
         # Looked up at call time, so a test can observe each library call.
-        result = alm_control.minimize_alm(
+        result = alm_outer.minimize_alm(
             np.asarray(run.x0, dtype=float).copy(),
             list(run.constraint_names),
             recorder.wrap_evaluate(evaluate),

@@ -25,7 +25,7 @@ from typing import Callable, Optional, Sequence, Tuple
 
 import numpy as np
 
-from .core import _as_float_list
+from ..alm_math import _as_float_list
 
 _DEFAULT_TAYLOR_EPSILONS = tuple(float(0.5**power) for power in range(7, 13))
 

@@ -20,7 +20,7 @@ from pathlib import Path
 import numpy as np
 
 import simsopt_alm as alm
-from simsopt_alm import continuation as alm_continuation
+from simsopt_alm import policy as alm_policy
 from simsopt_alm.policy import ALMContinuationPolicy, DefaultContinuationPolicy
 
 GOLDEN_DIR = Path(__file__).resolve().parent / "alm_golden"
@@ -120,11 +120,11 @@ class AlmBorrowedPolicyViewTests(unittest.TestCase):
 
 class AlmPolicyViewTypeTests(unittest.TestCase):
     def test_the_after_inner_view_requires_the_inner_solve(self):
-        post_inner = alm_continuation.ALMPostInnerView
-        pre_inner = alm_continuation.ALMPreInnerView
+        post_inner = alm_policy.ALMPostInnerView
+        pre_inner = alm_policy.ALMPreInnerView
         self.assertIn("inner", [field.name for field in dataclasses.fields(post_inner)])
         self.assertNotIn("inner", [field.name for field in dataclasses.fields(pre_inner)])
-        self.assertFalse(hasattr(alm_continuation, "ALMStepView"))
+        self.assertFalse(hasattr(alm_policy, "ALMStepView"))
         with self.assertRaises(TypeError):
             post_inner(
                 settings=alm.ALMSettings(), outer_iteration=1, continuation_iteration=0,
@@ -135,8 +135,8 @@ class AlmPolicyViewTypeTests(unittest.TestCase):
     def test_the_protocol_names_the_view_each_call_gets(self):
         before = typing.get_type_hints(ALMContinuationPolicy.before_inner)["view"]
         after = typing.get_type_hints(ALMContinuationPolicy.after_inner)["view"]
-        self.assertIs(before, alm_continuation.ALMPreInnerView)
-        self.assertIs(after, alm_continuation.ALMPostInnerView)
+        self.assertIs(before, alm_policy.ALMPreInnerView)
+        self.assertIs(after, alm_policy.ALMPostInnerView)
 
     def test_the_loop_hands_each_call_its_view_type(self):
         seen = {"before_inner": set(), "after_inner": set()}

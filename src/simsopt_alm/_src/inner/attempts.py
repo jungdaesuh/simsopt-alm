@@ -24,27 +24,22 @@ from typing import Callable, List, Optional, Tuple
 import numpy as np
 from scipy.optimize import minimize
 
-from .continuation import ALMInnerPlanView, ALMStalledTrialView
-from .core import (
-    ALMSettings,
-    _bound_reduced_stationarity_norm,
-    _constraint_routing_state,
-    _extract_constraint_state,
-    _nonnegative_alm_integer,
-)
-from .evaluation import (
-    _attach_alm_constraint_metadata,
-    _contract_checked_evaluation,
-    _unusable_evaluation_fields,
-    _search_step_rejected,
-)
-from .events import _borrowed_read_only_value, _require_acyclic_containers
-from .policy import (
+from ..alm_math import _bound_reduced_stationarity_norm, _constraint_routing_state, _extract_constraint_state
+from ..loop.events import _borrowed_read_only_value, _require_acyclic_containers
+from ..policy.default import (
     DEFAULT_CONTINUATION_POLICY,
     ALMContinuationPolicy,
     _dual_update_gate_satisfied,
     _positive_alm_integer,
 )
+from ..policy.views import ALMInnerPlanView, ALMStalledTrialView
+from ..problem.evaluation import (
+    _attach_alm_constraint_metadata,
+    _contract_checked_evaluation,
+    _unusable_evaluation_fields,
+    _search_step_rejected,
+)
+from ..settings.settings import ALMSettings, _nonnegative_alm_integer
 
 def _inner_options_with_remaining_maxiter(
     inner_options: Optional[dict],

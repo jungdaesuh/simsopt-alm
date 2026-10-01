@@ -20,9 +20,21 @@ from pathlib import Path
 import numpy as np
 
 import simsopt_alm as alm
-from simsopt_alm import boundary, checkpoint, continuation, control, core
-from simsopt_alm import evaluation, events, history, hybrid, inner, policy
-from simsopt_alm import problem, taylor
+from simsopt_alm import _src, checkpoint, history, policy
+from simsopt_alm._src import alm_math, state
+from simsopt_alm._src import checkpoint as checkpoint_package
+from simsopt_alm._src import inner as inner_package
+from simsopt_alm._src import loop as loop_package
+from simsopt_alm._src import policy as policy_package
+from simsopt_alm._src import problem as problem_package
+from simsopt_alm._src import settings as settings_package
+from simsopt_alm._src.checkpoint import boundary, codec, snapshot
+from simsopt_alm._src.inner import attempts
+from simsopt_alm._src.loop import events, outer
+from simsopt_alm._src.loop import history as loop_history
+from simsopt_alm._src.policy import decisions, default, hybrid, plan, views
+from simsopt_alm._src.problem import evaluation, physics, taylor
+from simsopt_alm._src.settings import settings
 
 EXAMPLES_DIR = Path(__file__).resolve().parents[1] / "examples"
 if str(EXAMPLES_DIR) not in sys.path:
@@ -30,8 +42,12 @@ if str(EXAMPLES_DIR) not in sys.path:
 
 import alm_typed_evaluator_example as typed_example  # noqa: E402
 
-ALM_MODULES = (alm, boundary, checkpoint, continuation, control, core, evaluation,
-               events, history, hybrid, inner, policy, problem, taylor)
+# Every module of the package: the facades and the implementation (``_src``).
+ALM_MODULES = (alm, checkpoint, history, policy, _src, alm_math, state,
+               checkpoint_package, boundary, codec, snapshot, inner_package, attempts,
+               loop_package, events, loop_history, outer, policy_package, decisions, default,
+               hybrid, plan, views, problem_package, evaluation, physics, taylor,
+               settings_package, settings)
 
 REQUIRED_KEYS = {
     "total",
@@ -318,9 +334,13 @@ class AlmEvaluationSchemaCompletenessTests(unittest.TestCase):
     def test_the_package_module_list_is_complete(self):
         # Every solver module; signed_constraints (simsopt geometry rows) is
         # an evaluator-side module the solver never reads.
-        on_disk = {path.stem for path in Path(alm.__file__).parent.glob("*.py")} - {"signed_constraints"}
-        scanned = {Path(module.__file__).stem for module in ALM_MODULES}
-        self.assertEqual(scanned, on_disk)
+        package_dir = Path(alm.__file__).parent
+        on_disk = {path.relative_to(package_dir) for path in package_dir.rglob("*.py")} - {
+            Path("signed_constraints.py")
+        }
+        scanned = [Path(module.__file__).relative_to(package_dir) for module in ALM_MODULES]
+        self.assertEqual(len(scanned), len(set(scanned)))
+        self.assertEqual(set(scanned), on_disk)
 
     def test_every_canonical_builder_key_is_declared(self):
         builders = {
@@ -339,8 +359,7 @@ class AlmEvaluationSchemaCompletenessTests(unittest.TestCase):
     def test_every_field_the_solver_copies_or_strips_is_declared(self):
         for label, fields in (
             ("evaluation._OWNED_EVALUATION_ARRAY_FIELDS", evaluation._OWNED_EVALUATION_ARRAY_FIELDS),
-            ("checkpoint._TRANSITION_OMITTED_JACOBIAN_KEYS",
-             checkpoint._TRANSITION_OMITTED_JACOBIAN_KEYS),
+            ("codec._TRANSITION_OMITTED_JACOBIAN_KEYS", codec._TRANSITION_OMITTED_JACOBIAN_KEYS),
         ):
             with self.subTest(fields=label):
                 self.assertEqual(set(fields) - _declared_evaluation_keys(), set())

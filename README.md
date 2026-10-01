@@ -83,6 +83,13 @@ bound)` for any simsopt objective. The examples in
 `help(simsopt_alm)` documents the evaluator contract, hybrid (smooth and
 exact) rows, stateful evaluators, history and checkpoints.
 
+The public API is `simsopt_alm` and three facades: `simsopt_alm.policy`
+(custom continuation policies: the views, decisions and default policy),
+`simsopt_alm.checkpoint` (checkpoint/resume) and `simsopt_alm.history` (the
+per-step history recorder); the last two are opt-in and load only when
+imported. The implementation lives in `simsopt_alm._src`, whose module paths
+may change between releases.
+
 ## What `converged` means
 
 `result.success` is true, with `termination_reason` `converged` (or
@@ -104,8 +111,9 @@ KKT point at the shifted multipliers `λ⁺ = max(0, λ + ρ g)`:
 
 This certifies the returned point only. It is not global optimality, not a
 guarantee of descent from the start, and not a statement about which basin
-a nonconvex problem ends in. `policy.py` (`_kkt_point`) makes the decision and
-`core.py` (`_complementarity_gap`) measures the gap. Every other termination
+a nonconvex problem ends in. `src/simsopt_alm/_src/policy/default.py`
+(`_kkt_point`) makes the decision and `src/simsopt_alm/_src/alm_math.py`
+(`_complementarity_gap`) measures the gap. Every other termination
 reason is a stop without that certificate; `result.restored_best_feasible`
 says when the solver returned the best feasible iterate it saw (the start
 included) instead of the last one, which stays in `result.last_iterate`

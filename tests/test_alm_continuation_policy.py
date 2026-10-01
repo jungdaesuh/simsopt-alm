@@ -25,18 +25,17 @@ from unittest.mock import patch
 import numpy as np
 
 import simsopt_alm as alm
-from simsopt_alm import control as alm_control
-from simsopt_alm import inner as alm_inner
-from simsopt_alm import core as alm_core
-from simsopt_alm import policy as alm_policy
-from simsopt_alm.continuation import (
+from simsopt_alm import ALMInnerSolveOutcome, ALMIterateMeasurement
+from simsopt_alm._src import alm_math
+from simsopt_alm._src.inner import attempts as alm_attempts
+from simsopt_alm._src.loop import outer as alm_outer
+from simsopt_alm._src.policy.default import DEFAULT_CONTINUATION_POLICY
+from simsopt_alm.policy import (
     ALMContinue,
     ALMConverge,
     ALMDualUpdateStep,
     ALMHold,
     ALMInnerPlanView,
-    ALMInnerSolveOutcome,
-    ALMIterateMeasurement,
     ALMPostInnerView,
     ALMPreInnerView,
     ALMRaisePenalty,
@@ -57,7 +56,7 @@ def library_policy(policy):
     """Run every library ``minimize_alm`` call in this block with ``policy``;
     yields the ``(trust_radius_init, policy the caller passed)`` of each call."""
     calls: list = []
-    library_minimize_alm = alm_control.minimize_alm
+    library_minimize_alm = alm_outer.minimize_alm
 
     def with_policy(*args, **kwargs):
         settings = args[3] if len(args) > 3 else kwargs["settings"]
@@ -68,7 +67,7 @@ def library_policy(policy):
             *args, **{**kwargs, "continuation_policy": policy}
         )
 
-    with patch.object(alm_control, "minimize_alm", with_policy):
+    with patch.object(alm_outer, "minimize_alm", with_policy):
         yield calls
 
 
@@ -85,10 +84,10 @@ class AlmPolicyGoldenReplayTests(unittest.TestCase):
 
 class AlmPolicyWiringTests(unittest.TestCase):
     def test_library_default_is_the_default_policy(self):
-        parameter = inspect.signature(alm_control.minimize_alm).parameters[
+        parameter = inspect.signature(alm_outer.minimize_alm).parameters[
             "continuation_policy"
         ]
-        self.assertIs(parameter.default, alm_policy.DEFAULT_CONTINUATION_POLICY)
+        self.assertIs(parameter.default, DEFAULT_CONTINUATION_POLICY)
         self.assertIsInstance(parameter.default, DefaultContinuationPolicy)
 
     def test_the_default_policy_is_a_stateless_frozen_dataclass(self):
@@ -135,7 +134,7 @@ class AlmPolicyWiringTests(unittest.TestCase):
             "_emit_alm_converged_step",
             "_apply_continuation_penalty_increase",
         )
-        tree = ast.parse((PACKAGE_ROOT / "control.py").read_text(encoding="utf-8"))
+        tree = ast.parse((PACKAGE_ROOT / "_src" / "loop" / "outer.py").read_text(encoding="utf-8"))
         defined = {
             target.id
             for node in tree.body
@@ -181,10 +180,10 @@ def _measure(
         settings.feasibility_tol,
         min(update_feasibility_tol, settings.relaxed_feasibility_gate_cap),
     )
-    solver, feasibility, _dual, max_violation = alm_core._extract_constraint_state(
+    solver, feasibility, _dual, max_violation = alm_math._extract_constraint_state(
         evaluation
     )
-    routing = alm_core._constraint_routing_state(
+    routing = alm_math._constraint_routing_state(
         evaluation, multipliers, penalty, gate
     )
     return ALMIterateMeasurement(
@@ -195,8 +194,8 @@ def _measure(
         feasibility_values=feasibility,
         max_feasibility_violation=max_violation,
         routing_state=routing,
-        stationarity_norm=alm_core._augmented_stationarity_norm(evaluation),
-        kkt_stationarity_norm=alm_core._routed_kkt_stationarity_norm(evaluation, routing, gate),
+        stationarity_norm=alm_math._augmented_stationarity_norm(evaluation),
+        kkt_stationarity_norm=alm_math._routed_kkt_stationarity_norm(evaluation, routing, gate),
         signal_mismatch_active=routing.signal_mismatch_active,
         update_feasibility_tol=update_feasibility_tol,
         update_stationarity_tol=update_stationarity_tol,
@@ -844,11 +843,11 @@ class AlmComplementarityGapTests(unittest.TestCase):
             0.3, np.zeros(1), np.array([-0.5, 0.0, -2.0]),
             [np.ones(1), np.ones(1), np.ones(1)], np.array([2.0, 1.0, 1.0]), 1.0,
         )
-        routing = alm_core._constraint_routing_state(
+        routing = alm_math._constraint_routing_state(
             evaluation, np.array([2.0, 1.0, 1.0]), 1.0, 1.0e-6
         )
         # lambda+ = (1.5, 1, 0), slack = (0.5, 0, 2): f - l(x, lambda+) = 0.75.
-        self.assertEqual(alm_core._complementarity_gap(routing), 0.75)
+        self.assertEqual(alm_math._complementarity_gap(routing), 0.75)
 
 
 class AlmObjectiveOffsetTests(unittest.TestCase):
@@ -1023,9 +1022,9 @@ class AlmInnerStepOffsetTests(unittest.TestCase):
                  "feasibility_values": np.zeros(1), "dual_update_values": np.array([-1.0])}
         trial = dict(start, total=1.5, nonfinite_evaluation=True)
         result = SimpleNamespace(success=True, nit=1, message="ok")
-        self.assertFalse(alm_inner._candidate_is_acceptable(start, trial, result, 10.0))
+        self.assertFalse(alm_attempts._candidate_is_acceptable(start, trial, result, 10.0))
         self.assertTrue(
-            alm_inner._candidate_is_acceptable(start, dict(trial, nonfinite_evaluation=False),
+            alm_attempts._candidate_is_acceptable(start, dict(trial, nonfinite_evaluation=False),
                                                result, 10.0)
         )
 
@@ -1082,7 +1081,7 @@ class AlmBoundStationarityTests(unittest.TestCase):
             with self.subTest(grad=grad):
                 evaluation = {"grad": grad, "stationarity_norm": float(np.linalg.norm(grad))}
                 self.assertEqual(
-                    alm_core._bound_reduced_stationarity_norm(evaluation, x, bounds),
+                    alm_math._bound_reduced_stationarity_norm(evaluation, x, bounds),
                     expected,
                 )
 
@@ -1092,7 +1091,7 @@ class AlmBoundStationarityTests(unittest.TestCase):
             with self.subTest(x=x):
                 evaluation = {"grad": np.array([grad])}
                 self.assertEqual(
-                    alm_core._bound_reduced_stationarity_norm(
+                    alm_math._bound_reduced_stationarity_norm(
                         evaluation, np.array([x]), bounds
                     ),
                     1.0,
@@ -1105,7 +1104,7 @@ class AlmBoundStationarityTests(unittest.TestCase):
             inside = np.nextafter(bound, -np.inf)
             with self.subTest(bound=bound):
                 self.assertEqual(
-                    alm_core._bound_reduced_stationarity_norm(
+                    alm_math._bound_reduced_stationarity_norm(
                         {"grad": np.array([-1.0])}, np.array([inside]), [(-np.inf, bound)]
                     ),
                     1.0,
@@ -1161,10 +1160,10 @@ class AlmBoundStationarityTests(unittest.TestCase):
         x = np.array([few_ulps_below_1, 1.0e-3, -2.0e9 - 19 * np.spacing(2.0e9), few_ulps_below_1])
         grad = np.array([-1.0, 1.0, -1.0, 1.0])
         np.testing.assert_array_equal(
-            alm_inner._snap_onto_bounds(x, grad, bounds),
+            alm_attempts._snap_onto_bounds(x, grad, bounds),
             [1.0, 1.0e-3, -2.0e9, few_ulps_below_1],
         )
-        np.testing.assert_array_equal(alm_inner._snap_onto_bounds(x, grad, None), x)
+        np.testing.assert_array_equal(alm_attempts._snap_onto_bounds(x, grad, None), x)
 
     def test_a_snap_that_raises_the_objective_is_not_kept(self):
         # f = C - t + sin(2 pi t), t = (1 - x) / h, h = 64 ulp: the gradient
@@ -1201,14 +1200,14 @@ class AlmBoundStationarityTests(unittest.TestCase):
         ):
             with self.subTest(before=before, after=after):
                 self.assertIs(
-                    alm_inner._snap_keeps_total({"total": before}, {"total": after}), kept
+                    alm_attempts._snap_keeps_total({"total": before}, {"total": after}), kept
                 )
 
     def test_an_evaluator_stationarity_norm_is_kept(self):
         # Its own measure (not ||grad||): the evaluator accounts for the bounds.
         evaluation = {"grad": np.array([-1.0]), "stationarity_norm": 100.0}
         self.assertEqual(
-            alm_core._bound_reduced_stationarity_norm(evaluation, np.array([1.0]), [(0.0, 1.0)]),
+            alm_math._bound_reduced_stationarity_norm(evaluation, np.array([1.0]), [(0.0, 1.0)]),
             100.0,
         )
 
@@ -1268,7 +1267,7 @@ class AlmSignalMismatchTests(unittest.TestCase):
 
     def test_identical_channels_are_no_mismatch(self):
         evaluation = _row_scaled(hybrid=True)(np.array([0.1]), np.array([1.0]), 1.0)
-        routing = alm_core._constraint_routing_state(evaluation, np.array([1.0]), 1.0, 1.0e-6)
+        routing = alm_math._constraint_routing_state(evaluation, np.array([1.0]), 1.0, 1.0e-6)
         self.assertFalse(routing.signal_mismatch_active)
 
     def test_a_surrogate_that_pushes_while_the_hard_row_is_slack_is_a_mismatch(self):
@@ -1437,7 +1436,7 @@ class AlmLoopGapTests(unittest.TestCase):
         settings = alm.ALMSettings(
             max_outer_iterations=1, max_subproblem_continuations=0, penalty_init=100.0
         )
-        with patch.object(alm_inner, "minimize", _scripted_minimize(1.5)):
+        with patch.object(alm_attempts, "minimize", _scripted_minimize(1.5)):
             result = alm.minimize_alm(
                 np.array([3.0]), ["x_cap"], _pushed_away, settings, {"maxiter": 5}
             )
@@ -1457,9 +1456,9 @@ class AlmLoopGapTests(unittest.TestCase):
         def accepted_callback(x):
             accepted.append(float(x[0]))
             if len(accepted) == 2:
-                raise alm_control.ALMProcessBudgetExhausted()
+                raise alm_outer.ALMProcessBudgetExhausted()
 
-        with patch.object(alm_inner, "minimize", _scripted_minimize(0.5, 1.2)):
+        with patch.object(alm_attempts, "minimize", _scripted_minimize(0.5, 1.2)):
             result = alm.minimize_alm(
                 np.array([0.0]),
                 ["x_cap"],

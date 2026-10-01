@@ -14,8 +14,7 @@ import unittest
 import numpy as np
 
 import simsopt_alm as alm
-from simsopt_alm.continuation import ALMConverge
-from simsopt_alm.policy import DefaultContinuationPolicy
+from simsopt_alm.policy import ALMConverge, DefaultContinuationPolicy
 
 
 class _ConvergeImmediately:

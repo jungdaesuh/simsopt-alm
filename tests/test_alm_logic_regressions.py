@@ -12,9 +12,8 @@ import numpy as np
 import simsopt_alm as alm
 from simsopt_alm import ALMSettings, augmented_inequality_objective, minimize_alm
 from simsopt_alm.checkpoint import resume_boundary, transition_snapshot
-from simsopt_alm.continuation import ALMInnerPlan, ALMStalledTrialView
-from simsopt_alm.core import _constraint_routing_state
-from simsopt_alm.policy import DefaultContinuationPolicy
+from simsopt_alm._src.alm_math import _constraint_routing_state
+from simsopt_alm.policy import ALMInnerPlan, ALMStalledTrialView, DefaultContinuationPolicy
 
 
 def shifted_multipliers(result):

@@ -19,7 +19,7 @@ from unittest.mock import patch
 import numpy as np
 
 import simsopt_alm as alm
-from simsopt_alm import control as alm_control
+from simsopt_alm._src.loop import outer as alm_outer
 
 GOLDEN_DIR = Path(__file__).resolve().parent / "alm_golden"
 if str(GOLDEN_DIR) not in sys.path:
@@ -32,7 +32,7 @@ def captured_outer_step_events():
     """Observe every ``on_outer_step`` event of the library runs the golden
     scenarios start in this block (their own recorders still see them)."""
     events: list = []
-    library_minimize_alm = alm_control.minimize_alm
+    library_minimize_alm = alm_outer.minimize_alm
 
     def minimize_alm_with_observer(*args, on_outer_step=None, **kwargs):
         def observe(event):
@@ -42,7 +42,7 @@ def captured_outer_step_events():
 
         return library_minimize_alm(*args, on_outer_step=observe, **kwargs)
 
-    with patch.object(alm_control, "minimize_alm", minimize_alm_with_observer):
+    with patch.object(alm_outer, "minimize_alm", minimize_alm_with_observer):
         yield events
 
 

@@ -17,9 +17,9 @@ from typing import Callable, Mapping, Protocol, Tuple
 
 import numpy as np
 
-from .core import augmented_inequality_objective
+from ..alm_math import augmented_inequality_objective
+from ..loop.events import _frozen_event_value, _require_acyclic_containers, _writable_copy
 from .evaluation import ALMEvaluation, ALMEvaluator
-from .events import _frozen_event_value, _require_acyclic_containers, _writable_copy
 
 __all__ = [
     "ALMPhysics",

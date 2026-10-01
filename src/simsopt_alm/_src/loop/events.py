@@ -1,9 +1,9 @@
-"""What the ALM loop hands its observers, and the read-only copy rule.
+"""The read-only copy rule by which the ALM loop hands out its data.
 
-:func:`~.control.minimize_alm` passes one :class:`ALMOuterStepEvent` per
+:func:`~.outer.minimize_alm` passes one ``ALMOuterStepEvent`` per
 continuation-step decision to ``on_outer_step``; the event's ``after``, and
-every outer boundary's ``state``, is an :class:`ALMLoopState`, whose
-incumbent is an :class:`ALMFeasibleIncumbent`. Observers get owned,
+every outer boundary's ``state``, is an ``ALMLoopState``, whose incumbent is an
+``ALMFeasibleIncumbent`` (the types are in :mod:`..state`). Observers get owned,
 read-only copies (:func:`_frozen_event_value`): arrays not writable, mappings
 read-only views, lists and tuples tuples; :func:`_writable_copy` undoes that
 for plain values. A continuation policy gets the same shape without the
@@ -12,163 +12,19 @@ arrays, borrowed for one synchronous call. Copying needs the mappings, lists and
 a shared subtree is fine. Where such data enters the package (the loop's
 evaluations, ``ALMPhysics`` extras, a resume boundary),
 :func:`_require_acyclic_containers` rejects a cycle, naming its path; the
-checkpoint encoder does the same in its own walk. A checkpointable accepted
-state carries its geometry identity through :class:`ALMGeometryIdentityCarrier`.
+checkpoint encoder does the same in its own walk.
 """
 
 from __future__ import annotations
 
-from dataclasses import dataclass, fields, replace
+from dataclasses import fields, replace
 from types import MappingProxyType
-from typing import Callable, Dict, Generic, Mapping, Optional, Protocol, Sequence, Set, Tuple, TypeVar, runtime_checkable
+from typing import Callable, Dict, Mapping, Optional, Set
 
 import numpy as np
 
-from .continuation import ALMInnerSolveOutcome, ALMIterateMeasurement
-from .core import ALMConstraintRoutingState, ALMConstraintSignalState
-
-AcceptedStateT = TypeVar("AcceptedStateT")
-
-@runtime_checkable
-class ALMGeometryIdentityCarrier(Protocol):
-    """Accepted-state protocol for checkpointable geometry identities.
-
-    The ALM core deliberately does not know how a regime serializes geometry.
-    A checkpoint-capable regime exposes the resulting content identity through
-    this small protocol so that the identity travels with the core incumbent
-    instead of being recomputed by a later adapter.
-    """
-
-    @property
-    def geometry_identity(self) -> str: ...
-
-def _accepted_state_geometry_identity(
-    accepted_state: Optional[AcceptedStateT],
-) -> Optional[str]:
-    """Read an identity only from an explicitly checkpointable carrier."""
-    if accepted_state is None:
-        return None
-    if not isinstance(accepted_state, ALMGeometryIdentityCarrier):
-        return None
-    identity = accepted_state.geometry_identity
-    if not isinstance(identity, str) or not identity:
-        raise ValueError("checkpointable accepted-state geometry_identity must be non-empty")
-    return identity
-
-def _validate_geometry_identity_pair(
-    *,
-    accepted_state: Optional[AcceptedStateT],
-    geometry_identity: Optional[str],
-    context: str,
-) -> None:
-    """Keep a checkpointable accepted carrier and its identity inseparable."""
-    if geometry_identity is not None and accepted_state is None:
-        raise ValueError(f"{context} geometry_identity requires accepted_state")
-    carrier_identity = _accepted_state_geometry_identity(accepted_state)
-    if carrier_identity is not None:
-        if geometry_identity is None:
-            raise ValueError(
-                f"{context} checkpointable accepted_state requires geometry_identity"
-            )
-        if geometry_identity != carrier_identity:
-            raise ValueError(f"{context} geometry_identity does not match accepted_state")
-
-@dataclass(frozen=True)
-class ALMFeasibleIncumbent(Generic[AcceptedStateT]):
-    x: np.ndarray
-    evaluation: Mapping[str, object]
-    multipliers: np.ndarray
-    penalty: float
-    inner_result: object
-    incumbent_state: Optional[AcceptedStateT] = None
-    geometry_identity: Optional[str] = None
-
-    def __post_init__(self) -> None:
-        carrier_identity = _accepted_state_geometry_identity(self.incumbent_state)
-        if self.geometry_identity is None:
-            object.__setattr__(self, "geometry_identity", carrier_identity)
-        elif not isinstance(self.geometry_identity, str) or not self.geometry_identity:
-            raise ValueError("ALM best-feasible geometry_identity must be non-empty")
-        elif carrier_identity is not None and self.geometry_identity != carrier_identity:
-            raise ValueError(
-                "ALM best-feasible geometry_identity does not match incumbent_state"
-            )
-        _validate_geometry_identity_pair(
-            accepted_state=self.incumbent_state,
-            geometry_identity=self.geometry_identity,
-            context="ALM best-feasible incumbent",
-        )
-
-@dataclass(frozen=True)
-class ALMDualUpdate:
-    """Projected multipliers after a dual step and the tightened tolerances."""
-
-    multipliers: np.ndarray
-    update_feasibility_tol: float
-    update_stationarity_tol: float
-    multiplier_cap_binding: bool
-    multiplier_cap_binding_indices: Sequence[int]
-
-@dataclass(frozen=True)
-class ALMLoopState(Generic[AcceptedStateT]):
-    """What the outer loop carries after a decision: the content of a checkpoint.
-
-    ``best_feasible`` omits the inner optimizer result; its ``incumbent_state``
-    is the caller's own object, and None in a skipped-inner step, whose state
-    the caller snapshots only after ``on_outer_step``. ``sufficient_decrease_*``
-    is the latest accepted measure with its multipliers and penalty.
-    """
-
-    x: np.ndarray
-    multipliers: np.ndarray
-    penalty: float
-    update_feasibility_tol: float
-    update_stationarity_tol: float
-    trust_radius: Optional[float]
-    best_feasible: Optional[ALMFeasibleIncumbent[AcceptedStateT]]
-    total_inner_iterations: int
-    last_cap_binding_active: bool
-    cap_binding_detected: bool
-    cap_binding_indices: Tuple[int, ...]
-    penalty_cap_reached: bool
-    penalty_cap_requested: Optional[float]
-    sufficient_decrease_measure: Optional[float]
-    sufficient_decrease_multipliers: Optional[np.ndarray]
-    sufficient_decrease_penalty: Optional[float]
-
-@dataclass(frozen=True)
-class ALMOuterStepEvent(Generic[AcceptedStateT]):
-    """One decision of the outer loop, passed to ``minimize_alm(on_outer_step=...)``.
-
-    Emitted once per continuation step when its decision is final, before a
-    terminal result is built. The package docstring lists the fields. An event
-    is a read-only snapshot: arrays are not writable and mappings are
-    ``MappingProxyType`` views, so it cannot be pickled or deep-copied; an
-    observer that stores events converts the fields it needs. Objects the
-    evaluator put in its dict that are not arrays, mappings or sequences
-    (and the caller's accepted states) are passed by reference.
-    """
-
-    outer_iteration: int
-    continuation_iteration: int
-    constraint_names: Tuple[str, ...]
-    action: str
-    outer_termination: Optional[str]
-    subproblem_limit_reason: Optional[str]
-    signal_mismatch_repair: bool
-    feasible_stall_count: int
-    start_x: np.ndarray
-    start: ALMIterateMeasurement
-    inner: Optional[ALMInnerSolveOutcome]
-    dual_update: Optional[ALMDualUpdate]
-    penalty_update: Optional[ALMIterateMeasurement]
-    dual_update_penalty_reason: Optional[str]
-    after: ALMLoopState[AcceptedStateT]
-
-    @property
-    def measured(self) -> ALMIterateMeasurement:
-        """The iterate the decision was made on (``start`` when no inner solve ran)."""
-        return self.start if self.inner is None else self.inner.measured
+from ..state import (AcceptedStateT, ALMConstraintRoutingState, ALMConstraintSignalState, ALMDualUpdate,
+                     ALMFeasibleIncumbent, ALMInnerSolveOutcome, ALMIterateMeasurement, ALMLoopState)
 
 _EVENT_CARRIERS = (
     ALMIterateMeasurement,

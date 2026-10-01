@@ -24,7 +24,6 @@ from pathlib import Path
 
 import simsopt_alm as alm
 from simsopt_alm import checkpoint as alm_checkpoint
-from simsopt_alm import continuation as alm_continuation
 from simsopt_alm import history as alm_history
 from simsopt_alm import policy as alm_policy
 
@@ -48,7 +47,7 @@ EXAMPLE_MODULES = (
 PACKAGE_DIR = Path(alm.__file__).resolve().parent
 PYTHON_FLOOR = (3, 8)
 PYTHON_FLOOR_SOURCES = (
-    *sorted(PACKAGE_DIR.glob("*.py")),
+    *sorted(PACKAGE_DIR.rglob("*.py")),
     *(LIBRARY_EXAMPLES_DIR / name for name in (
         "stage_two_optimization_alm.py",
         "boozerQA_alm.py",
@@ -149,9 +148,9 @@ def _python_floor_violations(tree):
 
 def _public_annotated_objects():
     """``(label, object)`` for each public class, its public methods and each
-    public function defined by the package, its plugin modules or the examples."""
-    modules = (alm, alm_checkpoint, alm_continuation, alm_history, alm_policy,
-               *EXAMPLE_MODULES)
+    public function the package, its policy facade, its plugin modules or the
+    examples export."""
+    modules = (alm, alm_checkpoint, alm_history, alm_policy, *EXAMPLE_MODULES)
     owners = {module.__name__ for module in EXAMPLE_MODULES}
     seen = set()
     for module in modules:
@@ -179,9 +178,10 @@ class AlmPublicAnnotationTests(unittest.TestCase):
             with self.subTest(label=label):
                 typing.get_type_hints(value)
             labels.append(label)
-        self.assertIn("simsopt_alm.control.minimize_alm", labels)
-        self.assertIn("simsopt_alm.checkpoint.ALMTransitionSnapshot", labels)
-        self.assertIn("simsopt_alm.history.ALMHistoryRecorder", labels)
+        self.assertIn("simsopt_alm._src.loop.outer.minimize_alm", labels)
+        self.assertIn("simsopt_alm._src.checkpoint.snapshot.ALMTransitionSnapshot", labels)
+        self.assertIn("simsopt_alm._src.loop.history.ALMHistoryRecorder", labels)
+        self.assertIn("simsopt_alm._src.policy.views.ALMPostInnerView", labels)
         self.assertIn("boozerQA_alm.BoozerQAProblem", labels)
 
 
@@ -202,7 +202,7 @@ class AlmPythonFloorTests(unittest.TestCase):
         # On Python 3.8 a TypedDict subclass defined in another module resolves
         # inherited string annotations in that module's namespace, so the
         # ALMEvaluation schema must not use postponed annotations.
-        path = PACKAGE_DIR / "evaluation.py"
+        path = PACKAGE_DIR / "_src" / "problem" / "evaluation.py"
         tree = ast.parse(path.read_text(encoding="utf-8"))
         self.assertFalse(any(
             isinstance(node, ast.ImportFrom) and node.module == "__future__"

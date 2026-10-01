@@ -39,8 +39,8 @@ Hybrid signals: an evaluator that smooths g returns all four of
 ``surrogate_signed_constraint_values``, ``hard_dual_update_values``, or none.
 L uses the surrogate g, the dual update uses the hard g, and a disagreement
 blocks ``success``. A missing member raises ``KeyError``. What a step does
-under a disagreement is in :mod:`simsopt_alm.hybrid`, which no evaluator
-without the quartet reaches.
+under a disagreement is a rule of ``DefaultContinuationPolicy``
+(:mod:`simsopt_alm.policy`), which no evaluator without the quartet reaches.
 
 Stateful evaluators (e.g. warm-started inner solves) pass both
 ``snapshot_accepted_state_fn() -> state`` and ``restore_incumbent_state_fn(state)``;
@@ -72,7 +72,11 @@ A toy problem, min ||x||^2 s.t. 1 - x0 <= 0 (solution x = (1, 0))::
     print(result.termination_reason, result.x.round(4) + 0.0)  # converged [1. 0.]
 
 For simsopt objectives, :func:`evaluate_alm_problem` builds that dict from a
-base Optimizable and signed constraint rows (see :mod:`.problem`).
+base Optimizable and signed constraint rows, each a callable
+``row(base_objective) -> (signed_value, grad, ...)`` evaluated at the dofs
+just set (``signed_value <= 0`` is feasible; ``grad`` spans the base
+objective's free dofs), e.g. ``functools.partial(signed_upper_bound,
+objective, bound)`` or a :mod:`simsopt_alm.signed_constraints` kernel.
 
 Physics reuse: the solver evaluates the same x again with new multipliers or a
 new penalty (the outer iterate, then L-BFGS-B's first call; after a dual or
@@ -138,7 +142,7 @@ Continuation policy: the loop measures, solves and executes; an
 ``ALMContinuationPolicy`` (:mod:`simsopt_alm.policy`) decides each step
 (inner-solve options, stalled-trial retries, convergence, dual update,
 penalty raise or hold, another subproblem, stop) from a read-only view of the
-measurements (:mod:`simsopt_alm.continuation`).
+measurements (the views and decisions are in :mod:`simsopt_alm.policy` too).
 ``minimize_alm(continuation_policy=...)`` defaults to
 ``DefaultContinuationPolicy``. The loop executes a policy's convergence
 decision as given, so the success guarantees hold for
@@ -155,24 +159,11 @@ initial value).
 
 from __future__ import annotations
 
-from .continuation import ALMInnerSolveOutcome, ALMIterateMeasurement
-from .boundary import ALMOuterBoundary
-from .control import ALMLastIterate, ALMResult, minimize_alm
-from .core import (
-    ALMConstraintRoutingState,
-    ALMConstraintSignalState,
-    ALMSettings,
-    augmented_inequality_objective,
-    normalize_alm_constraints,
-)
-from .evaluation import ALMEvaluation, ALMEvaluator
-from .events import (
-    ALMDualUpdate,
-    ALMFeasibleIncumbent,
-    ALMLoopState,
-    ALMOuterStepEvent,
-)
-from .problem import (
+from ._src.alm_math import augmented_inequality_objective, normalize_alm_constraints
+from ._src.checkpoint.boundary import ALMOuterBoundary
+from ._src.loop.outer import ALMLastIterate, ALMResult, minimize_alm
+from ._src.problem.evaluation import ALMEvaluation, ALMEvaluator
+from ._src.problem.physics import (
     ALMPhysics,
     CachedALMEvaluator,
     alm_problem_physics,
@@ -181,7 +172,18 @@ from .problem import (
     signed_lower_bound,
     signed_upper_bound,
 )
-from .taylor import run_directional_taylor_test
+from ._src.problem.taylor import run_directional_taylor_test
+from ._src.settings.settings import ALMSettings
+from ._src.state import (
+    ALMConstraintRoutingState,
+    ALMConstraintSignalState,
+    ALMDualUpdate,
+    ALMFeasibleIncumbent,
+    ALMInnerSolveOutcome,
+    ALMIterateMeasurement,
+    ALMLoopState,
+    ALMOuterStepEvent,
+)
 
 __all__ = [
     "ALMConstraintRoutingState",

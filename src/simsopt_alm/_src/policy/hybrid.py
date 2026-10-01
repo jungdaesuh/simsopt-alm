@@ -4,7 +4,7 @@ the surrogate and hard constraint signals disagree.
 A signal mismatch needs an evaluator that returns the hybrid quartet
 (``hard_signed_constraint_values``, ``hard_violation_values``,
 ``surrogate_signed_constraint_values``, ``hard_dual_update_values``), so no
-other evaluator reaches these rules. :class:`~.policy.DefaultContinuationPolicy`
+other evaluator reaches these rules. :class:`~.default.DefaultContinuationPolicy`
 calls them; the paired no-converge guards stay in that policy.
 """
 
@@ -12,7 +12,8 @@ from __future__ import annotations
 
 from typing import Union
 
-from .continuation import ALMContinue, ALMPostInnerView, ALMRaisePenalty
+from .decisions import ALMContinue, ALMRaisePenalty
+from .views import ALMPostInnerView
 
 
 def signal_mismatch_step(

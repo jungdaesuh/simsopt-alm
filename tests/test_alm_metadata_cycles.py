@@ -14,8 +14,9 @@ import unittest
 import numpy as np
 
 import simsopt_alm as alm
-from simsopt_alm.boundary import ALMOuterBoundary
-from simsopt_alm.checkpoint import _transition_json_value, transition_snapshot
+from simsopt_alm import ALMOuterBoundary
+from simsopt_alm._src.checkpoint.codec import _transition_json_value
+from simsopt_alm.checkpoint import transition_snapshot
 
 X0 = np.array([3.0, 2.0])
 

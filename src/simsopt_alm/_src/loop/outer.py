@@ -3,12 +3,12 @@ steps and boundaries, the lean result and the best-feasible restore.
 
 The public entry point is :func:`minimize_alm`; the evaluator contract and
 the outer-step event fields are in the package docstring. The loop reads the
-math from :mod:`.core`, its decisions from the continuation policy
-(:mod:`.continuation`, :mod:`.policy`), one inner solve from :mod:`.inner`,
-the evaluation contract from :mod:`.evaluation`, and publishes the carriers
-of :mod:`.events` and :mod:`.boundary`. The opt-in plugins are the history
-recorder (:mod:`simsopt_alm.history`) and checkpoint/resume
-(:mod:`simsopt_alm.checkpoint`); this module imports neither.
+math from :mod:`..alm_math`, its decisions from the continuation policy
+(:mod:`..policy`), one inner solve from :mod:`..inner.attempts`, the
+evaluation contract from :mod:`..problem.evaluation`, and publishes the
+carriers of :mod:`..state` and :mod:`..checkpoint.boundary`. The opt-in
+plugins are the history recorder (:mod:`.history`) and checkpoint/resume
+(:mod:`..checkpoint.snapshot`); this module imports neither.
 """
 
 from __future__ import annotations
@@ -20,8 +20,7 @@ from typing import Callable, Dict, Generic, List, Mapping, Optional, Sequence, S
 
 import numpy as np
 
-from .core import (
-    ALMSettings,
+from ..alm_math import (
     _bound_reduced_stationarity_norm,
     _constraint_routing_state,
     _extract_constraint_state,
@@ -31,38 +30,8 @@ from .core import (
     alm_penalty_schedule_tolerances,
     validate_initial_multipliers,
 )
-from .boundary import ALMOuterBoundary, _validate_resume_boundary
-from .continuation import (
-    ALMContinue,
-    ALMConverge,
-    ALMDualUpdateStep,
-    ALMHold,
-    ALMInnerSolveOutcome,
-    ALMIterateMeasurement,
-    ALMPostInnerView,
-    ALMPreInnerView,
-    ALMStepDecision,
-    ALMStop,
-)
-from .evaluation import (
-    ALMEvaluator,
-    _checked_evaluation,
-    _incumbent_objective_value,
-    _measure_iterate,
-)
-from .events import (
-    AcceptedStateT,
-    ALMDualUpdate,
-    ALMFeasibleIncumbent,
-    ALMLoopState,
-    ALMOuterStepEvent,
-    _accepted_state_geometry_identity,
-    _borrowed_read_only_value,
-    _frozen_event_value,
-    _frozen_loop_state,
-    _validate_geometry_identity_pair,
-)
-from .inner import (
+from ..checkpoint.boundary import ALMOuterBoundary, _validate_resume_boundary
+from ..inner.attempts import (
     ALMInnerAttemptRequest,
     ALMInnerAttemptResult,
     _feasibility_improvement_and_floor,
@@ -73,7 +42,23 @@ from .inner import (
     _project_onto_bounds,
     _run_alm_inner_attempts,
 )
-from .policy import DEFAULT_CONTINUATION_POLICY, ALMContinuationPolicy
+from ..policy.decisions import ALMContinue, ALMConverge, ALMDualUpdateStep, ALMHold, ALMStepDecision, ALMStop
+from ..policy.default import DEFAULT_CONTINUATION_POLICY, ALMContinuationPolicy
+from ..policy.views import ALMPostInnerView, ALMPreInnerView
+from ..problem.evaluation import ALMEvaluator, _checked_evaluation, _incumbent_objective_value, _measure_iterate
+from ..settings.settings import ALMSettings
+from ..state import (
+    AcceptedStateT,
+    ALMDualUpdate,
+    ALMFeasibleIncumbent,
+    ALMInnerSolveOutcome,
+    ALMIterateMeasurement,
+    ALMLoopState,
+    ALMOuterStepEvent,
+    _accepted_state_geometry_identity,
+    _validate_geometry_identity_pair,
+)
+from .events import _borrowed_read_only_value, _frozen_event_value, _frozen_loop_state
 
 def _require_alm_penalty_within_cap(
     penalty,

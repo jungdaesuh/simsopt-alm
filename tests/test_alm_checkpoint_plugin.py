@@ -31,7 +31,7 @@ import numpy as np
 
 import simsopt_alm as alm
 from simsopt_alm import checkpoint as alm_checkpoint
-from simsopt_alm import control as alm_control
+from simsopt_alm._src.loop import outer as alm_outer
 
 GOLDEN_DIR = Path(__file__).resolve().parent / "alm_golden"
 if str(GOLDEN_DIR) not in sys.path:
@@ -91,7 +91,7 @@ def captured_library_boundaries():
     """Each library ``minimize_alm`` call in this block, as
     ``(inner options the loop ran with, published boundaries)``."""
     runs: list = []
-    library_minimize_alm = alm_control.minimize_alm
+    library_minimize_alm = alm_outer.minimize_alm
 
     def observed_minimize_alm(*args, on_outer_boundary=None, **kwargs):
         inner_options = args[4] if len(args) > 4 else kwargs["inner_options"]
@@ -106,7 +106,7 @@ def captured_library_boundaries():
 
         return library_minimize_alm(*args, on_outer_boundary=observe, **kwargs)
 
-    with patch.object(alm_control, "minimize_alm", observed_minimize_alm):
+    with patch.object(alm_outer, "minimize_alm", observed_minimize_alm):
         yield runs
 
 
@@ -456,8 +456,8 @@ class AlmLoopOwnsNoCheckpointTests(unittest.TestCase):
         )
     )
 
-    def test_control_defines_no_checkpoint_type_or_codec(self):
-        tree = ast.parse((PACKAGE_ROOT / "control.py").read_text(encoding="utf-8"))
+    def test_the_outer_loop_defines_no_checkpoint_type_or_codec(self):
+        tree = ast.parse((PACKAGE_ROOT / "_src" / "loop" / "outer.py").read_text(encoding="utf-8"))
         defined = {
             node.name
             for node in tree.body
@@ -466,25 +466,29 @@ class AlmLoopOwnsNoCheckpointTests(unittest.TestCase):
         self.assertEqual(sorted(defined & self.CHECKPOINT_SYMBOLS), [])
 
     def test_loop_entry_point_takes_a_generic_resume_boundary(self):
-        parameters = inspect.signature(alm_control.minimize_alm).parameters
+        parameters = inspect.signature(alm_outer.minimize_alm).parameters
         self.assertIn("resume_from", parameters)
         self.assertIn("on_outer_boundary", parameters)
         self.assertNotIn("resume_state", parameters)
         self.assertNotIn("completed_outer_callback", parameters)
 
     def test_checkpoint_module_owns_the_snapshot_types(self):
+        # A snapshot pickles under this module path (``simsopt_alm.checkpoint``
+        # re-exports the types).
         for name in ("ALMTransitionSnapshot", "ALMFeasibleIncumbentSnapshot"):
             with self.subTest(name=name):
                 self.assertEqual(
                     getattr(alm_checkpoint, name).__module__,
-                    "simsopt_alm.checkpoint",
+                    "simsopt_alm._src.checkpoint.snapshot",
                 )
 
     def test_package_import_does_not_load_the_checkpoint_plugin(self):
         probe = (
             "import sys\n"
             "import simsopt_alm\n"
-            "sys.exit(1 if 'simsopt_alm.checkpoint' in sys.modules else 0)\n"
+            "plugin = ('simsopt_alm.checkpoint', 'simsopt_alm._src.checkpoint.snapshot',\n"
+            "          'simsopt_alm._src.checkpoint.codec')\n"
+            "sys.exit(1 if any(name in sys.modules for name in plugin) else 0)\n"
         )
         completed = subprocess.run(
             [sys.executable, "-c", probe], capture_output=True, text=True, check=False

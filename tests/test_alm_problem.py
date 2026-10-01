@@ -6,9 +6,9 @@ import numpy as np
 from simsopt.geo.curveobjectives import CurveCurveDistance, CurveLength
 from simsopt.geo.curvexyzfourier import CurveXYZFourier
 
-from simsopt_alm import augmented_inequality_objective
-from simsopt_alm.problem import (
+from simsopt_alm import (
     alm_problem_physics,
+    augmented_inequality_objective,
     evaluate_alm_problem,
     signed_lower_bound,
     signed_upper_bound,

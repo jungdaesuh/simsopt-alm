@@ -21,15 +21,15 @@ from typing import Callable, List, Mapping, Optional, Protocol, Sequence, Tuple,
 
 import numpy as np
 
-from .continuation import ALMIterateMeasurement
-from .core import (
+from ..alm_math import (
     _HYBRID_SIGNAL_FIELDS,
     _bound_reduced_stationarity_norm,
     _constraint_routing_state,
     _extract_constraint_state,
     _routed_kkt_stationarity_norm,
 )
-from .events import _require_acyclic_containers
+from ..loop.events import _require_acyclic_containers
+from ..state import ALMIterateMeasurement
 
 
 class _ALMEvaluationRequired(TypedDict):

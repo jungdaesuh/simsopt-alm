@@ -110,7 +110,7 @@ class AlmDemoSmokeTests(unittest.TestCase):
         )
         self.assertEqual(
             summary["result_types"],
-            ["simsopt_alm.control.ALMResult"],
+            [f"{simsopt_alm.ALMResult.__module__}.{simsopt_alm.ALMResult.__name__}"],
             f"{module} must read the library's lean result",
         )
         self.assertGreater(

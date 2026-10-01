@@ -35,7 +35,7 @@ import numpy as np
 
 import simsopt_alm as alm
 import simsopt_alm.signed_constraints as signed_constraints
-from simsopt_alm import ALMResult, ALMSettings, checkpoint, control, history, policy
+from simsopt_alm import ALMResult, ALMSettings, checkpoint, history, policy
 
 # The repository root: the package (pyproject.toml, src/, tests/), the skill
 # and the generated guide.
@@ -55,7 +55,6 @@ import check_env  # noqa: E402
 MODULES = {
     "simsopt_alm": alm,
     "simsopt_alm.checkpoint": checkpoint,
-    "simsopt_alm.control": control,
     "simsopt_alm.history": history,
     "simsopt_alm.policy": policy,
     "simsopt_alm.signed_constraints": signed_constraints,
@@ -434,7 +433,7 @@ def call_name(node: ast.Call) -> Optional[str]:
 def package_termination_reasons() -> Set[str]:
     """Every string the package source can return as ``termination_reason``."""
     reasons = set()
-    for path in sorted(PACKAGE_DIR.glob("*.py")):
+    for path in sorted(PACKAGE_DIR.rglob("*.py")):
         for node in ast.walk(ast.parse(path.read_text())):
             if isinstance(node, ast.keyword) and node.arg in TERMINATION_KEYWORDS:
                 reasons.add(string_value(node.value))
@@ -450,7 +449,7 @@ def package_termination_reasons() -> Set[str]:
 def package_success_reasons() -> Set[str]:
     """The ``termination_reason`` of every ``ALMConverge`` the package builds."""
     reasons = set()
-    for path in sorted(PACKAGE_DIR.glob("*.py")):
+    for path in sorted(PACKAGE_DIR.rglob("*.py")):
         for node in ast.walk(ast.parse(path.read_text())):
             if isinstance(node, ast.Call) and call_name(node) == "ALMConverge":
                 reasons.update(string_value(keyword.value) for keyword in node.keywords
