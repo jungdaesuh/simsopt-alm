@@ -4,7 +4,7 @@
 # test reads the skill (.claude/skills) and the generated guide (docs/),
 # which the sdist does not ship, so it runs from a checkout only and is left
 # out.
-include README.md LICENSE
+include README.md LICENSE CHANGELOG.md
 graft tests
 graft examples
 exclude tests/test_alm_setup_skill.py

@@ -88,7 +88,7 @@ The public API is `simsopt_alm` and three facades: `simsopt_alm.policy`
 `simsopt_alm.checkpoint` (checkpoint/resume) and `simsopt_alm.history` (the
 per-step history recorder); the last two are opt-in and load only when
 imported. The implementation lives in `simsopt_alm._src`, whose module paths
-may change between releases.
+may change between releases (see `CHANGELOG.md`).
 
 ## What `converged` means
 

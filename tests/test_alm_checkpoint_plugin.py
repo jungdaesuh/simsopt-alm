@@ -17,9 +17,12 @@ plugin.
 import ast
 import dataclasses
 import inspect
+import json
 import pickle
+import pickletools
 import subprocess
 import sys
+import tempfile
 import unittest
 from contextlib import contextmanager
 from pathlib import Path
@@ -494,6 +497,109 @@ class AlmLoopOwnsNoCheckpointTests(unittest.TestCase):
             [sys.executable, "-c", probe], capture_output=True, text=True, check=False
         )
         self.assertEqual(completed.returncode, 0, completed.stdout + completed.stderr)
+
+
+# A checkpointed run of min (x0-2)^2 + (x1-1)^2 s.t. x0 + x1 <= 2, x0 >= 0
+# from the infeasible x0 = (2, 1), in a fresh interpreter: ``write`` pickles
+# every resumable snapshot into DIR and prints the uninterrupted result;
+# ``resume`` unpickles each one, resumes from it and prints each result.
+CHECKPOINT_PICKLE_PROBE = """\
+import json, pickle, sys
+from pathlib import Path
+
+import numpy as np
+
+import simsopt_alm as alm
+from simsopt_alm.checkpoint import alm_checkpointing
+
+
+def physics(x):
+    return alm.ALMPhysics(
+        base_value=(x[0] - 2.0) ** 2 + (x[1] - 1.0) ** 2,
+        base_grad=np.array([2.0 * (x[0] - 2.0), 2.0 * (x[1] - 1.0)]),
+        constraint_values=np.array([x[0] + x[1] - 2.0, -x[0]]),
+        constraint_grads=(np.array([1.0, 1.0]), np.array([-1.0, 0.0])),
+    )
+
+
+def solve(resume_state=None, completed_outer_callback=None):
+    plugin = alm_checkpointing({"maxiter": 200}, resume_state, completed_outer_callback)
+    x0 = [2.0, 1.0] if resume_state is None else resume_state.x
+    result = alm.minimize_alm(
+        np.array(x0, dtype=float), ["sum_cap", "x0_floor"], alm.cached_alm_evaluator(physics),
+        alm.ALMSettings(max_outer_iterations=12, max_subproblem_continuations=2,
+                        penalty_init=10.0, penalty_scale=10.0),
+        plugin.inner_options, resume_from=plugin.resume_from,
+        on_outer_boundary=plugin.on_outer_boundary,
+    )
+    return {"x": [value.hex() for value in result.x.tolist()],
+            "objective": float(result.objective).hex(),
+            "multipliers": [value.hex() for value in result.multipliers.tolist()],
+            "penalty": float(result.penalty).hex(),
+            "termination_reason": result.termination_reason,
+            "success": result.success, "nit": result.nit,
+            "outer_iterations": result.outer_iterations}
+
+
+mode, directory = sys.argv[1], Path(sys.argv[2])
+if mode == "write":
+    snapshots = []
+    uninterrupted = solve(completed_outer_callback=snapshots.append)
+    for snapshot in snapshots:
+        if snapshot.resume_eligible:
+            name = "outer_%03d.pkl" % snapshot.completed_outer_iterations
+            (directory / name).write_bytes(pickle.dumps(snapshot))
+    print("PROBE " + json.dumps(uninterrupted))
+else:
+    print("PROBE " + json.dumps({path.name: solve(resume_state=pickle.loads(path.read_bytes()))
+                                 for path in sorted(directory.glob("*.pkl"))}))
+"""
+
+
+def _probe(mode: str, directory: str) -> dict:
+    completed = subprocess.run(
+        [sys.executable, "-c", CHECKPOINT_PICKLE_PROBE, mode, directory],
+        capture_output=True, text=True, check=False,
+    )
+    lines = [line for line in completed.stdout.splitlines() if line.startswith("PROBE ")]
+    if completed.returncode != 0 or len(lines) != 1:
+        raise AssertionError(f"probe {mode} failed:\n{completed.stdout}\n{completed.stderr}")
+    return json.loads(lines[0][len("PROBE "):])
+
+
+def _pickled_simsopt_alm_modules(data: bytes) -> set:
+    """The ``simsopt_alm`` module paths a pickle names (where unpickling
+    looks its classes up)."""
+    return {
+        argument
+        for opcode, argument, _position in pickletools.genops(data)
+        if isinstance(argument, str) and argument.startswith("simsopt_alm")
+    }
+
+
+class AlmCheckpointPickleTests(unittest.TestCase):
+    """A checkpoint this release writes is a pickle of its snapshot classes,
+    which names their module path (``simsopt_alm._src.checkpoint.snapshot``
+    since 0.2.0): a fresh interpreter unpickles each resumable one and
+    resumes to the uninterrupted run's result, bit for bit."""
+
+    def test_each_pickled_checkpoint_resumes_to_the_uninterrupted_result(self):
+        with tempfile.TemporaryDirectory() as directory:
+            uninterrupted = _probe("write", directory)
+            pickles = sorted(Path(directory).glob("*.pkl"))
+            self.assertGreater(len(pickles), 1, "the run wrote fewer than two resumable checkpoints")
+            for path in pickles:
+                with self.subTest(checkpoint=path.name):
+                    self.assertEqual(
+                        _pickled_simsopt_alm_modules(path.read_bytes()),
+                        {"simsopt_alm._src.checkpoint.snapshot"},
+                    )
+            resumed = _probe("resume", directory)
+        self.assertEqual(sorted(resumed), [path.name for path in pickles])
+        self.assertTrue(uninterrupted["success"], uninterrupted)
+        for name, record in resumed.items():
+            with self.subTest(checkpoint=name):
+                self.assertEqual(record, uninterrupted)
 
 
 if __name__ == "__main__":

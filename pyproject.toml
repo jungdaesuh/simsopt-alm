@@ -6,7 +6,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "simsopt-alm"
-version = "0.1.0"
+version = "0.2.0"
 description = "Augmented Lagrangian solver for min f(x) s.t. g_i(x) <= 0, for simsopt Stage-2 and single-stage coil optimization"
 readme = "README.md"
 requires-python = ">=3.8"
