@@ -205,16 +205,22 @@ EVALUATOR_SIDE_MODULES = ("signed_constraints.py",)
 
 def alm_source_blob_ids() -> dict[str, str]:
     """Git blob ids of the imported ``simsopt_alm`` solver sources (every
-    module but ``EVALUATOR_SIDE_MODULES``) and of ``PROVENANCE_SCRIPTS``, which
+    module of the package and its subpackages but ``EVALUATOR_SIDE_MODULES``),
+    keyed by their path in the package, and of ``PROVENANCE_SCRIPTS``, which
     ``manifest.json`` and ``sensitivity.json`` record."""
     package_dir = Path(alm.__file__).resolve().parent
-    paths = sorted(
-        path for path in package_dir.glob("*.py") if path.name not in EVALUATOR_SIDE_MODULES
-    ) + [golden.FIXTURE_DIR / script for script in PROVENANCE_SCRIPTS]
+    package_paths = sorted(
+        path for path in package_dir.rglob("*.py") if path.name not in EVALUATOR_SIDE_MODULES
+    )
     return {
-        (f"simsopt_alm/{path.name}" if path.parent == package_dir else path.name):
-        _git_blob_id(path.read_bytes())
-        for path in paths
+        **{
+            f"simsopt_alm/{path.relative_to(package_dir).as_posix()}": _git_blob_id(path.read_bytes())
+            for path in package_paths
+        },
+        **{
+            script: _git_blob_id((golden.FIXTURE_DIR / script).read_bytes())
+            for script in PROVENANCE_SCRIPTS
+        },
     }
 
 
