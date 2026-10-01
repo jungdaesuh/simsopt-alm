@@ -31,7 +31,7 @@ and the help of each module named below.
 | `ALMTransitionSnapshot` | `simsopt_alm.checkpoint` | Immutable checkpoint (no Jacobians): `x`, `total_inner_iterations`, `completed_outer_iterations`, `resume_eligible`, `accepted_state`, ... Built by `alm_checkpointing`, which encodes every evaluation value (arrays and lists come back as tuples). |
 | `DefaultContinuationPolicy` | `simsopt_alm.policy` | The default `continuation_policy`; its vetoes give the success guarantees. |
 | `ALMContinuationPolicy` | `simsopt_alm.policy` | Protocol of a custom policy (advanced; keep the default's convergence vetoes). |
-| `ALMProcessBudgetExhausted` | `simsopt_alm.checkpoint` | Raise it from `accepted_callback` to stop with `process_budget_exhausted` (your own budget, e.g. wall clock). |
+| `ALMProcessBudgetExhausted` | `simsopt_alm` | Raise it from `accepted_callback` to stop with `process_budget_exhausted` (your own budget, e.g. wall clock). |
 | `smooth_min_curve_curve_signed_constraint` | `simsopt_alm.signed_constraints` | Row `minimum_distance - min dist(curve_i, curve_j)`, smooth; returns `(signed, grad, hard_signed)`. |
 | `smooth_min_curve_surface_signed_constraint` | `simsopt_alm.signed_constraints` | Row `minimum_distance - min dist(curve_i, surface)`, smooth. |
 | `smooth_max_curvature_signed_constraint` | `simsopt_alm.signed_constraints` | Row `max(kappa) - threshold` for one curve, smooth. |

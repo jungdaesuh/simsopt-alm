@@ -11,6 +11,7 @@ from typing import List
 import numpy as np
 
 import simsopt_alm as alm
+from simsopt_alm import checkpoint as alm_checkpoint
 from simsopt_alm._src import alm_math
 from simsopt_alm._src.loop import outer as alm_outer
 from simsopt_alm._src.settings import settings as alm_settings
@@ -177,6 +178,7 @@ class AlmPublicApiTests(unittest.TestCase):
                 "ALMOuterBoundary",
                 "ALMOuterStepEvent",
                 "ALMPhysics",
+                "ALMProcessBudgetExhausted",
                 "ALMResult",
                 "ALMSettings",
                 "CachedALMEvaluator",
@@ -194,6 +196,12 @@ class AlmPublicApiTests(unittest.TestCase):
         for name in alm.__all__:
             with self.subTest(name=name):
                 self.assertTrue(hasattr(alm, name))
+
+    def test_the_budget_stop_is_public_at_the_root_and_in_the_checkpoint_facade(self):
+        # A caller's accepted_callback raises it to stop the run; checkpoint
+        # users import it from simsopt_alm.checkpoint (0.2.0's first home).
+        self.assertIs(alm.ALMProcessBudgetExhausted, alm_checkpoint.ALMProcessBudgetExhausted)
+        self.assertTrue(issubclass(alm.ALMProcessBudgetExhausted, Exception))
 
     def test_import_binds_the_policy_facade_and_no_internal_module(self):
         # 0.1.0's ``import simsopt_alm`` bound eleven submodules. ``policy`` is

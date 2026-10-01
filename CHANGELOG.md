@@ -16,11 +16,13 @@
   (`alm_checkpointing`, the snapshot types, `transition_snapshot`,
   `resume_boundary`, `ALMOuterBoundary`) and `ALMProcessBudgetExhausted`;
   `simsopt_alm.history` exports `ALMHistoryRecorder`.
+- Added to `simsopt_alm.__all__`: `ALMProcessBudgetExhausted` (0.1.0:
+  `simsopt_alm.control`), which an `accepted_callback` raises to stop a run;
+  `simsopt_alm.checkpoint` exports it too.
 - Deep imports moved, without aliases: `simsopt_alm.core`, `.control`,
   `.inner`, `.continuation`, `.events`, `.boundary`, `.evaluation`,
   `.hybrid`, `.problem` and `.taylor` no longer exist. Import public names
-  from `simsopt_alm` or a facade (`ALMProcessBudgetExhausted` from
-  `simsopt_alm.checkpoint`; the views and decisions from
+  from `simsopt_alm` or a facade (the views and decisions from
   `simsopt_alm.policy`); `simsopt_alm._src` paths may change between
   releases.
 - Pickles: a pickle names each class by its module path. A 0.1.0 pickle of a

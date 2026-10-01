@@ -136,7 +136,9 @@ the run as ``minimize_alm(resume_from=boundary)`` with the same x0, names and
 blocks. The opt-in ``simsopt_alm.checkpoint`` module turns boundaries
 into ``ALMTransitionSnapshot`` checkpoints and back
 (``alm_checkpointing(inner_options, resume_state, completed_outer_callback)``
-returns the three ``minimize_alm`` arguments).
+returns the three ``minimize_alm`` arguments). An ``accepted_callback(x)`` that
+raises :class:`ALMProcessBudgetExhausted` (e.g. at a wall-clock budget) ends the
+run with ``process_budget_exhausted``; a later run resumes from its last boundary.
 
 Continuation policy: the loop measures, solves and executes; an
 ``ALMContinuationPolicy`` (:mod:`simsopt_alm.policy`) decides each step
@@ -164,7 +166,7 @@ from __future__ import annotations
 from . import policy as policy
 from ._src.alm_math import augmented_inequality_objective, normalize_alm_constraints
 from ._src.checkpoint.boundary import ALMOuterBoundary
-from ._src.loop.outer import ALMLastIterate, ALMResult, minimize_alm
+from ._src.loop.outer import ALMLastIterate, ALMProcessBudgetExhausted, ALMResult, minimize_alm
 from ._src.problem.evaluation import ALMEvaluation, ALMEvaluator
 from ._src.problem.physics import (
     ALMPhysics,
@@ -202,6 +204,7 @@ __all__ = [
     "ALMOuterBoundary",
     "ALMOuterStepEvent",
     "ALMPhysics",
+    "ALMProcessBudgetExhausted",
     "ALMResult",
     "ALMSettings",
     "CachedALMEvaluator",
