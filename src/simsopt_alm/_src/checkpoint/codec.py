@@ -9,7 +9,7 @@ from typing import Dict, List, Mapping, Sequence, Set, Tuple, Union
 
 import numpy as np
 
-from ..loop.events import _cyclic_container_error
+from ..state_views import _cyclic_container_error
 
 ALMTransitionValue = Union[
     str,

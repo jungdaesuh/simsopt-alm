@@ -259,8 +259,21 @@ class AlmLibraryBoundaryTests(unittest.TestCase):
             imported,
             {"..alm_math", "..checkpoint.boundary", "..inner.attempts", "..policy.decisions",
              "..policy.default", "..policy.views", "..problem.evaluation", "..settings.settings",
-             "..state", ".events"},
+             "..state", "..state_views"},
         )
+
+    def test_only_the_facades_and_the_loop_import_the_loop(self):
+        # The shared state and its read-only copy rule (state_views) sit
+        # beside the components; the problem, policy, inner-solve, checkpoint
+        # and settings components never depend on the loop.
+        offenders = []
+        for filename in LIBRARY_MODULE_FILES:
+            if filename.startswith("_src/loop/"):
+                continue
+            for node in _parse_library_module(filename).body:
+                if isinstance(node, ast.ImportFrom) and node.level > 0 and (node.module or "").split(".")[0] == "loop":
+                    offenders.append(f"{filename}: from {'.' * node.level}{node.module}")
+        self.assertEqual(offenders, [])
 
     def test_alm_library_is_coil_agnostic(self):
         # No identifier or string literal may name an application: a coil
@@ -339,7 +352,6 @@ class AlmLibrarySizeBudgetTests(unittest.TestCase):
             "_src/checkpoint/codec.py": 200,
             "_src/checkpoint/snapshot.py": 401,
             "_src/inner/attempts.py": 763,
-            "_src/loop/events.py": 195,
             "_src/loop/history.py": 657,
             "_src/loop/outer.py": 1591,
             "_src/policy/decisions.py": 82,
@@ -351,6 +363,7 @@ class AlmLibrarySizeBudgetTests(unittest.TestCase):
             "_src/problem/taylor.py": 201,
             "_src/settings/settings.py": 132,
             "_src/state.py": 233,
+            "_src/state_views.py": 195,
         }
         for filename, budget in budgets.items():
             with self.subTest(module=filename):

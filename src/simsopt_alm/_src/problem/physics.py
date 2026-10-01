@@ -18,7 +18,7 @@ from typing import Callable, Mapping, Protocol, Tuple
 import numpy as np
 
 from ..alm_math import augmented_inequality_objective
-from ..loop.events import _frozen_event_value, _require_acyclic_containers, _writable_copy
+from ..state_views import _frozen_event_value, _require_acyclic_containers, _writable_copy
 from .evaluation import ALMEvaluation, ALMEvaluator
 
 __all__ = [
@@ -80,7 +80,7 @@ class ALMPhysics:
             if rejected:
                 raise ValueError(f"ALMPhysics extras {rejected} {reason}")
         _require_acyclic_containers(self.extras, context="ALMPhysics extras", path="extras")
-        # The solver's read-only copy rule (events.py): arrays become read-only
+        # The solver's read-only copy rule (state_views.py): arrays become read-only
         # copies, mappings read-only views, lists and tuples tuples. One memo
         # per field: its keys are ids of objects alive only during that call.
         for name, value in (

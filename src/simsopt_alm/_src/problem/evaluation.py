@@ -28,8 +28,8 @@ from ..alm_math import (
     _extract_constraint_state,
     _routed_kkt_stationarity_norm,
 )
-from ..loop.events import _require_acyclic_containers
 from ..state import ALMIterateMeasurement
+from ..state_views import _require_acyclic_containers
 
 
 class _ALMEvaluationRequired(TypedDict):

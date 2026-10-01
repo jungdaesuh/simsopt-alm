@@ -18,8 +18,8 @@ from typing import Generic, Mapping, Optional, Sequence, Tuple
 
 import numpy as np
 
-from ..loop.events import _require_acyclic_containers
 from ..state import AcceptedStateT, ALMLoopState, _validate_geometry_identity_pair
+from ..state_views import _require_acyclic_containers
 
 @dataclass(frozen=True)
 class ALMOuterBoundary(Generic[AcceptedStateT]):

@@ -58,7 +58,7 @@ from ..state import (
     _accepted_state_geometry_identity,
     _validate_geometry_identity_pair,
 )
-from .events import _borrowed_read_only_value, _frozen_event_value, _frozen_loop_state
+from ..state_views import _borrowed_read_only_value, _frozen_event_value, _frozen_loop_state
 
 def _require_alm_penalty_within_cap(
     penalty,

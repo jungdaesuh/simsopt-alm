@@ -17,9 +17,9 @@ from typing import Callable, Generic, Mapping, Optional, Tuple
 
 import numpy as np
 
-from ..loop.events import _frozen_loop_state
 from ..settings.settings import _nonnegative_alm_integer
 from ..state import AcceptedStateT, ALMFeasibleIncumbent, ALMLoopState, _validate_geometry_identity_pair
+from ..state_views import _frozen_loop_state
 from .boundary import (ALMOuterBoundary, _strict_transition_float_tuple, _validate_alm_boundary_fields,
                        _validate_transition_vectors)
 from .codec import (ALMTransitionEvaluation, ALMTransitionValue, _canonical_transition_evaluation,

@@ -1,9 +1,9 @@
 """The read-only copy rule by which the ALM loop hands out its data.
 
-:func:`~.outer.minimize_alm` passes one ``ALMOuterStepEvent`` per
+:func:`~.loop.outer.minimize_alm` passes one ``ALMOuterStepEvent`` per
 continuation-step decision to ``on_outer_step``; the event's ``after``, and
 every outer boundary's ``state``, is an ``ALMLoopState``, whose incumbent is an
-``ALMFeasibleIncumbent`` (the types are in :mod:`..state`). Observers get owned,
+``ALMFeasibleIncumbent`` (the types are in :mod:`.state`). Observers get owned,
 read-only copies (:func:`_frozen_event_value`): arrays not writable, mappings
 read-only views, lists and tuples tuples; :func:`_writable_copy` undoes that
 for plain values. A continuation policy gets the same shape without the
@@ -23,8 +23,8 @@ from typing import Callable, Dict, Mapping, Optional, Set
 
 import numpy as np
 
-from ..state import (AcceptedStateT, ALMConstraintRoutingState, ALMConstraintSignalState, ALMDualUpdate,
-                     ALMFeasibleIncumbent, ALMInnerSolveOutcome, ALMIterateMeasurement, ALMLoopState)
+from .state import (AcceptedStateT, ALMConstraintRoutingState, ALMConstraintSignalState, ALMDualUpdate,
+                    ALMFeasibleIncumbent, ALMInnerSolveOutcome, ALMIterateMeasurement, ALMLoopState)
 
 _EVENT_CARRIERS = (
     ALMIterateMeasurement,

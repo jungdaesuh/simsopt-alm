@@ -25,7 +25,6 @@ import numpy as np
 from scipy.optimize import minimize
 
 from ..alm_math import _bound_reduced_stationarity_norm, _constraint_routing_state, _extract_constraint_state
-from ..loop.events import _borrowed_read_only_value, _require_acyclic_containers
 from ..policy.default import (
     DEFAULT_CONTINUATION_POLICY,
     ALMContinuationPolicy,
@@ -40,6 +39,7 @@ from ..problem.evaluation import (
     _search_step_rejected,
 )
 from ..settings.settings import ALMSettings, _nonnegative_alm_integer
+from ..state_views import _borrowed_read_only_value, _require_acyclic_containers
 
 def _inner_options_with_remaining_maxiter(
     inner_options: Optional[dict],

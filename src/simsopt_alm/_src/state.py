@@ -3,7 +3,7 @@ evaluation's constraint signals, the measurement of an iterate and of an inner
 solve, and what the loop carries and publishes (the best-feasible incumbent
 and the geometry identity of an accepted state, the dual update, the loop
 state, the outer-step event). Observers get them as read-only copies
-(:mod:`.loop.events`).
+(:mod:`.state_views`).
 """
 
 from __future__ import annotations
