@@ -13,6 +13,7 @@ from typing import Dict, List, Optional, Sequence, Tuple, Union
 import numpy as np
 from scipy.optimize import nnls
 
+from .public_api import set_module
 from .settings.settings import ALMSettings
 from .state import ALMConstraintRoutingState, ALMConstraintSignalState
 
@@ -23,6 +24,7 @@ _HYBRID_SIGNAL_FIELDS = (
     "hard_dual_update_values",
 )
 
+@set_module("simsopt_alm")
 def augmented_inequality_objective(
     base_value: float,
     base_grad,
@@ -72,6 +74,7 @@ def augmented_inequality_objective(
         "augmented_term_by_constraint": augmented_terms.copy(),
     }
 
+@set_module("simsopt_alm")
 def normalize_alm_constraints(
     signed_values,
     constraint_grads,

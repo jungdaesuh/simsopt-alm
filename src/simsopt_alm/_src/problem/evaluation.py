@@ -28,6 +28,7 @@ from ..alm_math import (
     _extract_constraint_state,
     _routed_kkt_stationarity_norm,
 )
+from ..public_api import set_module
 from ..state import ALMIterateMeasurement
 from ..state_views import _require_acyclic_containers
 
@@ -41,6 +42,7 @@ class _ALMEvaluationRequired(TypedDict):
     constraint_grads: Sequence[np.ndarray]
 
 
+@set_module("simsopt_alm")
 class ALMEvaluation(_ALMEvaluationRequired, total=False):
     """The evaluator's dict: the required keys and every optional key the
     solver owns. The hybrid quartet is all-or-none, checked at run time. Any
@@ -101,6 +103,7 @@ class ALMEvaluation(_ALMEvaluationRequired, total=False):
     nonfinite_fields: Sequence[str]
 
 
+@set_module("simsopt_alm")
 class ALMEvaluator(Protocol):
     """``minimize_alm``'s ``evaluate_problem``: the :class:`ALMEvaluation` at
     ``x`` for these multipliers and this penalty, a dict the solver may keep."""

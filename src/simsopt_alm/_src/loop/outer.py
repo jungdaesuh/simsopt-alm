@@ -46,6 +46,7 @@ from ..policy.decisions import ALMContinue, ALMConverge, ALMDualUpdateStep, ALMH
 from ..policy.default import DEFAULT_CONTINUATION_POLICY, ALMContinuationPolicy
 from ..policy.views import ALMPostInnerView, ALMPreInnerView
 from ..problem.evaluation import ALMEvaluator, _checked_evaluation, _incumbent_objective_value, _measure_iterate
+from ..public_api import set_module
 from ..settings.settings import ALMSettings
 from ..state import (
     AcceptedStateT,
@@ -195,6 +196,7 @@ def _run_loop_state(
         sufficient_decrease_penalty=run_state.previous_sufficient_decrease_penalty,
     )
 
+@set_module("simsopt_alm")
 class ALMProcessBudgetExhausted(Exception):
     """This-process accepted-iteration budget is spent.
 
@@ -354,6 +356,7 @@ def _apply_alm_penalty_increase(
         penalty_update_state=penalty_update_state,
     )
 
+@set_module("simsopt_alm")
 @dataclass(frozen=True)
 class ALMLastIterate:
     """The loop's last iterate, the point a best-feasible restore replaces as
@@ -369,6 +372,7 @@ class ALMLastIterate:
     multipliers: np.ndarray
     penalty: float
 
+@set_module("simsopt_alm")
 @dataclass(frozen=True)
 class ALMResult:
     """What :func:`minimize_alm` returns, on success and on failure alike.
@@ -1383,6 +1387,7 @@ def _publish_outer_boundary(
         )
     )
 
+@set_module("simsopt_alm")
 def minimize_alm(
     x0,
     constraint_names: Sequence[str],

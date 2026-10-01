@@ -9,6 +9,8 @@ from typing import Optional
 
 import numpy as np
 
+from ..public_api import set_module
+
 def _finite_alm_value(name: str, value) -> float:
     value_f = float(value)
     if not np.isfinite(value_f):
@@ -71,6 +73,7 @@ _ALM_SETTINGS_BOUNDS = (
     ("history_max_entries", _finite_alm_integer_or_none, _POSITIVE_WHEN_PROVIDED),
 )
 
+@set_module("simsopt_alm")
 @dataclass(frozen=True)
 class ALMSettings:
     max_outer_iterations: int = 10

@@ -18,6 +18,7 @@ from typing import Callable, Mapping, Protocol, Tuple
 import numpy as np
 
 from ..alm_math import augmented_inequality_objective
+from ..public_api import set_module
 from ..state_views import _frozen_event_value, _require_acyclic_containers, _writable_copy
 from .evaluation import ALMEvaluation, ALMEvaluator
 
@@ -54,6 +55,7 @@ _RESERVED_EXTRA_KEYS = (
 )
 
 
+@set_module("simsopt_alm")
 @dataclass(frozen=True, eq=False)
 class ALMPhysics:
     """The multiplier- and penalty-independent part of one ALM evaluation at one x.
@@ -119,6 +121,7 @@ class ALMPhysics:
         return evaluation
 
 
+@set_module("simsopt_alm")
 class CachedALMEvaluator(ALMEvaluator, Protocol):
     """An :class:`ALMEvaluator` that reuses its physics at a revisited x."""
 
@@ -150,6 +153,7 @@ class _CachedALMEvaluator:
         self._physics = None
 
 
+@set_module("simsopt_alm")
 def cached_alm_evaluator(
     evaluate_physics: Callable[[np.ndarray], ALMPhysics],
 ) -> CachedALMEvaluator:
@@ -163,6 +167,7 @@ def cached_alm_evaluator(
     return _CachedALMEvaluator(evaluate_physics)
 
 
+@set_module("simsopt_alm")
 def signed_upper_bound(objective, upper_bound, base_objective):
     """``(objective.J() - upper_bound, gradient)``; the gradient spans ``base_objective``'s free dofs."""
     signed_value = float(objective.J()) - float(upper_bound)
@@ -170,12 +175,14 @@ def signed_upper_bound(objective, upper_bound, base_objective):
     return signed_value, grad
 
 
+@set_module("simsopt_alm")
 def signed_lower_bound(objective, lower_bound, base_objective):
     """``(lower_bound - objective.J(), gradient)``; the gradient spans ``base_objective``'s free dofs."""
     signed_value, grad = signed_upper_bound(objective, lower_bound, base_objective)
     return -signed_value, -grad
 
 
+@set_module("simsopt_alm")
 def alm_problem_physics(dofs, base_objective, inequalities) -> ALMPhysics:
     """Set ``base_objective.x = dofs``; return the :class:`ALMPhysics` of
     ``f = base_objective.J()`` and one row per entry of ``inequalities``.
@@ -195,6 +202,7 @@ def alm_problem_physics(dofs, base_objective, inequalities) -> ALMPhysics:
     )
 
 
+@set_module("simsopt_alm")
 def evaluate_alm_problem(
     dofs, base_objective, inequalities, multipliers, penalty
 ) -> ALMEvaluation:

@@ -30,6 +30,11 @@
   `ALMOuterBoundary`, `ALMLoopState`, `ALMFeasibleIncumbent`, the
   measurement types, `ALMPhysics`) fails to load in 0.2.0
   (`ModuleNotFoundError`). A 0.1.0 `ALMTransitionSnapshot` names
-  `simsopt_alm.checkpoint`, which 0.2.0 still exports, so it still loads; a
-  0.2.0 checkpoint names `simsopt_alm._src.checkpoint.snapshot`, which 0.1.0
-  cannot load.
+  `simsopt_alm.checkpoint`, which 0.2.0 still exports, so it still loads.
+- Stable pickle paths: every class and function that `simsopt_alm` or a
+  facade exports has that public module as its `__module__` (numpy's
+  `set_module` pattern; the defining module is `_module_source`), so 0.2.0
+  pickles name `simsopt_alm`, `simsopt_alm.policy`, `simsopt_alm.checkpoint`
+  or `simsopt_alm.history`, never `simsopt_alm._src`, and a later move inside
+  `_src` does not break them. `inspect.getsource` of such a class raises
+  `OSError`, as for numpy's classes.

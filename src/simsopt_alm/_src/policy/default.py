@@ -18,6 +18,7 @@ import numpy as np
 
 from . import hybrid
 from ..alm_math import _complementarity_gap, _constraint_routing_state
+from ..public_api import set_module
 from ..settings.settings import ALMSettings, _finite_alm_integer, _finite_alm_value
 from ..state import ALMIterateMeasurement
 from .decisions import ALMContinue, ALMConverge, ALMDualUpdateStep, ALMHold, ALMRaisePenalty, ALMStepDecision, ALMStop
@@ -25,6 +26,7 @@ from .plan import ALMInnerPlan
 from .views import ALMInnerPlanView, ALMPostInnerView, ALMPreInnerView, ALMStalledTrialView
 
 
+@set_module("simsopt_alm.policy")
 class ALMContinuationPolicy(Protocol):
     """The decisions of one continuation step that differ between users.
 
@@ -52,6 +54,7 @@ class ALMContinuationPolicy(Protocol):
         """How the step ends, given the judged inner solve."""
 
 
+@set_module("simsopt_alm.policy")
 @dataclass(frozen=True)
 class DefaultContinuationPolicy:
     """The library's continuation rules: the ALM dual update and penalty raise

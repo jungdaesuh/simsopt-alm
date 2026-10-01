@@ -230,7 +230,6 @@ class AlmModuleOwnershipTests(unittest.TestCase):
             (alm_math, "augmented_inequality_objective"),
             (alm_math, "_constraint_routing_state"),
             (alm_math, "_updated_nonnegative_multipliers"),
-            (alm_settings, "ALMSettings"),
         ):
             with self.subTest(name=name):
                 # The imported package's own file: an installed (non-editable)
@@ -239,6 +238,10 @@ class AlmModuleOwnershipTests(unittest.TestCase):
                     Path(inspect.getsourcefile(getattr(module, name))).resolve(),
                     Path(module.__file__).resolve(),
                 )
+        # A public class names its facade as __module__ and its defining
+        # module as _module_source.
+        self.assertIs(alm.ALMSettings, alm_settings.ALMSettings)
+        self.assertEqual(alm.ALMSettings._module_source, alm_settings.__name__)
 
     def test_the_outer_loop_module_owns_the_loop(self):
         for name in ("minimize_alm", "_run_alm_continuation_step"):
@@ -286,8 +289,8 @@ class AlmLibraryBoundaryTests(unittest.TestCase):
         self.assertEqual(
             imported,
             {"..alm_math", "..checkpoint.boundary", "..inner.attempts", "..policy.decisions",
-             "..policy.default", "..policy.views", "..problem.evaluation", "..settings.settings",
-             "..state", "..state_views"},
+             "..policy.default", "..policy.views", "..problem.evaluation", "..public_api",
+             "..settings.settings", "..state", "..state_views"},
         )
 
     def test_only_the_facades_and_the_loop_import_the_loop(self):
@@ -368,29 +371,33 @@ class AlmLibrarySizeBudgetTests(unittest.TestCase):
         )
 
     def test_module_line_budgets(self):
-        # Re-pointed by the 0.2.0 layout at the measured sizes, each below the
-        # 0.1.0 budget of the module its code came from (core.py 822,
+        # The 0.2.0 layout re-pointed these at the measured sizes, each at or
+        # below the 0.1.0 budget of the module its code came from (core.py 822,
         # continuation.py 225, events.py 339, control.py 1606, checkpoint.py
         # 601, boundary.py 290, evaluation.py 382, history.py 660, hybrid.py
-        # 69, inner.py 768, policy.py 396, taylor.py 201); codec.py and
-        # snapshot.py split checkpoint.py's 601 lines between them.
+        # 69, inner.py 768, policy.py 396, taylor.py 201; codec.py and
+        # snapshot.py split checkpoint.py's 601). The stable pickle identities
+        # then raised them: each public class and function gained its
+        # @set_module line, each defining module the import (core package
+        # 5292 -> 5387 with public_api.py, the decorator).
         budgets = {
-            "_src/alm_math.py": 681,
-            "_src/checkpoint/boundary.py": 286,
+            "_src/alm_math.py": 684,
+            "_src/checkpoint/boundary.py": 288,
             "_src/checkpoint/codec.py": 200,
-            "_src/checkpoint/snapshot.py": 401,
+            "_src/checkpoint/snapshot.py": 408,
             "_src/inner/attempts.py": 763,
-            "_src/loop/history.py": 657,
-            "_src/loop/outer.py": 1591,
-            "_src/policy/decisions.py": 82,
-            "_src/policy/default.py": 380,
+            "_src/loop/history.py": 659,
+            "_src/loop/outer.py": 1596,
+            "_src/policy/decisions.py": 90,
+            "_src/policy/default.py": 383,
             "_src/policy/hybrid.py": 55,
-            "_src/policy/plan.py": 15,
-            "_src/policy/views.py": 86,
-            "_src/problem/evaluation.py": 382,
-            "_src/problem/taylor.py": 201,
-            "_src/settings/settings.py": 132,
-            "_src/state.py": 233,
+            "_src/policy/plan.py": 18,
+            "_src/policy/views.py": 91,
+            "_src/problem/evaluation.py": 385,
+            "_src/problem/taylor.py": 203,
+            "_src/public_api.py": 40,
+            "_src/settings/settings.py": 135,
+            "_src/state.py": 243,
             "_src/state_views.py": 195,
         }
         for filename, budget in budgets.items():
@@ -422,8 +429,8 @@ class AlmLibrarySizeBudgetTests(unittest.TestCase):
         )
         self.assertLessEqual(
             line_count,
-            5292,
-            f"the core package has {line_count} lines; budget is 5292",
+            5387,
+            f"the core package has {line_count} lines; budget is 5387",
         )
 
 

@@ -476,12 +476,13 @@ class AlmLoopOwnsNoCheckpointTests(unittest.TestCase):
         self.assertNotIn("completed_outer_callback", parameters)
 
     def test_checkpoint_module_owns_the_snapshot_types(self):
-        # A snapshot pickles under this module path (``simsopt_alm.checkpoint``
-        # re-exports the types).
+        # A snapshot pickles under its public module path; the types are
+        # defined in the snapshot module of the implementation.
         for name in ("ALMTransitionSnapshot", "ALMFeasibleIncumbentSnapshot"):
             with self.subTest(name=name):
+                self.assertEqual(getattr(alm_checkpoint, name).__module__, "simsopt_alm.checkpoint")
                 self.assertEqual(
-                    getattr(alm_checkpoint, name).__module__,
+                    getattr(alm_checkpoint, name)._module_source,
                     "simsopt_alm._src.checkpoint.snapshot",
                 )
 
@@ -579,8 +580,8 @@ def _pickled_simsopt_alm_modules(data: bytes) -> set:
 
 class AlmCheckpointPickleTests(unittest.TestCase):
     """A checkpoint this release writes is a pickle of its snapshot classes,
-    which names their module path (``simsopt_alm._src.checkpoint.snapshot``
-    since 0.2.0): a fresh interpreter unpickles each resumable one and
+    which names their public module path (``simsopt_alm.checkpoint``), never
+    ``simsopt_alm._src``: a fresh interpreter unpickles each resumable one and
     resumes to the uninterrupted run's result, bit for bit."""
 
     def test_each_pickled_checkpoint_resumes_to_the_uninterrupted_result(self):
@@ -590,9 +591,10 @@ class AlmCheckpointPickleTests(unittest.TestCase):
             self.assertGreater(len(pickles), 1, "the run wrote fewer than two resumable checkpoints")
             for path in pickles:
                 with self.subTest(checkpoint=path.name):
+                    self.assertNotIn(b"_src", path.read_bytes())
                     self.assertEqual(
                         _pickled_simsopt_alm_modules(path.read_bytes()),
-                        {"simsopt_alm._src.checkpoint.snapshot"},
+                        {"simsopt_alm.checkpoint"},
                     )
             resumed = _probe("resume", directory)
         self.assertEqual(sorted(resumed), [path.name for path in pickles])

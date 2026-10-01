@@ -5,7 +5,10 @@ from __future__ import annotations
 from dataclasses import dataclass
 from typing import Mapping
 
+from ..public_api import set_module
 
+
+@set_module("simsopt_alm.policy")
 @dataclass(frozen=True)
 class ALMInnerPlan:
     """L-BFGS-B ``options`` for one attempt (read-only; a call budget caps

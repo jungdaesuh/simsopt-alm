@@ -15,10 +15,12 @@ from __future__ import annotations
 from dataclasses import dataclass
 from typing import Mapping, Optional
 
+from ..public_api import set_module
 from ..settings.settings import ALMSettings
 from ..state import ALMInnerSolveOutcome, ALMIterateMeasurement
 
 
+@set_module("simsopt_alm.policy")
 @dataclass(frozen=True)
 class ALMInnerPlanView:
     """One inner L-BFGS-B attempt about to run.
@@ -37,6 +39,7 @@ class ALMInnerPlanView:
     start_feasible: bool
 
 
+@set_module("simsopt_alm.policy")
 @dataclass(frozen=True)
 class ALMStalledTrialView:
     """A trial the loop classified as an infeasible stall (no move, no gain).
@@ -51,6 +54,7 @@ class ALMStalledTrialView:
     inner_false_success: bool
 
 
+@set_module("simsopt_alm.policy")
 @dataclass(frozen=True)
 class ALMPreInnerView:
     """What the convergence check before the inner solve may read.
@@ -69,6 +73,7 @@ class ALMPreInnerView:
     trust_radius: Optional[float]
 
 
+@set_module("simsopt_alm.policy")
 @dataclass(frozen=True)
 class ALMPostInnerView:
     """What the decision after the inner solve may read: the

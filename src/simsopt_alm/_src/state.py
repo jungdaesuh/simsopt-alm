@@ -13,6 +13,9 @@ from typing import Generic, Mapping, Optional, Protocol, Sequence, Tuple, TypeVa
 
 import numpy as np
 
+from .public_api import set_module
+
+@set_module("simsopt_alm")
 @dataclass(frozen=True)
 class ALMConstraintSignalState:
     explicit_hybrid_signals: bool
@@ -21,6 +24,7 @@ class ALMConstraintSignalState:
     surrogate_signed_constraint_values: np.ndarray
     preferred_dual_update_values: np.ndarray
 
+@set_module("simsopt_alm")
 @dataclass(frozen=True)
 class ALMConstraintRoutingState:
     signal_state: ALMConstraintSignalState
@@ -34,6 +38,7 @@ class ALMConstraintRoutingState:
     hard_max_violation: float
     surrogate_max_value: float
 
+@set_module("simsopt_alm")
 @dataclass(frozen=True)
 class ALMIterateMeasurement:
     """One evaluation of the problem and the solver quantities derived from it.
@@ -59,6 +64,7 @@ class ALMIterateMeasurement:
     effective_feasibility_tol: float
 
 
+@set_module("simsopt_alm")
 @dataclass(frozen=True)
 class ALMInnerSolveOutcome:
     """The inner solve of one continuation step and how the loop judged it.
@@ -135,6 +141,7 @@ def _validate_geometry_identity_pair(
         if geometry_identity != carrier_identity:
             raise ValueError(f"{context} geometry_identity does not match accepted_state")
 
+@set_module("simsopt_alm")
 @dataclass(frozen=True)
 class ALMFeasibleIncumbent(Generic[AcceptedStateT]):
     x: np.ndarray
@@ -161,6 +168,7 @@ class ALMFeasibleIncumbent(Generic[AcceptedStateT]):
             context="ALM best-feasible incumbent",
         )
 
+@set_module("simsopt_alm")
 @dataclass(frozen=True)
 class ALMDualUpdate:
     """Projected multipliers after a dual step and the tightened tolerances."""
@@ -171,6 +179,7 @@ class ALMDualUpdate:
     multiplier_cap_binding: bool
     multiplier_cap_binding_indices: Sequence[int]
 
+@set_module("simsopt_alm")
 @dataclass(frozen=True)
 class ALMLoopState(Generic[AcceptedStateT]):
     """What the outer loop carries after a decision: the content of a checkpoint.
@@ -198,6 +207,7 @@ class ALMLoopState(Generic[AcceptedStateT]):
     sufficient_decrease_multipliers: Optional[np.ndarray]
     sufficient_decrease_penalty: Optional[float]
 
+@set_module("simsopt_alm")
 @dataclass(frozen=True)
 class ALMOuterStepEvent(Generic[AcceptedStateT]):
     """One decision of the outer loop, passed to ``minimize_alm(on_outer_step=...)``.

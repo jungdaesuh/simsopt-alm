@@ -27,6 +27,7 @@ from ..alm_math import (
     alm_raw_dual_estimates,
 )
 from ..inner.attempts import _move_tolerance
+from ..public_api import set_module
 from ..settings.settings import _POSITIVE_WHEN_PROVIDED, ALMSettings, _finite_alm_integer_or_none
 from ..state import ALMIterateMeasurement, ALMOuterStepEvent
 
@@ -66,6 +67,7 @@ def _multiplier_interpretation(evaluation: dict) -> str:
     return "differentiable_alm_multipliers"
 
 
+@set_module("simsopt_alm.history")
 class ALMHistoryRecorder:
     """Builds the ALM history from ``minimize_alm``'s outer-step events.
 

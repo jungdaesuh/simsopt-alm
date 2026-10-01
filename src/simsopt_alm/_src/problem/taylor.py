@@ -26,6 +26,7 @@ from typing import Callable, Optional, Sequence, Tuple
 import numpy as np
 
 from ..alm_math import _as_float_list
+from ..public_api import set_module
 
 _DEFAULT_TAYLOR_EPSILONS = tuple(float(0.5**power) for power in range(7, 13))
 
@@ -123,6 +124,7 @@ def _directional_taylor_result(
         status,
     )
 
+@set_module("simsopt_alm")
 def run_directional_taylor_test(
     evaluate_problem: Callable[[np.ndarray, np.ndarray, float], dict],
     x0,

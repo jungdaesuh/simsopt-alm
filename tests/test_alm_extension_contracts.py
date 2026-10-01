@@ -21,7 +21,7 @@ import numpy as np
 
 import simsopt_alm as alm
 from simsopt_alm import _src, checkpoint, history, policy
-from simsopt_alm._src import alm_math, state, state_views
+from simsopt_alm._src import alm_math, public_api, state, state_views
 from simsopt_alm._src import checkpoint as checkpoint_package
 from simsopt_alm._src import inner as inner_package
 from simsopt_alm._src import loop as loop_package
@@ -43,7 +43,7 @@ if str(EXAMPLES_DIR) not in sys.path:
 import alm_typed_evaluator_example as typed_example  # noqa: E402
 
 # Every module of the package: the facades and the implementation (``_src``).
-ALM_MODULES = (alm, checkpoint, history, policy, _src, alm_math, state, state_views,
+ALM_MODULES = (alm, checkpoint, history, policy, _src, alm_math, public_api, state, state_views,
                checkpoint_package, boundary, codec, snapshot, inner_package, attempts,
                loop_package, loop_history, outer, policy_package, decisions, default,
                hybrid, plan, views, problem_package, evaluation, physics, taylor,

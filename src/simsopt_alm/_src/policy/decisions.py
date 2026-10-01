@@ -8,7 +8,10 @@ from __future__ import annotations
 from dataclasses import dataclass
 from typing import ClassVar, Optional, Union
 
+from ..public_api import set_module
 
+
+@set_module("simsopt_alm.policy")
 @dataclass(frozen=True)
 class ALMConverge:
     """Return success: publish ``action`` and report ``message``."""
@@ -19,6 +22,7 @@ class ALMConverge:
     feasible_stall_count: int
 
 
+@set_module("simsopt_alm.policy")
 @dataclass(frozen=True)
 class ALMStop:
     """Return failure after publishing ``action``; the best-feasible restore
@@ -36,6 +40,7 @@ class ALMStop:
 # termination reason when such a step ends the final outer iteration.
 
 
+@set_module("simsopt_alm.policy")
 @dataclass(frozen=True)
 class ALMDualUpdateStep:
     """Update the multipliers and end the outer iteration; with a
@@ -46,6 +51,7 @@ class ALMDualUpdateStep:
     max_outer_termination: ClassVar[str] = "max_outer_after_dual_update"
 
 
+@set_module("simsopt_alm.policy")
 @dataclass(frozen=True)
 class ALMRaisePenalty:
     """Raise the penalty and end the outer iteration (or return at the cap)."""
@@ -57,6 +63,7 @@ class ALMRaisePenalty:
     signal_mismatch_repair: bool = False
 
 
+@set_module("simsopt_alm.policy")
 @dataclass(frozen=True)
 class ALMHold:
     """Keep the penalty and multipliers and end the outer iteration."""
@@ -65,6 +72,7 @@ class ALMHold:
     max_outer_termination: ClassVar[str] = "max_outer_after_sufficient_decrease_hold"
 
 
+@set_module("simsopt_alm.policy")
 @dataclass(frozen=True)
 class ALMContinue:
     """Solve the subproblem again with this trust radius (None: no box, else

@@ -178,10 +178,11 @@ class AlmPublicAnnotationTests(unittest.TestCase):
             with self.subTest(label=label):
                 typing.get_type_hints(value)
             labels.append(label)
-        self.assertIn("simsopt_alm._src.loop.outer.minimize_alm", labels)
-        self.assertIn("simsopt_alm._src.checkpoint.snapshot.ALMTransitionSnapshot", labels)
-        self.assertIn("simsopt_alm._src.loop.history.ALMHistoryRecorder", labels)
-        self.assertIn("simsopt_alm._src.policy.views.ALMPostInnerView", labels)
+        self.assertIn("simsopt_alm.minimize_alm", labels)
+        self.assertIn("simsopt_alm.ALMSettings", labels)
+        self.assertIn("simsopt_alm.checkpoint.ALMTransitionSnapshot", labels)
+        self.assertIn("simsopt_alm.history.ALMHistoryRecorder", labels)
+        self.assertIn("simsopt_alm.policy.ALMPostInnerView", labels)
         self.assertIn("boozerQA_alm.BoozerQAProblem", labels)
 
 

@@ -17,6 +17,7 @@ from typing import Callable, Generic, Mapping, Optional, Tuple
 
 import numpy as np
 
+from ..public_api import set_module
 from ..settings.settings import _nonnegative_alm_integer
 from ..state import AcceptedStateT, ALMFeasibleIncumbent, ALMLoopState, _validate_geometry_identity_pair
 from ..state_views import _frozen_loop_state
@@ -26,6 +27,7 @@ from .codec import (ALMTransitionEvaluation, ALMTransitionValue, _canonical_tran
                     _checked_encoded_value, _restore_transition_evaluation, _restore_transition_json_value,
                     _snapshot_transition_evaluation, _transition_json_value, _validate_frozen_transition_evaluation)
 
+@set_module("simsopt_alm.checkpoint")
 @dataclass(frozen=True)
 class ALMFeasibleIncumbentSnapshot(Generic[AcceptedStateT]):
     """Immutable core best-feasible carrier at an outer boundary."""
@@ -72,6 +74,7 @@ class ALMFeasibleIncumbentSnapshot(Generic[AcceptedStateT]):
             context="ALM best-feasible snapshot",
         )
 
+@set_module("simsopt_alm.checkpoint")
 @dataclass(frozen=True)
 class ALMTransitionSnapshot(Generic[AcceptedStateT]):
     """Immutable state committed after one completed ALM outer iteration."""
@@ -206,6 +209,7 @@ class ALMTransitionSnapshot(Generic[AcceptedStateT]):
         if self.best_feasible is not None:
             _validate_frozen_transition_evaluation(self.best_feasible.evaluation)
 
+@set_module("simsopt_alm.checkpoint")
 def transition_snapshot(
     boundary: ALMOuterBoundary[AcceptedStateT],
     inner_options: Optional[Mapping[str, object]],
@@ -280,6 +284,7 @@ def transition_snapshot(
         ),
     )
 
+@set_module("simsopt_alm.checkpoint")
 def resume_boundary(
     snapshot: ALMTransitionSnapshot[AcceptedStateT],
 ) -> ALMOuterBoundary[AcceptedStateT]:
@@ -359,6 +364,7 @@ def _report_transition_snapshot(
 ) -> None:
     completed_outer_callback(transition_snapshot(boundary, inner_options))
 
+@set_module("simsopt_alm.checkpoint")
 @dataclass(frozen=True)
 class ALMCheckpointing(Generic[AcceptedStateT]):
     """The ``minimize_alm`` arguments of one checkpointed run:
@@ -368,6 +374,7 @@ class ALMCheckpointing(Generic[AcceptedStateT]):
     resume_from: Optional[ALMOuterBoundary[AcceptedStateT]]
     on_outer_boundary: Optional[Callable[[ALMOuterBoundary[AcceptedStateT]], None]]
 
+@set_module("simsopt_alm.checkpoint")
 def alm_checkpointing(
     inner_options: Optional[Mapping[str, object]],
     resume_state: Optional[ALMTransitionSnapshot[AcceptedStateT]] = None,

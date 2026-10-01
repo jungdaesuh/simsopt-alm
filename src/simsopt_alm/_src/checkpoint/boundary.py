@@ -18,9 +18,11 @@ from typing import Generic, Mapping, Optional, Sequence, Tuple
 
 import numpy as np
 
+from ..public_api import set_module
 from ..state import AcceptedStateT, ALMLoopState, _validate_geometry_identity_pair
 from ..state_views import _require_acyclic_containers
 
+@set_module("simsopt_alm")
 @dataclass(frozen=True)
 class ALMOuterBoundary(Generic[AcceptedStateT]):
     """The loop between two outer iterations, or where it returns.

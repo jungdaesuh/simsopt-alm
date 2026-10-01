@@ -8,8 +8,8 @@ arguments of one checkpointed run (:class:`ALMCheckpointing`). The loop's
 (:func:`resume_boundary`). An ``accepted_callback`` that raises
 :class:`ALMProcessBudgetExhausted` ends the run at a budget the caller
 enforces (``process_budget_exhausted``); a later run resumes from the last
-checkpoint. A snapshot pickles its classes by module path, so a checkpoint
-pickled by one release of the package may not load in another. Importing
+checkpoint. A pickled snapshot names its classes by this module's path,
+which a move inside the implementation does not change. Importing
 :mod:`simsopt_alm` does not load this module.
 """
 
