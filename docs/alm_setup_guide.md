@@ -29,7 +29,7 @@ unchanged, and sets up one constrained optimization,
 checked before the real run.
 
 `$SKILL_DIR` is the skill's directory (`.claude/skills/simsopt-alm-setup` of
-the `alm-library` branch). `<python>` is the interpreter the user's
+the simsopt-alm repository). `<python>` is the interpreter the user's
 optimization runs with (ask when unclear). `<dir>` is the directory the
 generated files go into.
 
@@ -51,9 +51,9 @@ generated files go into.
 
 1. Run `<python> $SKILL_DIR/scripts/check_env.py --python <python>`, adding
    `--checkout <path>` when the user wants the solver's sources in an
-   editable clone of the `alm-library` branch at `<path>` (an existing clone,
-   or a new directory to clone into). The branch comes from
-   `https://github.com/jungdaesuh/simsopt.git`; `--fork-url <url>`
+   editable clone of the repository at `<path>` (an existing clone, or a new
+   directory to clone into). The repository is
+   `https://github.com/jungdaesuh/simsopt-alm.git`; `--repo-url <url>`
    overrides it. Read `route`, `blockers` and `notes` from the `CHECK_ENV`
    line; the lines before it show where each module imports from, how the
    package is installed and the clone's HEAD commit.
@@ -207,21 +207,20 @@ Then give the user the full-run command,
 ## Install routes
 
 `check_env.py` picks the route; this page has the commands for each. In them,
-`<python>` is the interpreter the optimization runs with, `<fork-url>` the
-repository that publishes the `alm-library` branch
-(`https://github.com/jungdaesuh/simsopt.git`, `check_env.py`'s default), and
-`<clone>` the directory of an `alm-library` clone (`checkout.path` in the
-report).
+`<python>` is the interpreter the optimization runs with, `<repo-url>` the
+simsopt-alm repository (`https://github.com/jungdaesuh/simsopt-alm.git`,
+`check_env.py`'s default), and `<clone>` the directory of a clone of it
+(`checkout.path` in the report).
 
 What gets installed: the pip package `simsopt-alm` (import name
-`simsopt_alm`), which lives in `packages/simsopt-alm/` of the `alm-library`
-branch. It is pure Python and needs Python >= 3.8, numpy and scipy. It
-installs beside the simsopt the user already has (a fork, an editable
-checkout or a PyPI release) and changes nothing in it. The solver
+`simsopt_alm`), which is the root of the repository (`pyproject.toml`,
+`src/simsopt_alm/`). It is pure Python and needs Python >= 3.8, numpy and
+scipy. It installs beside the simsopt the user already has (a fork, an
+editable checkout or a PyPI release) and changes nothing in it. The solver
 (`simsopt_alm` and its modules) imports only numpy, scipy and the standard
 library; `simsopt_alm.signed_constraints` (the coil rows) also imports
 simsopt's `Derivative`, so it needs a simsopt in the same interpreter. The
-package directory also holds the four examples in `examples/`
+repository also holds the four examples in `examples/`
 (`stage_two_optimization_alm.py`, `boozerQA_alm.py`,
 `alm_composition_example.py`, `alm_typed_evaluator_example.py`) and the tests
 in `tests/`.
@@ -230,21 +229,22 @@ in `tests/`.
 solver; the Stage-2 and Boozer templates also import the signed constraints,
 so they also need simsopt. `templates` in the report says which templates can
 run now. Without a simsopt, install the user's own first; for PyPI's, add
-the `simsopt` extra: `"simsopt-alm[simsopt] @ git+<fork-url>@alm-library#subdirectory=packages/simsopt-alm"`.
+the `simsopt` extra: `"simsopt-alm[simsopt] @ git+<repo-url>"`.
 
 In a uv environment without pip, use `uv pip install --python <python> ...`
 instead of `<python> -m pip install ...` in the commands below.
 
 ### install
 
-The default: install the package from the fork, with no local clone.
+The default: install the package from the repository's `main` branch,
+with no local clone.
 
 ```sh
-<python> -m pip install "git+<fork-url>@alm-library#subdirectory=packages/simsopt-alm"
+<python> -m pip install "git+<repo-url>"
 ```
 
-This builds no C++ and takes seconds. To update to a newer `alm-library`
-later, rerun it with `--force-reinstall --no-deps`.
+This builds no C++ and takes seconds. To update to a newer `main` later,
+rerun it with `--force-reinstall --no-deps`.
 
 ### editable
 
@@ -252,15 +252,15 @@ later, rerun it with `--force-reinstall --no-deps`.
 clone they can read and change. `<clone>` is either a place to clone into
 (a new or empty directory: `checkout.clone_target` in the report) or an
 existing clone (`checkout.is_alm_clone`): the top level of a git repository,
-on the `alm-library` branch, with `packages/simsopt-alm/pyproject.toml` and
-`packages/simsopt-alm/src/simsopt_alm/__init__.py`. Any other directory is
+on the `main` branch, with `pyproject.toml` and `src/simsopt_alm/__init__.py`
+at its root. Any other directory is
 a blocker (`checkout.problems` says why) and never this route: clone into a
 new directory and rerun `check_env.py` with it. Skip the `git clone` line
 when `<clone>` already is a clone.
 
 ```sh
-git clone -b alm-library <fork-url> <clone>
-<python> -m pip install -e <clone>/packages/simsopt-alm
+git clone <repo-url> <clone>
+<python> -m pip install -e <clone>
 ```
 
 Changes to the clone's Python files then take effect without reinstalling;
@@ -756,7 +756,7 @@ tune them from the termination reason, not in advance.
 
 `ALMResult.termination_reason` says why `minimize_alm` returned. This table
 lists every reason the package can return (the drift test in
-`packages/simsopt-alm/tests/test_alm_setup_skill.py` checks the list against
+`tests/test_alm_setup_skill.py` checks the list against
 the source in both directions). `success` is `yes` only for the two
 converged reasons.
 
@@ -1141,7 +1141,7 @@ Report whether a Python environment can run the ALM solver package
 ``simsopt_alm`` (the ``simsopt-alm`` distribution) and which install route
 applies.
 
-    python check_env.py [--python INTERPRETER] [--checkout DIR] [--fork-url URL]
+    python check_env.py [--python INTERPRETER] [--checkout DIR] [--repo-url URL]
 
 It runs on Python 3.7 or newer and inspects the interpreter the optimization
 runs with (default: the one running this script; any Python that runs
@@ -1154,12 +1154,12 @@ installs beside any simsopt (a fork, an editable checkout, a PyPI release)
 and changes nothing in it. It reads local git refs only and changes nothing.
 
 ``--checkout DIR`` asks for an editable install from a clone of the
-``alm-library`` branch at ``DIR`` (cloned there first when ``DIR`` does not
+simsopt-alm repository at ``DIR`` (cloned there first when ``DIR`` does not
 exist or is empty), for users who want to read or change the solver's
-sources; without it the plain install from ``--fork-url`` applies. An
+sources; without it the plain install from ``--repo-url`` applies. An
 existing ``DIR`` counts as a clone only when it is the top level of a git
-repository, is on the ``alm-library`` branch and has the package's sources
-(``CLONE_SOURCES``); anything else is a blocker.
+repository, is on the ``main`` branch and has the package's sources at its
+root (``CLONE_SOURCES``); anything else is a blocker.
 
 ``templates`` in the report says which problem templates can run: the
 generic one needs the solver, the Stage-2 and Boozer ones also the signed
@@ -1167,13 +1167,12 @@ constraints, which import simsopt (``TEMPLATE_MODULES``).
 
 ``route`` is the first that applies: ``blocked`` (Python below the floor; an
 ALM module that exists but fails to import: the report quotes the error; or
-``--checkout`` names a non-empty directory that is not an ``alm-library``
+``--checkout`` names a non-empty directory that is not a simsopt-alm
 clone), ``ready`` (``simsopt_alm`` imports, and with ``--checkout`` from that
 clone), ``editable`` (``--checkout`` given: clone if needed, then install the
-clone's package editable), ``install`` (install the package from
-``--fork-url``). ``blockers`` lists what must be fixed first. When simsopt
-does not import, ``ready`` covers the generic template only, and a note says
-so.
+clone editable), ``install`` (install the package from ``--repo-url``).
+``blockers`` lists what must be fixed first. When simsopt does not import,
+``ready`` covers the generic template only, and a note says so.
 
 It prints the route, the blockers and notes, the file each module imports
 from, the clone's HEAD (with ``--checkout``), and, last,

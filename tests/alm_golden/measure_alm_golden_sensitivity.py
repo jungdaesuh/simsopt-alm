@@ -49,7 +49,7 @@ scenario reaches an outcome outside ``observed_outcomes``: each recorded
 outcome set is closed under the held-out samples.
 
 The replay test sets each numeric tolerance to ``10 x max(spread, eps)``.
-Rerun from the package directory (``packages/simsopt-alm``) whenever the
+Rerun from the repository root (the package's directory) whenever the
 goldens or the ALM solver sources change (the test pins the source blob ids),
 in the environment the goldens were recorded in (the generator's
 ``RECORDING_ENVIRONMENT_VARIABLES``; the script exits otherwise)::

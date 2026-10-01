@@ -134,6 +134,17 @@ class AlmGoldenFixtureSetTests(unittest.TestCase):
                 "are written only by generate_alm_golden.py",
             )
 
+    def test_the_receipt_commands_run_from_the_repository_root(self):
+        # The regenerate and measure commands are typed in the repository root
+        # (an extracted sdist's root too): each names a script under tests/alm_golden.
+        root = GOLDEN_DIR.parents[1]
+        for receipt, command in (("manifest.json", MANIFEST["regenerate"]),
+                                 ("sensitivity.json", SENSITIVITY["measure"])):
+            with self.subTest(receipt=receipt):
+                script = command.split(" python ", 1)[1]
+                self.assertTrue(script.startswith("tests/alm_golden/"), command)
+                self.assertTrue((root / script).is_file(), f"{receipt}: {script} is not under {root}")
+
     def test_the_receipts_name_the_sources_and_scenarios_that_produced_them(self):
         ids = alm_source_blob_ids()
         self.assertEqual(list(SENSITIVITY["scenarios"]), [s.name for s in golden.SCENARIOS])

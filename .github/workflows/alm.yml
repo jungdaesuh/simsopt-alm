@@ -1,26 +1,28 @@
-# Gates of the simsopt-alm package (packages/simsopt-alm: the ALM solver
+# Gates of the simsopt-alm package (this repository: the ALM solver
 # simsopt_alm, its tests and examples) and of the simsopt-alm-setup skill.
-# The package installs beside any simsopt, so each job installs a simsopt
-# first and the package on top, non-editable, and runs the package's tests
-# from packages/simsopt-alm (they import the installed package). Four jobs:
+# The package installs beside any simsopt, so each job installs stock simsopt
+# from PyPI first (where tests need it) and the package on top, and runs the
+# package's tests from the repository root. Four jobs:
 #
-# package: Python 3.11 with simsopt built from this checkout: every package
-#   test, including the examples (test_alm_examples.py runs the Stage-2 and
-#   Boozer demos at their CI size; the Boozer demo is bounded by evaluations)
-#   and the skill's tests; then the sdist is built, installed and extracted,
-#   and the README's `python -m pytest tests` runs from the extracted copy
-#   (MANIFEST.in ships tests/alm_golden and examples and leaves out the
-#   checkout-only skill test).
+# package: Python 3.11, the package installed editable (the README's
+#   editable route): every test, including the examples (test_alm_examples.py
+#   runs the Stage-2 and Boozer demos at their CI size; the Boozer demo is
+#   bounded by evaluations) and the skill's tests; then the sdist is built,
+#   installed and extracted, and the README's `python -m pytest tests` runs
+#   from the extracted copy (MANIFEST.in ships tests/alm_golden and examples
+#   and leaves out the checkout-only skill test).
 #
-# stock-simsopt: the same tests in a clean environment whose simsopt is the
-#   stock upstream release from PyPI, the case of a user who installs the
-#   package next to someone else's simsopt.
+# stock-simsopt: the same tests in a clean environment with the package
+#   installed non-editable (the README's plain route), the case of a user who
+#   installs the package next to someone else's simsopt; it also requires
+#   that importing simsopt_alm loads no simsopt module.
 #
-# python38: the declared Python floor (requires-python = ">=3.8"). Upstream
-#   simsopt's isolated build needs numpy >= 2, which has no Python 3.8
-#   release, so the build dependencies are installed first (numpy 1.24.4,
-#   SciPy 1.10.1, jax/jaxlib 0.4.13 from Google's jax-releases page) and
-#   simsopt builds without isolation.
+# python38: the declared Python floor (requires-python = ">=3.8"), beside
+#   stock simsopt from PyPI. PyPI has no simsopt wheel for Python 3.8 and the
+#   sdist's isolated build needs numpy >= 2, which has no Python 3.8 release,
+#   so the build dependencies are installed first (numpy 1.24.4, SciPy
+#   1.10.1, jax/jaxlib 0.4.13 from Google's jax-releases page) and PyPI's
+#   simsopt sdist builds without isolation.
 #
 # golden-exact-replay: the bitwise replay of tests/alm_golden, which runs only
 #   under the numpy, SciPy, machine and OpenBLAS kernel family the goldens
@@ -35,11 +37,9 @@ name: ALM
 
 on:
   push:
-    # A tags filter alone makes GitHub skip every branch push; tests.yml
-    # pairs its tag filter with a branch filter the same way.
-    branches: ['**']
-    tags-ignore: [v*]
+    branches: [main]
   pull_request:
+    branches: [main]
   workflow_dispatch:
 
 concurrency:
@@ -51,7 +51,7 @@ permissions:
 
 jobs:
   package:
-    name: simsopt-alm on this checkout's simsopt
+    name: simsopt-alm (editable) beside stock PyPI simsopt
     runs-on: ubuntu-24.04
     timeout-minutes: 60
     env:
@@ -60,30 +60,23 @@ jobs:
 
     steps:
     - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4.4.0 (tag v4)
-      with:
-        # setuptools_scm derives simsopt's version from the tags.
-        fetch-depth: 0
-        submodules: recursive
 
     - uses: astral-sh/setup-uv@d0cc045d04ccac9d8b7881df0226f9e82c39688e # v6.8.0 (tag v6)
 
-    - name: Install Boost headers
-      run: sudo apt-get update && sudo apt-get install -y libboost-dev
-
-    - name: Install simsopt from this checkout, then the package
+    - name: Install stock simsopt from PyPI, then the package editable
       run: |
         uv venv --python 3.11 .venv-alm
-        uv pip install --python "$PYTHON" .
-        uv pip install --python "$PYTHON" "./packages/simsopt-alm[test]"
+        uv pip install --python "$PYTHON" simsopt
+        uv pip install --python "$PYTHON" -e ".[test]"
+        "$PYTHON" -c "import pathlib, simsopt_alm; assert pathlib.Path(simsopt_alm.__file__).resolve().is_relative_to(pathlib.Path('src').resolve()), simsopt_alm.__file__"
 
     - name: Run the package tests
-      working-directory: packages/simsopt-alm
       run: |
         "$PYTHON" -m pytest -q -rs tests
 
     - name: Run the README's test command from the extracted sdist
       run: |
-        uv build --sdist --out-dir "$RUNNER_TEMP/sdist" packages/simsopt-alm
+        uv build --sdist --out-dir "$RUNNER_TEMP/sdist" .
         sdist=$(ls "$RUNNER_TEMP"/sdist/simsopt_alm-*.tar.gz)
         tar -tzf "$sdist" | grep -q '/tests/alm_golden/manifest.json$'
         tar -tzf "$sdist" | grep -q '/examples/boozerQA_alm.py$'
@@ -112,8 +105,8 @@ jobs:
         uv venv --python 3.11 .venv-stock
         uv pip install --python "$PYTHON" --no-cache simsopt
 
-    - name: Install the package and its test dependencies on top
-      run: uv pip install --python "$PYTHON" "./packages/simsopt-alm[test]"
+    - name: Install the package (non-editable) and its test dependencies on top
+      run: uv pip install --python "$PYTHON" ".[test]"
 
     - name: Require stock simsopt and a solver import free of simsopt
       run: |
@@ -139,7 +132,6 @@ jobs:
         EOF
 
     - name: Run the package tests
-      working-directory: packages/simsopt-alm
       run: |
         "$PYTHON" -m pytest -q -rs tests
 
@@ -153,9 +145,6 @@ jobs:
 
     steps:
     - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4.4.0 (tag v4)
-      with:
-        fetch-depth: 0
-        submodules: recursive
 
     - uses: astral-sh/setup-uv@d0cc045d04ccac9d8b7881df0226f9e82c39688e # v6.8.0 (tag v6)
 
@@ -172,10 +161,10 @@ jobs:
         uv pip install --python "$PYTHON" jax==0.4.13 jaxlib==0.4.13 \
           -f https://storage.googleapis.com/jax-releases/jax_releases.html
 
-    - name: Build and install simsopt without build isolation, then the package
+    - name: Build stock simsopt from PyPI's sdist without build isolation, then the package
       run: |
-        uv pip install --python "$PYTHON" --no-build-isolation .
-        uv pip install --python "$PYTHON" "./packages/simsopt-alm[test]"
+        uv pip install --python "$PYTHON" --no-build-isolation --no-binary simsopt simsopt
+        uv pip install --python "$PYTHON" ".[test]"
 
     - name: Import the package on Python 3.8
       run: |
@@ -193,7 +182,6 @@ jobs:
         EOF
 
     - name: Run the package tests (examples excluded)
-      working-directory: packages/simsopt-alm
       run: |
         "$PYTHON" -m pytest -q -rs tests \
           --ignore=tests/test_alm_examples.py \
@@ -210,7 +198,7 @@ jobs:
       # The recording pin (manifest.json openblas_coretype; checked below).
       OPENBLAS_CORETYPE: Haswell
       PYTHON: ${{ github.workspace }}/.venv-golden/bin/python
-      GOLDEN_DIR: ${{ github.workspace }}/packages/simsopt-alm/tests/alm_golden
+      GOLDEN_DIR: ${{ github.workspace }}/tests/alm_golden
 
     steps:
     - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4.4.0 (tag v4)
@@ -257,7 +245,7 @@ jobs:
         uv venv --python "${{ steps.recorded.outputs.python }}" .venv-golden
         printf 'numpy==%s\nscipy==%s\n' "${{ steps.recorded.outputs.numpy }}" \
           "${{ steps.recorded.outputs.scipy }}" > golden-constraints.txt
-        uv pip install --python "$PYTHON" -c golden-constraints.txt numpy scipy "./packages/simsopt-alm[test]"
+        uv pip install --python "$PYTHON" -c golden-constraints.txt numpy scipy ".[test]"
 
     - name: Require the bitwise environment
       run: |
@@ -275,7 +263,6 @@ jobs:
         [ "$cores" = "Core: $OPENBLAS_CORETYPE" ]
 
     - name: Run the golden tests
-      working-directory: packages/simsopt-alm
       run: |
         "$PYTHON" -m pytest -q -rs tests/test_alm_golden_trajectories.py --junitxml="$GITHUB_WORKSPACE/golden-junit.xml"
 

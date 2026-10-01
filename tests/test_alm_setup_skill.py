@@ -7,8 +7,8 @@ termination reasons of ``references/termination.md`` are exactly those the
 package source can return (and ``success`` exactly its converge decisions);
 ``references/settings.md`` lists every ``ALMSettings`` field with its default;
 the Python floor matches the package's ``pyproject.toml`` and the install
-commands its location in the repository; and ``docs/alm_setup_guide.md`` is
-what ``build_guide.py`` generates.
+commands name this repository and its layout; and ``docs/alm_setup_guide.md``
+is what ``build_guide.py`` generates.
 
 Runs: the scripts and templates run in fresh interpreters of this test's
 Python, which imports the installed ``simsopt_alm`` and simsopt, in scratch
@@ -37,10 +37,9 @@ import simsopt_alm as alm
 import simsopt_alm.signed_constraints as signed_constraints
 from simsopt_alm import ALMResult, ALMSettings, checkpoint, control, history, policy
 
-# The package directory (pyproject.toml, src/, tests/) and the repository
-# around it, which holds the skill and the generated guide.
-DISTRIBUTION_ROOT = Path(__file__).resolve().parents[1]
-REPO_ROOT = DISTRIBUTION_ROOT.parents[1]
+# The repository root: the package (pyproject.toml, src/, tests/), the skill
+# and the generated guide.
+REPO_ROOT = Path(__file__).resolve().parents[1]
 PACKAGE_DIR = Path(alm.__file__).resolve().parent
 SKILL_DIR = REPO_ROOT / ".claude" / "skills" / "simsopt-alm-setup"
 SCRIPTS_DIR = SKILL_DIR / "scripts"
@@ -622,18 +621,26 @@ class SkillDocumentsThePackageTests(unittest.TestCase):
 
     def test_python_floor_matches_pyproject(self):
         requires = re.search(r'^requires-python = ">=([\d.]+)"',
-                             (DISTRIBUTION_ROOT / "pyproject.toml").read_text(), re.MULTILINE).group(1)
+                             (REPO_ROOT / "pyproject.toml").read_text(), re.MULTILINE).group(1)
         self.assertEqual(check_env.MIN_PYTHON, tuple(int(part) for part in requires.split(".")))
 
     def test_install_commands_name_this_package(self):
-        self.assertEqual(REPO_ROOT / check_env.PACKAGE_SUBDIRECTORY, DISTRIBUTION_ROOT)
-        name = re.search(r'^name = "([\w-]+)"', (DISTRIBUTION_ROOT / "pyproject.toml").read_text(),
+        # This repository passes the clone rule's source check: the package is its root.
+        for source in check_env.CLONE_SOURCES:
+            with self.subTest(source=source.as_posix()):
+                self.assertTrue((REPO_ROOT / source).is_file(), f"{source} is not in the repository root")
+        name = re.search(r'^name = "([\w-]+)"', (REPO_ROOT / "pyproject.toml").read_text(),
                          re.MULTILINE).group(1)
         self.assertEqual(check_env.DISTRIBUTION, name)
         text = (REFERENCES_DIR / "install.md").read_text()
-        self.assertIn(f'install "{check_env.install_url("<fork-url>")}"', text)
-        self.assertIn(f"git clone -b {check_env.ALM_BRANCH} <fork-url> <clone>", text)
-        self.assertIn(f"install -e <clone>/{check_env.PACKAGE_SUBDIRECTORY.as_posix()}", text)
+        self.assertIn(f'install "{check_env.install_url("<repo-url>")}"', text)
+        self.assertIn("git clone <repo-url> <clone>\n", text)
+        self.assertIn("install -e <clone>\n", text)
+
+    def test_the_readme_installs_from_this_repository(self):
+        readme = (REPO_ROOT / "README.md").read_text()
+        self.assertIn(f'pip install "{check_env.install_url(check_env.REPO_URL)}"\n', readme)
+        self.assertIn(f"git clone {check_env.REPO_URL} && pip install -e simsopt-alm\n", readme)
 
     def test_guide_is_generated_from_the_skill(self):
         self.assertTrue(build_guide.GUIDE_PATH.exists(), "docs/alm_setup_guide.md is missing")
@@ -753,17 +760,16 @@ class SkillDocumentsThePackageTests(unittest.TestCase):
 class CheckEnvRouteTests(unittest.TestCase):
     """``check_env.choose_route``: the first route whose condition holds."""
 
-    CLONE = Path("/clones/simsopt")
+    CLONE = Path("/clones/simsopt-alm")
 
     @classmethod
     def report(cls, *, blockers=(), alm_file=None, checkout=False) -> dict:
         return {"blockers": list(blockers),
                 "alm": {"importable": alm_file is not None, "file": alm_file},
-                "checkout": {"path": str(cls.CLONE),
-                             "package": str(cls.CLONE / check_env.PACKAGE_SUBDIRECTORY)} if checkout else None}
+                "checkout": {"path": str(cls.CLONE)} if checkout else None}
 
     def test_routes(self):
-        clone_file = str(self.CLONE / check_env.PACKAGE_SUBDIRECTORY / "src" / "simsopt_alm" / "__init__.py")
+        clone_file = str(self.CLONE / "src" / "simsopt_alm" / "__init__.py")
         other_file = "/site-packages/simsopt_alm/__init__.py"
         cases = {
             "blocked": self.report(blockers=["Python too old"], alm_file=other_file),
@@ -826,14 +832,20 @@ class CheckEnvRouteTests(unittest.TestCase):
                     {"importable": False, "error": "ImportError: cannot import name 'nnls' from 'scipy.optimize'"},
                     module))
 
-    def test_the_default_install_is_the_published_alm_library_package(self):
-        self.assertEqual(check_env.FORK_URL, "https://github.com/jungdaesuh/simsopt.git")
-        self.assertEqual(check_env.install_url(check_env.FORK_URL),
-                         "git+https://github.com/jungdaesuh/simsopt.git@alm-library#subdirectory=packages/simsopt-alm")
+    def test_the_default_install_is_this_repository(self):
+        self.assertEqual(check_env.REPO_URL, "https://github.com/jungdaesuh/simsopt-alm.git")
+        self.assertEqual(check_env.ALM_BRANCH, "main")
+        self.assertEqual(check_env.install_url(check_env.REPO_URL),
+                         "git+https://github.com/jungdaesuh/simsopt-alm.git")
+        # Nothing in the skill or the guide still points at the package's
+        # former home, a subdirectory of the alm-library branch of the simsopt fork.
         for path in sorted(SKILL_DIR.rglob("*")) + [REPO_ROOT / "docs" / "alm_setup_guide.md"]:
             if path.is_file() and path.suffix in (".md", ".py"):
-                with self.subTest(path=path.name):
-                    self.assertNotIn("<owner>", path.read_text(encoding="utf-8"))
+                text = path.read_text(encoding="utf-8")
+                for stale in ("<owner>", "alm-library", "packages/simsopt-alm", "subdirectory=",
+                              "jungdaesuh/simsopt.git", "fork-url", "fork_url"):
+                    with self.subTest(path=path.name, stale=stale):
+                        self.assertNotIn(stale, text)
 
 
 class SkillScriptsRunTests(unittest.TestCase):
@@ -859,7 +871,7 @@ class SkillScriptsRunTests(unittest.TestCase):
         self.assertEqual(report["alm"]["file"], alm_file)
         self.assertEqual(report["signed_constraints"]["file"], os.path.realpath(signed_constraints.__file__))
         self.assertEqual(report["distribution"]["version"],
-                         re.search(r'^version = "([^"]+)"', (DISTRIBUTION_ROOT / "pyproject.toml").read_text(),
+                         re.search(r'^version = "([^"]+)"', (REPO_ROOT / "pyproject.toml").read_text(),
                                    re.MULTILINE).group(1))
         self.assertIn(f"import simsopt_alm: {alm_file}", completed.stdout.splitlines())
 
@@ -899,15 +911,15 @@ class SkillScriptsRunTests(unittest.TestCase):
                 self.assertTrue(report["checkout"]["clone_target"])
 
         fake = self.scratch / "fake"
-        (fake / check_env.PACKAGE_SUBDIRECTORY).mkdir(parents=True)
-        (fake / check_env.PACKAGE_SUBDIRECTORY / "pyproject.toml").write_text("")
+        fake.mkdir()
+        (fake / "pyproject.toml").write_text("")
         cases = {
             "only pyproject.toml, no git": (fake, "is not a git repository"),
-            "wrong branch": (self.make_repository("other-branch", "main", check_env.CLONE_SOURCES),
-                             "on branch 'main', not 'alm-library'"),
-            "not the top level": (clone / "packages", "not the top level of its git repository"),
+            "wrong branch": (self.make_repository("other-branch", "alm-library", check_env.CLONE_SOURCES),
+                             "on branch 'alm-library', not 'main'"),
+            "not the top level": (clone / "src", "not the top level of its git repository"),
             "no package sources": (self.make_repository("no-sources", check_env.ALM_BRANCH, (Path("README"),)),
-                                   "packages/simsopt-alm/src/simsopt_alm/__init__.py is missing"),
+                                   "src/simsopt_alm/__init__.py is missing"),
         }
         for case, (directory, problem) in cases.items():
             with self.subTest(case=case):
@@ -916,10 +928,9 @@ class SkillScriptsRunTests(unittest.TestCase):
                 self.assertEqual(completed.returncode, 1)
                 self.assertFalse(report["checkout"]["is_alm_clone"])
                 self.assertEqual(len(report["blockers"]), 1, report)
-                self.assertIn("is not a clone of the alm-library branch", report["blockers"][0])
+                self.assertIn("is not a clone of simsopt-alm's main branch", report["blockers"][0])
                 self.assertIn(problem, report["blockers"][0])
-                self.assertIn(f"git clone -b alm-library {check_env.FORK_URL} <new directory>",
-                              report["blockers"][0])
+                self.assertIn(f"git clone {check_env.REPO_URL} <new directory>", report["blockers"][0])
 
     def isolated_python(self) -> Path:
         """An interpreter without site-packages or PYTHONPATH: no simsopt and
@@ -935,7 +946,7 @@ class SkillScriptsRunTests(unittest.TestCase):
         self.assertEqual(report["route"], "install", report)
         self.assertEqual(report["blockers"], [])
         self.assertEqual(completed.returncode, 1)
-        self.assertEqual(report["install_url"], check_env.install_url(check_env.FORK_URL))
+        self.assertEqual(report["install_url"], check_env.install_url(check_env.REPO_URL))
         self.assertFalse(report["simsopt"]["importable"])
         self.assertEqual(set(report["templates"].values()), {False})
         self.assertTrue(any("only the generic template" in note for note in report["notes"]), report["notes"])

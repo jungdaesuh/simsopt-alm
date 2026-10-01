@@ -97,8 +97,8 @@
   "simsopt_alm/problem.py": "e034194ed13d300c93d399f91927ac43cad8b33b",
   "simsopt_alm/taylor.py": "81feda4824f698ed0b860a04fde7f64e2bf38d0a",
   "alm_golden_scenarios.py": "8b507fadaca91a8d0ff5cbc450c6535e66b8ae6f",
-  "generate_alm_golden.py": "53b2b380127b0621fdb2ff5c0c3cc351f0652211",
-  "measure_alm_golden_sensitivity.py": "434f817334fe11f58e8ff9311db6bca2570a7fed"
+  "generate_alm_golden.py": "6e1c507e332a7a63b4080957079849b3063032cc",
+  "measure_alm_golden_sensitivity.py": "b5351309acfffcba9093e004accb67c128b82683"
  },
  "scenarios": {
   "toy_convex": {

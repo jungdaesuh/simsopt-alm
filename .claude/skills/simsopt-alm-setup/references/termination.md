@@ -2,7 +2,7 @@
 
 `ALMResult.termination_reason` says why `minimize_alm` returned. This table
 lists every reason the package can return (the drift test in
-`packages/simsopt-alm/tests/test_alm_setup_skill.py` checks the list against
+`tests/test_alm_setup_skill.py` checks the list against
 the source in both directions). `success` is `yes` only for the two
 converged reasons.
 

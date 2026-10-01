@@ -20,24 +20,27 @@ changes nothing in it.
 
 ## Install
 
-The package lives in `packages/simsopt-alm/` of the `alm-library` branch of
-<https://github.com/jungdaesuh/simsopt>. It is not on PyPI.
+The package is this repository, <https://github.com/jungdaesuh/simsopt-alm>.
+It is not on PyPI.
 
 Plain install, next to your own simsopt:
 
 ```sh
-pip install "git+https://github.com/jungdaesuh/simsopt.git@alm-library#subdirectory=packages/simsopt-alm"
+pip install "git+https://github.com/jungdaesuh/simsopt-alm.git"
 ```
 
 Editable install, to read or change the solver's sources:
 
 ```sh
-git clone -b alm-library https://github.com/jungdaesuh/simsopt.git simsopt-alm-clone
-pip install -e simsopt-alm-clone/packages/simsopt-alm
+git clone https://github.com/jungdaesuh/simsopt-alm.git && pip install -e simsopt-alm
 ```
 
 Without a simsopt of your own, the `simsopt` extra installs PyPI's:
-`pip install "simsopt-alm[simsopt] @ git+https://github.com/jungdaesuh/simsopt.git@alm-library#subdirectory=packages/simsopt-alm"`.
+`pip install "simsopt-alm[simsopt] @ git+https://github.com/jungdaesuh/simsopt-alm.git"`.
+
+The package originated in the `alm-library` branch of
+<https://github.com/jungdaesuh/simsopt> (as `packages/simsopt-alm/`, and
+before that as `simsopt.solve.alm`); this repository carries that history.
 
 ## Quick start
 
@@ -110,16 +113,16 @@ included) instead of the last one, which stays in `result.last_iterate`
 
 ## Setup skill and guide
 
-The `alm-library` branch also ships a Claude Code skill,
+This repository also ships a Claude Code skill,
 `.claude/skills/simsopt-alm-setup/`, that installs this package, interviews
 you about the problem, generates a problem module and a runner from tested
 templates (Stage 2, Boozer single-stage, generic), checks gradients and
 constraint signs, and explains every termination reason. Its content, for
-reading by hand, is `docs/alm_setup_guide.md` on the same branch.
+reading by hand, is `docs/alm_setup_guide.md`.
 
 ## Tests
 
-From this directory, with the package, simsopt and the `test` extra's
+From the repository root, with the package, simsopt and the `test` extra's
 dependencies installed (`pip install pytest threadpoolctl`, or install the
 package as `".[test]"`):
 

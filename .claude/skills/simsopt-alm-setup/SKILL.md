@@ -1,6 +1,6 @@
 ---
 name: simsopt-alm-setup
-description: "Install the augmented-Lagrangian solver package simsopt-alm (import simsopt_alm) beside a user's own simsopt and set up a constrained optimization min f(x) s.t. g_i(x) <= 0 for their case: Stage-2 coils, Boozer single-stage, or a custom problem. Detects the Python, the simsopt and the package install and picks an install route (pip install from the fork, or an editable clone), interviews the user (objective, constraints, stateful evaluator, hybrid signals), generates a problem module and a runner from tested templates, verifies gradients, constraint signs and scales plus a smoke run, and explains termination reasons. Use when the user says 'set up ALM', 'install the ALM solver', 'constrained coil optimization in simsopt', 'replace penalty weights with constraints', 'minimize_alm', or asks what an ALM termination_reason means or how to tune ALMSettings."
+description: "Install the augmented-Lagrangian solver package simsopt-alm (import simsopt_alm) beside a user's own simsopt and set up a constrained optimization min f(x) s.t. g_i(x) <= 0 for their case: Stage-2 coils, Boozer single-stage, or a custom problem. Detects the Python, the simsopt and the package install and picks an install route (pip install from the simsopt-alm repository, or an editable clone), interviews the user (objective, constraints, stateful evaluator, hybrid signals), generates a problem module and a runner from tested templates, verifies gradients, constraint signs and scales plus a smoke run, and explains termination reasons. Use when the user says 'set up ALM', 'install the ALM solver', 'constrained coil optimization in simsopt', 'replace penalty weights with constraints', 'minimize_alm', or asks what an ALM termination_reason means or how to tune ALMSettings."
 ---
 
 # Set up simsopt's ALM solver
@@ -12,7 +12,7 @@ unchanged, and sets up one constrained optimization,
 checked before the real run.
 
 `$SKILL_DIR` is the skill's directory (`.claude/skills/simsopt-alm-setup` of
-the `alm-library` branch). `<python>` is the interpreter the user's
+the simsopt-alm repository). `<python>` is the interpreter the user's
 optimization runs with (ask when unclear). `<dir>` is the directory the
 generated files go into.
 
@@ -34,9 +34,9 @@ generated files go into.
 
 1. Run `<python> $SKILL_DIR/scripts/check_env.py --python <python>`, adding
    `--checkout <path>` when the user wants the solver's sources in an
-   editable clone of the `alm-library` branch at `<path>` (an existing clone,
-   or a new directory to clone into). The branch comes from
-   `https://github.com/jungdaesuh/simsopt.git`; `--fork-url <url>`
+   editable clone of the repository at `<path>` (an existing clone, or a new
+   directory to clone into). The repository is
+   `https://github.com/jungdaesuh/simsopt-alm.git`; `--repo-url <url>`
    overrides it. Read `route`, `blockers` and `notes` from the `CHECK_ENV`
    line; the lines before it show where each module imports from, how the
    package is installed and the clone's HEAD commit.

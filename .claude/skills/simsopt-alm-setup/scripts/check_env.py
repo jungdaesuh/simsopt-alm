@@ -3,7 +3,7 @@
 ``simsopt_alm`` (the ``simsopt-alm`` distribution) and which install route
 applies.
 
-    python check_env.py [--python INTERPRETER] [--checkout DIR] [--fork-url URL]
+    python check_env.py [--python INTERPRETER] [--checkout DIR] [--repo-url URL]
 
 It runs on Python 3.7 or newer and inspects the interpreter the optimization
 runs with (default: the one running this script; any Python that runs
@@ -16,12 +16,12 @@ installs beside any simsopt (a fork, an editable checkout, a PyPI release)
 and changes nothing in it. It reads local git refs only and changes nothing.
 
 ``--checkout DIR`` asks for an editable install from a clone of the
-``alm-library`` branch at ``DIR`` (cloned there first when ``DIR`` does not
+simsopt-alm repository at ``DIR`` (cloned there first when ``DIR`` does not
 exist or is empty), for users who want to read or change the solver's
-sources; without it the plain install from ``--fork-url`` applies. An
+sources; without it the plain install from ``--repo-url`` applies. An
 existing ``DIR`` counts as a clone only when it is the top level of a git
-repository, is on the ``alm-library`` branch and has the package's sources
-(``CLONE_SOURCES``); anything else is a blocker.
+repository, is on the ``main`` branch and has the package's sources at its
+root (``CLONE_SOURCES``); anything else is a blocker.
 
 ``templates`` in the report says which problem templates can run: the
 generic one needs the solver, the Stage-2 and Boozer ones also the signed
@@ -29,13 +29,12 @@ constraints, which import simsopt (``TEMPLATE_MODULES``).
 
 ``route`` is the first that applies: ``blocked`` (Python below the floor; an
 ALM module that exists but fails to import: the report quotes the error; or
-``--checkout`` names a non-empty directory that is not an ``alm-library``
+``--checkout`` names a non-empty directory that is not a simsopt-alm
 clone), ``ready`` (``simsopt_alm`` imports, and with ``--checkout`` from that
 clone), ``editable`` (``--checkout`` given: clone if needed, then install the
-clone's package editable), ``install`` (install the package from
-``--fork-url``). ``blockers`` lists what must be fixed first. When simsopt
-does not import, ``ready`` covers the generic template only, and a note says
-so.
+clone editable), ``install`` (install the package from ``--repo-url``).
+``blockers`` lists what must be fixed first. When simsopt does not import,
+``ready`` covers the generic template only, and a note says so.
 
 It prints the route, the blockers and notes, the file each module imports
 from, the clone's HEAD (with ``--checkout``), and, last,
@@ -53,18 +52,17 @@ from pathlib import Path
 from typing import Dict, List, Optional
 from urllib.parse import unquote
 
-# The package's Python floor: requires-python of packages/simsopt-alm.
+# The package's Python floor: requires-python of pyproject.toml.
 MIN_PYTHON = (3, 8)
-ALM_BRANCH = "alm-library"
-# The repository that publishes the alm-library branch (--fork-url overrides it).
-FORK_URL = "https://github.com/jungdaesuh/simsopt.git"
+# The branch a clone must be on: the repository's default branch.
+ALM_BRANCH = "main"
+# The repository whose root is the package (--repo-url overrides it).
+REPO_URL = "https://github.com/jungdaesuh/simsopt-alm.git"
 DISTRIBUTION = "simsopt-alm"
-# The package's directory in a clone of the alm-library branch.
-PACKAGE_SUBDIRECTORY = Path("packages") / "simsopt-alm"
-# What a clone of the alm-library branch must hold to install the package.
+# What a clone must hold, relative to its root, to install the package.
 CLONE_SOURCES = (
-    PACKAGE_SUBDIRECTORY / "pyproject.toml",
-    PACKAGE_SUBDIRECTORY / "src" / "simsopt_alm" / "__init__.py",
+    Path("pyproject.toml"),
+    Path("src") / "simsopt_alm" / "__init__.py",
 )
 ALM_MODULE = "simsopt_alm"
 SIGNED_CONSTRAINTS_MODULE = "simsopt_alm.signed_constraints"
@@ -89,9 +87,10 @@ METADATA_PROBE = (
 )
 
 
-def install_url(fork_url: str) -> str:
-    """The pip requirement that installs the package from ``fork_url``."""
-    return f"git+{fork_url}@{ALM_BRANCH}#subdirectory={PACKAGE_SUBDIRECTORY.as_posix()}"
+def install_url(repo_url: str) -> str:
+    """The pip requirement that installs the package from ``repo_url``'s
+    default branch."""
+    return f"git+{repo_url}"
 
 
 def run(command: List[str], cwd: Optional[Path] = None) -> subprocess.CompletedProcess:
@@ -157,8 +156,8 @@ def git_state(checkout: Path) -> dict:
 
 
 def clone_problems(path: Path, git_report: dict) -> List[str]:
-    """Why the existing directory ``path`` is not a clone of the alm-library
-    branch; empty when it is one."""
+    """Why the existing directory ``path`` is not a simsopt-alm clone on
+    ``ALM_BRANCH``; empty when it is one."""
     if not git_report["is_git"]:
         return ["it is not a git repository"]
     problems = []
@@ -180,7 +179,6 @@ def checkout_state(path: Path) -> dict:
     problems = [] if clone_target else clone_problems(path, git_report)
     return {
         "path": str(path),
-        "package": str(path / PACKAGE_SUBDIRECTORY),
         "exists": exists,
         "clone_target": clone_target,
         "is_alm_clone": not clone_target and not problems,
@@ -190,9 +188,9 @@ def checkout_state(path: Path) -> dict:
 
 
 def imports_from_checkout(report: dict) -> bool:
-    """Whether ``simsopt_alm`` imports from the ``--checkout`` clone's package."""
-    package_src = Path(report["checkout"]["package"]) / "src"
-    return package_src in Path(report["alm"]["file"]).parents
+    """Whether ``simsopt_alm`` imports from the ``--checkout`` clone."""
+    clone_src = Path(report["checkout"]["path"]) / "src"
+    return clone_src in Path(report["alm"]["file"]).parents
 
 
 def choose_route(report: dict) -> str:
@@ -214,7 +212,7 @@ def distribution_install(direct_url_text: Optional[str]) -> str:
     return "editable" if json.loads(direct_url_text).get("dir_info", {}).get("editable") else "non-editable"
 
 
-def build_report(python: str, checkout_argument: Optional[Path], fork_url: str) -> dict:
+def build_report(python: str, checkout_argument: Optional[Path], repo_url: str) -> dict:
     version = json.loads(probe(python, VERSION_PROBE).stdout)
     simsopt_import = imports(python, "simsopt")
     simsopt_version = None
@@ -242,9 +240,9 @@ def build_report(python: str, checkout_argument: Optional[Path], fork_url: str) 
     if simsopt_import["importable"]:
         blockers.append(import_blocker(module_imports[SIGNED_CONSTRAINTS_MODULE], SIGNED_CONSTRAINTS_MODULE))
     if checkout is not None and checkout["problems"]:
-        blockers.append(f"{checkout['path']} is not a clone of the {ALM_BRANCH} branch "
+        blockers.append(f"{checkout['path']} is not a clone of {DISTRIBUTION}'s {ALM_BRANCH} branch "
                         f"({'; '.join(checkout['problems'])}): clone one with "
-                        f"`git clone -b {ALM_BRANCH} {fork_url} <new directory>` and pass "
+                        f"`git clone {repo_url} <new directory>` and pass "
                         "--checkout <new directory> (or name a new or empty directory to clone into)")
     report = {
         "python": {"executable": python, "version": ".".join(map(str, version)),
@@ -253,8 +251,8 @@ def build_report(python: str, checkout_argument: Optional[Path], fork_url: str) 
         **{REPORT_KEYS[module]: result for module, result in module_imports.items()},
         "distribution": distribution,
         "checkout": checkout,
-        "fork_url": fork_url,
-        "install_url": install_url(fork_url),
+        "repo_url": repo_url,
+        "install_url": install_url(repo_url),
         "blockers": [blocker for blocker in blockers if blocker is not None],
         "notes": [],
     }
@@ -265,7 +263,7 @@ def build_report(python: str, checkout_argument: Optional[Path], fork_url: str) 
         report["notes"].append(
             f"simsopt does not import ({simsopt_import['error']}): only the generic template can run; "
             "the Stage-2 and Boozer templates need simsopt in this interpreter (your own, or "
-            f"pip install \"{DISTRIBUTION}[simsopt] @ {install_url(fork_url)}\" for PyPI's)")
+            f"pip install \"{DISTRIBUTION}[simsopt] @ {install_url(repo_url)}\" for PyPI's)")
     if report["route"] == "editable" and module_imports[ALM_MODULE]["importable"]:
         report["notes"].append(f"the interpreter imports simsopt_alm from {module_imports[ALM_MODULE]['file']}, "
                                f"not from the clone {checkout['path']}: the editable install replaces it")
@@ -306,13 +304,13 @@ def main(argv=None) -> int:
     parser.add_argument("--python", default=sys.executable,
                         help="the interpreter the optimization runs with (default: this one)")
     parser.add_argument("--checkout", type=Path,
-                        help=f"a clone of the {ALM_BRANCH} branch to install editable "
+                        help=f"a clone of {DISTRIBUTION} (branch {ALM_BRANCH}) to install editable "
                              "(cloned there first when it does not exist)")
-    parser.add_argument("--fork-url", default=FORK_URL,
-                        help=f"another repository that publishes the {ALM_BRANCH} branch "
-                             f"(default: {FORK_URL})")
+    parser.add_argument("--repo-url", default=REPO_URL,
+                        help=f"another repository whose root is the {DISTRIBUTION} package "
+                             f"(default: {REPO_URL})")
     args = parser.parse_args(argv)
-    report = build_report(args.python, args.checkout, args.fork_url)
+    report = build_report(args.python, args.checkout, args.repo_url)
     print(f"route: {report['route']}")
     for blocker in report["blockers"]:
         print(f"BLOCKER: {blocker}")

@@ -34,7 +34,9 @@ simsopt = ["simsopt"]
 test = ["pytest", "threadpoolctl"]
 
 [project.urls]
-Source = "https://github.com/jungdaesuh/simsopt/tree/alm-library/packages/simsopt-alm"
+Homepage = "https://github.com/jungdaesuh/simsopt-alm"
+Source = "https://github.com/jungdaesuh/simsopt-alm"
+Issues = "https://github.com/jungdaesuh/simsopt-alm/issues"
 
 [tool.setuptools.packages.find]
 where = ["src"]

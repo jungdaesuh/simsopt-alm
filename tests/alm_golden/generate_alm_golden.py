@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """Record the ALM golden trajectories of ``alm_golden_scenarios.py``.
 
-Regenerate from the package directory (``packages/simsopt-alm``), and only
+Regenerate from the repository root (the package's directory), and only
 for a reviewed change that is meant to alter ALM behavior (a refactor that
 needs new goldens has changed behavior), in the recording environment
 (``RECORDING_ENVIRONMENT_VARIABLES``: one thread per library and OpenBLAS's
