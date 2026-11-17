@@ -179,8 +179,8 @@
        ]
       },
       "nit": 0,
-      "success": true,
-      "message": "inner maxiter exhausted"
+      "success": false,
+      "message": "inner_skipped: inner maxiter exhausted"
      }
     },
     "last_iterate": {
@@ -232,8 +232,8 @@
      "x0_floor"
     ],
     "inner_iterations": 0,
-    "inner_success": true,
-    "inner_message": "inner maxiter exhausted",
+    "inner_success": false,
+    "inner_message": "inner_skipped: inner maxiter exhausted",
     "penalty": "0x1.4000000000000p+3",
     "penalty_values": [
      "0x1.4000000000000p+3",
@@ -287,9 +287,9 @@
     "inner_maxiter": 0,
     "inner_maxls": null,
     "inner_maxfun": null,
-    "inner_profile": null,
+    "inner_profile": "inner_skipped",
     "inner_lbfgsb_projected_gradient_norm": "0x1.0000000000000p+2",
-    "inner_attempts": 1,
+    "inner_attempts": 0,
     "accepted_move_norm": "0x0.0p+0",
     "accepted_move_norm_scaled": "0x0.0p+0",
     "infeasible_stall_move_tolerance": "0x1.5798ee2308c3ap-27",
@@ -417,7 +417,7 @@
     "action": "subproblem_continue",
     "dual_update_penalty_reason": null,
     "outer_termination": null,
-    "event_sha256": "f6c0bfbf6d80cd83fdb8abd7ab0c3dfb9ae1920ff64a8e0cacbc57eef9248b43"
+    "event_sha256": "43ba6288bd527e5ef66468cdd6ba30be23fa0d51353e343e6df5d6ac3a3b6d56"
    },
    {
     "event": "on_outer_boundary",

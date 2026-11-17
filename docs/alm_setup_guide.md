@@ -181,7 +181,12 @@ Then give the user the full-run command,
    [Termination reasons](#termination-reasons) and apply its action. Check
    `restored_best_feasible` too: a restored `x` is feasible and usable, and
    can be the start itself when no later iterate was feasible;
-   `result.last_iterate` holds the last iterate.
+   `result.last_iterate` holds the last iterate. In a `--history` file,
+   `inner_success: false` with `inner_trust_box_limited: true` means the
+   trust box, not stationarity, ended that inner solve: no action unless
+   most steps show it (then raise `trust_radius_init`). A `ValueError` that
+   names `multiplier_max` before the first evaluation means warm-start or
+   checkpoint multipliers exceed the cap: lower them or raise the cap.
 2. Change one thing per rerun, and name the reason (the table row or the
    pitfall from [Pitfalls](#pitfalls)).
 3. Stop when the run ends `converged` or `constraints_inactive_converged`,
@@ -303,7 +308,7 @@ and the help of each module named below.
 | `ALMEvaluator` | `simsopt_alm` | Protocol `(x, multipliers, penalty) -> ALMEvaluation`. |
 | `ALMOuterStepEvent` | `simsopt_alm` | What `on_outer_step` receives once per continuation step. |
 | `ALMOuterBoundary` | `simsopt_alm` | What `on_outer_boundary` receives after each outer iteration; `resume_from` takes a non-final one. |
-| `ALMHistoryRecorder` | `simsopt_alm.history` | Opt-in history: pass `recorder.record` as `on_outer_step`, read `recorder.history()`. An entry's `constraint_values` is the signed g (as `result.constraint_values`), `violation_values` the per-row violation (`feasibility_values`). |
+| `ALMHistoryRecorder` | `simsopt_alm.history` | Opt-in history: pass `recorder.record` as `on_outer_step`, read `recorder.history()`. An entry's `constraint_values` is the signed g (as `result.constraint_values`), `violation_values` the per-row violation (`feasibility_values`). `inner_success` is False when no inner solve ran (`inner_profile` `"inner_skipped"`) and when L-BFGS-B stopped only because the trust box held its projected gradient (`inner_trust_box_limited: true`: normal while the subproblem minimizer lies outside the box; if most steps are, a larger `trust_radius_init` lets each one go further). |
 | `alm_checkpointing` | `simsopt_alm.checkpoint` | `alm_checkpointing(inner_options, resume_state, completed_outer_callback)` returns the `inner_options`, `resume_from` and `on_outer_boundary` arguments of one checkpointed run. |
 | `ALMCheckpointing` | `simsopt_alm.checkpoint` | The frozen triple `alm_checkpointing` returns. |
 | `ALMTransitionSnapshot` | `simsopt_alm.checkpoint` | Immutable checkpoint (no Jacobians): `x`, `total_inner_iterations`, `completed_outer_iterations`, `resume_eligible`, `accepted_state`, ... Built by `alm_checkpointing`, which encodes every evaluation value (arrays and lists come back as tuples). |
@@ -363,8 +368,9 @@ re-evaluates the same x with new multipliers or a new penalty. The dict needs
 `base_grad` (f without penalty terms, used to rank incumbents and for the KKT
 residual). An optional `stationarity_norm` that is not `||grad||` is the
 evaluator's own stationarity measure, used as given (so it must account for
-`base_bounds`); otherwise the solver measures `||grad||` without the
-components pointing out of the box at an active bound. The solver checks every dict where it enters (outer iterate and
+`base_bounds`); otherwise the solver measures `||grad||`, with `base_bounds`
+of the gradient's unit projection onto the box (a component pointing out of
+the box counts only up to its distance to the bound). The solver checks every dict where it enters (outer iterate and
 each inner trial): a required key absent or None raises `KeyError`
 (`constraint_grads` included, even with every row inactive); `grad` and each
 of the one-per-row `constraint_grads` must have x's shape, and
@@ -379,9 +385,11 @@ must be a `bool` or `numpy.bool_`: 0, None or any other type raises
 point rejects the trial (the line search backtracks); at an outer iterate
 either raises `ValueError`. Where the dict enters, the solver also takes its
 own copy of every array it reads (`grad`, the constraint, feasibility and
-dual-update values, the hybrid quartet, each `constraint_grads` row), so an
-evaluator may return arrays it reuses or refills in place (simsopt's cached
-`J()`/`dJ()` results, one buffer per call): no `.copy()` is needed.
+dual-update values, the hybrid quartet, each `constraint_grads` row) and of
+every array, dict, list and tuple under the other keys, nested ones too
+(a shared subtree stays shared; other objects are kept by reference), so an
+evaluator may return arrays and diagnostics it reuses or refills in place
+(simsopt's cached `J()`/`dJ()` results, one buffer per call): no `.copy()` is needed.
 
 - **Stateless physics** (depends on x alone): `cached_alm_evaluator(physics)`.
   Call its `cache_clear()` whenever anything else the physics reads changes
@@ -461,9 +469,12 @@ def hybrid_physics(base_value, base_grad, surrogate, hard, constraint_grads):
   restored state, the live state put back after) and drops it if it is no
   longer hard-feasible, so a restored result is judged by the final problem.
 - `snapshot_accepted_state_fn`, `restore_incumbent_state_fn`: stateful physics.
-- `initial_multipliers` (nonnegative, one per row), `initial_penalty` (one
-  positive scalar, shared by every row): warm start from an earlier result;
-  not with `resume_from`.
+- `initial_multipliers` (nonnegative, one per row, at most
+  `settings.multiplier_max`: `ValueError` otherwise, never clamped),
+  `initial_penalty` (one positive scalar, shared by every row): warm start
+  from an earlier result; not with `resume_from`. A `resume_from` whose
+  multipliers (or best feasible iterate's) exceed `multiplier_max` raises
+  `ValueError` before your state is restored.
 - `constraint_blocks`: one group label per row (reports only).
 - `base_bounds`: box bounds on x, a sequence of `(lower, upper)` pairs or an
   object with `lb`/`ub`. x0 is projected onto the box (as L-BFGS-B does); a
@@ -704,16 +715,16 @@ tolerances.
 | `max_subproblem_continuations` | 20 | Extra re-solves of one subproblem within an outer iteration (the loop runs n + 1) before the penalty is raised. | `max_outer_after_subproblem_limit_penalty_increase`, or every outer iteration ends in `max_outer`. |
 | `penalty_init` | 1.0 | Initial penalty, shared by every row. | Rows stay violated while f improves (raise to 10 to 100); the first subproblem overshoots into infeasibility of a stateful solve (lower). |
 | `penalty_scale` | 10.0 | Factor of each penalty raise (> 1). | Raises make the iterate jump and a warm-started inner solve fails (use 2 to 5). |
-| `penalty_max` | 1e8 | Largest penalty; a raise past it ends the run (`penalty_cap_reached`). None removes the cap. | Rarely: a run that needs a larger penalty usually has badly scaled or conflicting rows. |
+| `penalty_max` | 1e8 | Largest penalty; a raise past it ends the run (`penalty_cap_reached`). None removes the cap; a raise that then overflows to inf ends the run with `penalty_overflow`, keeping the finite penalty. | Rarely: a run that needs a larger penalty usually has badly scaled or conflicting rows. |
 | `feasibility_tol` | 1e-6 | Largest row violation that counts as feasible, in the rows' units. Also the complementarity-gap tolerance, absolute in f's units: Σ λ⁺_i max(0, -g_i) <= `feasibility_tol`, with λ⁺ = max(0, λ + ρ g) the shifted multipliers. On the feasible side the gap is f - ℓ(x, λ⁺), where ℓ(x, λ⁺) = f + Σ λ⁺_i g_i is the ordinary Lagrangian (not the augmented one), so an offset added to f changes nothing; scale f to O(1). | Scaled rows: 1e-4 is a violation of 0.01% of a bound; anything below the accuracy of the row's physics is unreachable. |
-| `stationarity_tol` | 1e-6 | Largest augmented-gradient norm that counts as stationary, in f's units per dof; with `base_bounds`, components on an active bound that point out of the box do not count. | Set it to what f's gradient accuracy allows (a noisy or discretized f cannot reach 1e-6); scale f first. |
+| `stationarity_tol` | 1e-6 | Largest augmented-gradient norm that counts as stationary, in f's units per dof; with `base_bounds`, the norm of the gradient's unit projection onto the box, where a component that points out of the box counts only up to its distance to the bound. | Set it to what f's gradient accuracy allows (a noisy or discretized f cannot reach 1e-6); scale f first. |
 | `trust_radius_init` | None | Initial trust radius of each inner L-BFGS-B attempt: a box of half-width radius x max(1, abs(x_i)) around the iterate. None: no box; a given radius must be positive (`ValueError` otherwise). | A stateful inner solve (Newton warm start) fails on long trial steps: a box keeps the trials near the accepted point. |
 | `trust_radius_min` | 1e-4 | Smallest radius. An attempt whose step is rejected (a rejected or unusable trial, or a higher total) keeps the start iterate at it; a step that only exceeds the feasibility slack (max violation above max(the scheduled tolerance, the start's)) is accepted there, and the outer loop raises the penalty. | Rarely. |
 | `trust_radius_shrink` | 0.5 | Radius factor after a rejected attempt, in (0, 1). | Rarely. |
 | `trust_radius_grow` | 1.5 | Radius factor after an accepted step that used at least half the radius (> 1). | Rarely. |
 | `max_inner_attempts` | 4 | L-BFGS-B attempts per subproblem; a rejected attempt, or one beyond the feasibility slack, retries with a shrunk radius (only with a trust radius; without one the step beyond the slack is accepted). | Rarely; with a trust radius, more attempts tolerate more rejected trials. |
 | `relaxed_feasibility_gate_cap` | 0.01 | Cap on the loose early feasibility gate that classifies active rows for routing and the dual update: max(`feasibility_tol`, min(scheduled tolerance, cap)). Convergence is judged at `feasibility_tol`, not this gate. | Rarely. |
-| `multiplier_max` | 1e6 | Largest multiplier; a clamped update blocks convergence until a later update is not clamped. | Multipliers pin at the cap with O(1) rows: a row is nearly infeasible or conflicting; fix the problem first. |
+| `multiplier_max` | 1e6 | Largest multiplier; a clamped update blocks convergence until a later update is not clamped. `initial_multipliers`, or a resumed checkpoint's multipliers (its best feasible iterate's too), above it raise `ValueError` before any evaluation; they are never clamped. | Multipliers pin at the cap with O(1) rows: a row is nearly infeasible or conflicting; fix the problem first. |
 | `history_max_entries` | 512 | Entries `ALMHistoryRecorder.from_settings` keeps (None: all); `minimize_alm` itself keeps no history. | Long runs whose full history you want. |
 | `continue_on_signal_mismatch` | False | Hybrid quartet only: a stalled mismatch (always a row with a live surrogate shift) keeps re-solving the subproblem instead of raising the penalty. | `signal_mismatch_*` reasons with a smooth surrogate you trust. |
 | `penalty_sufficient_decrease_tau` | 0.5 | ALGENCAN's tau: an infeasible step holds the penalty when the infeasibility measure fell to <= tau x its previous value. | Rarely; smaller raises the penalty sooner. |
@@ -738,8 +749,15 @@ The fifth `minimize_alm` argument is the options dict of scipy's L-BFGS-B:
   [Termination reasons](#termination-reasons)); `result.outer_iterations` counts the
   outer iterations that ran a step. A resumed run gets the budget minus the
   checkpoint's `total_inner_iterations` (`run_alm.py --resume` does this).
+  A step that starts on a spent budget runs no inner solve (0 attempts,
+  `inner_profile` `"inner_skipped"`, no optimizer success).
 - `gtol`: raised to at least min(1e-4, 0.1 x the scheduled stationarity
-  tolerance), so each subproblem stops near the current target.
+  tolerance), so each subproblem stops near the current target, then capped
+  at that tolerance / sqrt(n), n the dofs `base_bounds` does not fix: an
+  L-BFGS-B stop on `gtol` (a per-component test) then meets the solver's
+  norm test, unless a trust box (`trust_radius_init`) held the stop, whose
+  projected gradient then drops the components pushing through the box's
+  faces (the history flags it `inner_trust_box_limited`).
 - `maxls`: line-search steps, default 20. `maxcor`, `ftol`, `maxfun`: passed
   through (validated positive).
 
@@ -781,7 +799,7 @@ at the start of each outer iteration.
 
 | Reason | Success | Meaning | Action |
 |---|---|---|---|
-| `converged` | yes | An approximate KKT point at the returned point (not global optimality, not descent from the start; see [Pitfalls](#pitfalls) on offsets), at the stated tolerances, with the shifted multipliers λ⁺ = max(0, λ + ρg): max violation <= `feasibility_tol` (the evaluator's `feasibility_values`, the hard channel, and the positive part of the g that L uses, which for the hybrid quartet is the surrogate); augmented-gradient norm <= `stationarity_tol` (with `base_bounds`, components on an active bound that point out of the box do not count); and the complementarity gap Σ_i λ⁺_i max(0, -g_i) <= `feasibility_tol`, absolute in f's units (nonnegative per-row terms, so rows cannot cancel; unchanged when a row is rescaled, g -> Mg, λ -> λ/M, ρ -> ρ/M²; activity bands play no part). No hybrid signal mismatch judged at `feasibility_tol` (the relaxed early gate only routes steps), no binding multiplier cap. Limit: a nonconvex row steep enough that λ⁺_i x slack stays under the tolerance while λ⁺_i ∇g_i cancels ∇f can still pass; no finite tolerance excludes it. | Accept. Check the physics at `result.x` (the runner's `finish` summary). |
+| `converged` | yes | An approximate KKT point at the returned point (not global optimality, not descent from the start; see [Pitfalls](#pitfalls) on offsets), at the stated tolerances, with the shifted multipliers λ⁺ = max(0, λ + ρg): max violation <= `feasibility_tol` (the evaluator's `feasibility_values`, the hard channel, and the positive part of the g that L uses, which for the hybrid quartet is the surrogate); augmented-gradient norm <= `stationarity_tol` (with `base_bounds`, of the gradient's unit projection onto the box: a component that points out of the box counts only up to its distance to the bound, so one on its bound does not count); and the complementarity gap Σ_i λ⁺_i max(0, -g_i) <= `feasibility_tol`, absolute in f's units (nonnegative per-row terms, so rows cannot cancel; unchanged when a row is rescaled, g -> Mg, λ -> λ/M, ρ -> ρ/M²; activity bands play no part). No hybrid signal mismatch judged at `feasibility_tol` (the relaxed early gate only routes steps), no binding multiplier cap. Limit: a nonconvex row steep enough that λ⁺_i x slack stays under the tolerance while λ⁺_i ∇g_i cancels ∇f can still pass; no finite tolerance excludes it. | Accept. Check the physics at `result.x` (the runner's `finish` summary). |
 | `constraints_inactive_converged` | yes | Hybrid quartet only: every hard row is strictly inactive (no surrogate activity, zero shift) and the same approximate-KKT test holds. | Accept. The constraints did not bind; check whether the thresholds are the ones you meant. |
 
 ### Stopped early
@@ -793,6 +811,8 @@ at the start of each outer iteration.
 | `process_budget_exhausted` | no | Your `accepted_callback` raised `ALMProcessBudgetExhausted` (a budget you enforce, e.g. wall clock). | Resume from the last checkpoint: `run_alm.py --resume <dir>/outer_NNN.pkl`. |
 | `penalty_cap_reached` | no | The next penalty raise would exceed `penalty_max`; no better feasible iterate to restore. | Usually an infeasible or badly scaled problem: run `sign_check.py`, check the scale warnings, relax thresholds that may conflict. Raise `penalty_max` only when the rows are O(1). |
 | `penalty_cap_reached_restored_best_feasible` | no | As `penalty_cap_reached`, and `result.x` is the restored best hard-feasible iterate. | `result.x` is feasible and usable; for a better objective treat it as `penalty_cap_reached`. |
+| `penalty_overflow` | no | The next penalty raise overflowed to inf (possible only when `penalty_max` is None or near the float limit, or `penalty_scale` is huge); the run kept its finite penalty, and no better feasible iterate was restored. A checkpoint of this stop is terminal, not resumable. | Treat it as `penalty_cap_reached`: the problem is likely infeasible or badly scaled. Set a finite `penalty_max` (the default 1e8) so the run stops at a cap instead. |
+| `penalty_overflow_restored_best_feasible` | no | As `penalty_overflow`, and `result.x` is the restored best hard-feasible iterate. | `result.x` is feasible and usable; for a better objective treat it as `penalty_overflow`. |
 
 ### Outer-iteration limit
 
@@ -811,7 +831,7 @@ or start a new `minimize_alm` at `result.x` with
 | `max_outer_after_penalty_increase` | no | The last outer iteration raised the penalty: infeasibility did not shrink enough. | Check for conflicting constraints (relax a threshold), row scales, then raise `max_outer_iterations` or `penalty_init`. |
 | `max_outer_after_subproblem_limit_penalty_increase` | no | Hard-feasible, but the subproblem hit `max_subproblem_continuations` without meeting the multiplier-update test. | Raise `inner_options["maxiter"]` or `max_subproblem_continuations`, or loosen `stationarity_tol`. |
 | `max_outer_after_signal_mismatch_penalty_increase` | no | Hybrid quartet only: a stalled signal mismatch raised the penalty on the last outer iteration. A mismatch is a real disagreement: hard-feasible, yet a row whose surrogate still pushes (a live surrogate shift) has a surrogate value more than the feasibility gate away from its hard value. Rows whose channels agree to the gate, or that carry no shift, never mismatch, even when their activity differs. | Lower the smoothing temperature (surrogate closer to the hard value), or set `continue_on_signal_mismatch=True`, or drop the quartet (smooth rows only); then raise `max_outer_iterations`. |
-| `max_outer_restored_best_feasible` | no | The outer limit or the inner budget ran out, and the final iterate was hard-infeasible or worse than the best feasible one, which `result.x` now is. | `result.x` is feasible and usable; raise `max_outer_iterations` or `inner_options["maxiter"]` for a better one. |
+| `max_outer_restored_best_feasible` | no | The outer limit ran out, and the final iterate was hard-infeasible or worse than the best feasible one, which `result.x` now is. | `result.x` is feasible and usable; raise `max_outer_iterations` for a better one. |
 
 ### Inner budget spent
 
@@ -822,7 +842,9 @@ resumed from (`resume_from.state.total_inner_iterations`; 0 for a fresh call),
 because `result.nit` counts the iterations before the resume too. When it is
 used up the run stops before the next step, between two outer iterations or
 inside one, and the reason is the **action name of the last step** (unless a
-better feasible iterate is restored: then `max_outer_restored_best_feasible`).
+better feasible iterate is restored: then `inner_budget_restored_best_feasible`).
+A step that starts on a spent budget runs no inner solve: its event's `inner`
+has 0 attempts, `inner_profile` `"inner_skipped"` and no optimizer success.
 A run stopped inside an outer iteration writes no `outer_NNN.pkl` for it:
 raise `maxiter` and resume from the one before (`run_alm.py --resume`), which
 redoes that outer iteration.
@@ -837,6 +859,7 @@ redoes that outer iteration.
 | `signal_mismatch_penalty_increase` | no | Hybrid quartet only; budget spent after a stalled signal mismatch. | As `dual_update`; see `max_outer_after_signal_mismatch_penalty_increase`. |
 | `signal_mismatch_subproblem_limit_penalty_increase` | no | Hybrid quartet only; budget spent after a mismatch subproblem hit its limit. | As `dual_update`. |
 | `subproblem_continue` | no | Budget spent right after a subproblem continuation, inside an outer iteration. | As `dual_update`. |
+| `inner_budget_restored_best_feasible` | no | Budget spent, and the final iterate was hard-infeasible or worse than the best feasible one, which `result.x` now is. | `result.x` is feasible and usable; raise `inner_options["maxiter"]` for a better one, or resume from the last checkpoint with a fresh budget. |
 
 ### Never returned
 
@@ -875,8 +898,8 @@ Each entry: the symptom, the cause, the fix.
    though f(1) - f(0) = +0.001, and it converges at the bound KKT point x = 1.
    Other SciPy builds may pick either local KKT point; the certificate holds
    at whichever point is returned. A snap onto a bound is kept only
-   on a strict reported decrease, so a near-bound improvement the totals
-   cannot represent stalls instead.
+   on a strict reported decrease; otherwise the unsnapped point stays, and
+   its outward gradient counts only up to its distance to the bound.
 3. **`maxiter` is a whole-run budget.** `inner_options["maxiter"]` counts
    L-BFGS-B iterations over every subproblem of one `minimize_alm` call, not
    per subproblem, and the call never runs more (`result.nit` minus the
@@ -884,8 +907,9 @@ Each entry: the symptom, the cause, the fix.
    most `maxiter`). A
    small value ends the run early, possibly inside an outer iteration, with
    the last step's action as the termination reason (`dual_update`,
-   `penalty_increase`, `subproblem_continue`, ..., see
-   [Termination reasons](#termination-reasons)).
+   `penalty_increase`, `subproblem_continue`, ..., or
+   `inner_budget_restored_best_feasible` when a better feasible iterate is
+   restored; see [Termination reasons](#termination-reasons)).
 4. **Cached evaluator with stateful physics.** `cached_alm_evaluator` returns
    the physics of the first evaluation at a bitwise-equal x. A warm-started
    inner solve (Boozer surface, VMEC restart) can land elsewhere on a second
@@ -929,7 +953,9 @@ Each entry: the symptom, the cause, the fix.
     `restore_incumbent_state_fn` are both given or both omitted
     (`ValueError`); `resume_from` cannot be combined with
     `initial_multipliers` or `initial_penalty`, and needs the checkpoint's x
-    as x0.
+    as x0. Multipliers above `multiplier_max` (from `initial_multipliers` or
+    a checkpoint written with a larger cap) raise `ValueError` before any
+    evaluation or restore: lower them yourself or raise the cap.
 12. **Taylor-testing only the augmented Lagrangian misses rows.** With zero
     multipliers an inactive row (`max(0, multiplier + penalty * g) = 0`)
     drops out of L and its gradient goes unchecked; `gradient_check.py` tests

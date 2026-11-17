@@ -216,7 +216,7 @@
      "x0_floor"
     ],
     "inner_iterations": 0,
-    "inner_success": true,
+    "inner_success": false,
     "inner_message": "ALM skipped inner solve; current iterate already satisfies the KKT stationarity gate.",
     "penalty": "0x1.4000000000000p+3",
     "penalty_values": [
@@ -271,7 +271,7 @@
     "inner_maxiter": null,
     "inner_maxls": null,
     "inner_maxfun": null,
-    "inner_profile": null,
+    "inner_profile": "inner_skipped",
     "inner_lbfgsb_projected_gradient_norm": null,
     "inner_attempts": 0,
     "accepted_move_norm": "0x0.0p+0",

@@ -4,8 +4,8 @@
 returning an :class:`ALMEvaluation`; keys in the package docstring) is the
 loop's only view of the problem. This module owns what the loop assumes about
 that dict: its schema and the check of it where each evaluation enters
-(:func:`_contract_checked_evaluation`), which of its arrays the solver
-snapshots there to own them (:data:`_OWNED_EVALUATION_ARRAY_FIELDS`,
+(:func:`_contract_checked_evaluation`), which of its arrays and containers
+the solver snapshots there to own them (:data:`_OWNED_EVALUATION_ARRAY_FIELDS`,
 :func:`_owned_evaluation_snapshot`), what makes it unusable (a field that
 is not finite, or the ``nonfinite_evaluation`` flag:
 :func:`_unusable_evaluation_fields`), the constraint metadata it attaches,
@@ -17,7 +17,7 @@ iterate that the loop and the continuation policy read
 
 # Eager annotations: on Python 3.8 a TypedDict subclass defined in another
 # module resolves inherited string annotations in that module's namespace.
-from typing import Callable, List, Mapping, Optional, Protocol, Sequence, Tuple, TypedDict, Union
+from typing import Callable, Dict, List, Mapping, Optional, Protocol, Sequence, Tuple, TypedDict, Union
 
 import numpy as np
 
@@ -30,7 +30,7 @@ from ..alm_math import (
 )
 from ..public_api import set_module
 from ..state import ALMIterateMeasurement
-from ..state_views import _require_acyclic_containers
+from ..state_views import _require_acyclic_containers, _writable_copy
 
 
 class _ALMEvaluationRequired(TypedDict):
@@ -205,10 +205,13 @@ def _require_finite_evaluation(evaluation: dict, *, context: str) -> None:
 def _owned_evaluation_snapshot(evaluation: Mapping[str, object]) -> dict:
     """A dict of ``evaluation`` in which the solver owns what it reads: every
     :data:`_OWNED_EVALUATION_ARRAY_FIELDS` value (None means absent) as a new
-    float array and ``constraint_grads`` as a new list of new float rows.
-    Other values are shared. An evaluator may therefore return the same
-    buffers on every call (a cache that fills one array in place): a later
-    evaluation cannot change one the solver kept."""
+    float array, ``constraint_grads`` as a new list of new float rows, and
+    every other key's arrays, mappings, lists and tuples, nested ones too, as
+    owned copies (:func:`_writable_copy`: a shared subtree stays shared); other
+    objects are shared. An evaluator may therefore return the same buffers on
+    every call (a cache that fills one array or diagnostics list in place): a
+    later evaluation cannot change one the solver kept. ``evaluation`` is
+    acyclic."""
     snapshot = dict(evaluation)
     for key in _OWNED_EVALUATION_ARRAY_FIELDS:
         value = snapshot.get(key)
@@ -217,6 +220,10 @@ def _owned_evaluation_snapshot(evaluation: Mapping[str, object]) -> dict:
     snapshot["constraint_grads"] = [
         np.array(row, dtype=float) for row in evaluation["constraint_grads"]
     ]
+    memo: Dict[int, object] = {}
+    for key, value in evaluation.items():
+        if key not in _OWNED_EVALUATION_ARRAY_FIELDS and key != "constraint_grads":
+            snapshot[key] = _writable_copy(value, memo)
     return snapshot
 
 def _incumbent_objective_value(evaluation: dict) -> float:
@@ -256,10 +263,11 @@ def _contract_checked_evaluation(
     place every evaluation passes: every required key present and not None, ``grad``
     and each ``constraint_grads`` row of shape ``(x.size,)``, one row and one
     ``constraint_values`` entry per constraint, nonnegative
-    ``constraint_activity_tolerances`` (optional), and ``search_step_success``
-    (optional) a bool or ``numpy.bool_``, stored as a Python bool. Raises
-    ``KeyError`` for a missing key and ``ValueError`` otherwise, naming
-    ``context``."""
+    ``constraint_activity_tolerances`` (optional), no container that contains
+    itself (checked before the snapshot copies them), and
+    ``search_step_success`` (optional) a bool or ``numpy.bool_``, stored as a
+    Python bool. Raises ``KeyError`` for a missing key and ``ValueError``
+    otherwise, naming ``context``."""
     missing = [key for key in _REQUIRED_EVALUATION_KEYS if evaluation.get(key) is None]
     if missing:
         raise KeyError(
@@ -291,6 +299,7 @@ def _contract_checked_evaluation(
         np.asarray(activity_tolerances, dtype=float) < 0.0
     ):
         raise ValueError(f"{context}: constraint_activity_tolerances must be nonnegative")
+    _require_acyclic_containers(evaluation, context=context, path="evaluation")
     checked = _owned_evaluation_snapshot(evaluation)
     if "search_step_success" in checked:
         flag = checked["search_step_success"]
@@ -319,10 +328,10 @@ def _checked_evaluation(
 ) -> dict:
     """The evaluation at ``(x, multipliers, penalty_argument)`` with the
     constraint metadata attached (an owned dict). Raises as
-    :func:`_contract_checked_evaluation` does, and ``ValueError`` naming
-    ``context`` when a field the loop reads is not finite, the evaluator
-    flagged it ``nonfinite_evaluation``, or a container in it contains
-    itself."""
+    :func:`_contract_checked_evaluation` does (a container that contains
+    itself included), and ``ValueError`` naming ``context`` when a field the
+    loop reads is not finite or the evaluator flagged it
+    ``nonfinite_evaluation``."""
     evaluation = _attach_alm_constraint_metadata(
         _contract_checked_evaluation(
             evaluate_problem(x, multipliers, penalty_argument),
@@ -334,7 +343,6 @@ def _checked_evaluation(
         constraint_blocks_tuple,
     )
     _require_finite_evaluation(evaluation, context=context)
-    _require_acyclic_containers(evaluation, context=context, path="evaluation")
     return evaluation
 
 def _measure_iterate(
@@ -349,8 +357,8 @@ def _measure_iterate(
     effective_feasibility_tol: float,
 ) -> ALMIterateMeasurement:
     """What the loop and the policy read about the iterate ``x``: its signed
-    and feasibility values, routing state and stationarity norms (reduced at
-    active ``base_bounds``), with the active sets judged at
+    and feasibility values, routing state and stationarity norms (projected
+    onto ``base_bounds``), with the active sets judged at
     ``effective_feasibility_tol``. ``evaluation`` and ``multipliers`` are held
     by reference."""
     (

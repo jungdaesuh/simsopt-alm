@@ -19,6 +19,7 @@ import numpy as np
 from ..alm_math import (
     _as_float_list,
     _augmented_stationarity_norm,
+    _bound_projected_gradient,
     _conditioning_metrics,
     _max_value,
     _penalty_values,
@@ -29,7 +30,7 @@ from ..alm_math import (
 from ..inner.attempts import _move_tolerance
 from ..public_api import set_module
 from ..settings.settings import _POSITIVE_WHEN_PROVIDED, ALMSettings, _finite_alm_integer_or_none
-from ..state import ALMIterateMeasurement, ALMOuterStepEvent
+from ..state import INNER_STOP_TRUST_BOX_LIMITED, ALMIterateMeasurement, ALMOuterStepEvent
 
 __all__ = ["ALMHistoryRecorder"]
 
@@ -174,7 +175,10 @@ def _history_entry_from_event(event: ALMOuterStepEvent) -> dict:
 
     Base fields describe the measured iterate; a step without an inner solve
     (the pre-inner ``converged`` shortcut) gives every inner-solve field its
-    zero/None value, and inner options are the ones the last attempt ran with.
+    zero/None value, with ``inner_success`` False and ``inner_profile``
+    ``"inner_skipped"`` (no optimizer ran), and inner options are the ones the
+    last attempt ran with. ``inner_success`` is False for a trust-box-limited
+    stop, which is flagged ``inner_trust_box_limited``.
     A penalty raise refreshes the measured fields, all but the multipliers,
     to its re-evaluation at the new penalty. Decision annotations follow, then
     ``action``, ``trust_radius`` and ``outer_termination``.
@@ -197,7 +201,7 @@ def _history_entry_from_event(event: ALMOuterStepEvent) -> dict:
         "continuation_iteration": int(event.continuation_iteration),
         "constraint_names": [str(name) for name in event.constraint_names],
         "inner_iterations": 0 if skipped else int(inner.iterations),
-        "inner_success": True if skipped else bool(inner.optimizer_success),
+        "inner_success": False if skipped else bool(inner.succeeded),
         "inner_message": (
             "ALM skipped inner solve; current iterate already satisfies the "
             "KKT stationarity gate."
@@ -209,7 +213,7 @@ def _history_entry_from_event(event: ALMOuterStepEvent) -> dict:
         "inner_maxiter": int(options["maxiter"]) if "maxiter" in options else None,
         "inner_maxls": int(options["maxls"]) if "maxls" in options else None,
         "inner_maxfun": int(options["maxfun"]) if "maxfun" in options else None,
-        "inner_profile": None if skipped else inner.inner_profile,
+        "inner_profile": "inner_skipped" if skipped else inner.inner_profile,
         "inner_lbfgsb_projected_gradient_norm": (
             None
             if skipped
@@ -281,6 +285,9 @@ def _history_entry_from_event(event: ALMOuterStepEvent) -> dict:
         )
     if event.signal_mismatch_repair:
         entry["signal_mismatch_continuation_repair"] = True
+    # inner_success is then False: the trust box, not stationarity, ended it.
+    if not skipped and inner.inner_stop == INNER_STOP_TRUST_BOX_LIMITED:
+        entry["inner_trust_box_limited"] = True
     if event.subproblem_limit_reason is not None or (
         event.action == "subproblem_continue"
     ):
@@ -639,21 +646,7 @@ def _lbfgsb_projected_gradient_max_norm(
     x,
     bounds,
 ) -> float:
-    projected_gradient = np.asarray(gradient, dtype=float).reshape(-1).copy()
-    if bounds is not None:
-        x_array = np.asarray(x, dtype=float).reshape(-1)
-        for index, bound in enumerate(bounds):
-            lower_bound, upper_bound = bound
-            coordinate = float(x_array[index])
-            gradient_value = float(projected_gradient[index])
-            at_lower_bound = lower_bound is not None and coordinate <= float(
-                lower_bound
-            )
-            at_upper_bound = upper_bound is not None and coordinate >= float(
-                upper_bound
-            )
-            if (at_lower_bound and gradient_value > 0.0) or (
-                at_upper_bound and gradient_value < 0.0
-            ):
-                projected_gradient[index] = 0.0
-    return float(np.linalg.norm(projected_gradient, ord=np.inf))
+    """The infinity norm of the gradient's unit projection onto the inner
+    solve's ``bounds`` (its trust box, or the base bounds; None: no box): what
+    L-BFGS-B's ``gtol`` test reads."""
+    return float(np.max(np.abs(_bound_projected_gradient(gradient, x, bounds)), initial=0.0))

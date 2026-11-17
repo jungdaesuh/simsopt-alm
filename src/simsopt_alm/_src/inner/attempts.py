@@ -8,8 +8,10 @@ start iterate when no attempt produced a usable step
 cache and its early stop once the dual-update gate holds, the elevated
 fallback for a non-finite trial, the trust box (intersected with the
 caller's bounds), the acceptance and infeasible-stall tests with their
-tolerances, the one shrink/grow trust rule, the policy's inner plan and
-stalled-trial retry, and this process's ``maxiter``. The loop also reads
+tolerances, the one shrink/grow trust rule, the policy's inner plan (its
+``gtol`` capped so that a stop meets the loop's stationarity target) and
+stalled-trial retry, this process's ``maxiter``, and which stationarity test
+an attempt's reported success passed (:func:`_inner_stop`). The loop also reads
 two judgments that share those tolerances:
 :func:`_feasibility_improvement_and_floor` and
 :func:`_made_meaningful_inner_progress`.
@@ -24,7 +26,13 @@ from typing import Callable, List, Optional, Tuple
 import numpy as np
 from scipy.optimize import minimize
 
-from ..alm_math import _bound_reduced_stationarity_norm, _constraint_routing_state, _extract_constraint_state
+from ..alm_math import (
+    _bound_projected_gradient,
+    _bound_reduced_stationarity_norm,
+    _constraint_routing_state,
+    _extract_constraint_state,
+    _inner_gtol_for_l2_target,
+)
 from ..policy.default import (
     DEFAULT_CONTINUATION_POLICY,
     ALMContinuationPolicy,
@@ -39,7 +47,8 @@ from ..problem.evaluation import (
     _search_step_rejected,
 )
 from ..settings.settings import ALMSettings, _nonnegative_alm_integer
-from ..state_views import _borrowed_read_only_value, _require_acyclic_containers
+from ..state import INNER_STOP_RAW_STATIONARITY, INNER_STOP_TRUST_BOX_LIMITED
+from ..state_views import _borrowed_read_only_value
 
 def _inner_options_with_remaining_maxiter(
     inner_options: Optional[dict],
@@ -61,11 +70,13 @@ def _inner_options_with_remaining_maxiter(
     return remaining_options
 
 def _exhausted_inner_optimizer_result(x: np.ndarray) -> SimpleNamespace:
+    """The optimizer result of an inner solve the spent budget skipped: no
+    iteration and no success."""
     return SimpleNamespace(
         x=np.asarray(x, dtype=float).copy(),
         nit=0,
-        success=True,
-        message="inner maxiter exhausted",
+        success=False,
+        message="inner_skipped: inner maxiter exhausted",
     )
 
 @dataclass(frozen=True)
@@ -106,6 +117,9 @@ class ALMInnerAttemptResult:
     forced_inner_false_success: bool
     nonfinite_candidate_evaluation: bool
     nonfinite_candidate_fields: Optional[List[str]]
+    # Which stationarity test ``optimizer_result``'s point passed
+    # (:func:`_inner_stop`); None when it passed none.
+    inner_stop: Optional[str]
 
 @dataclass
 class _ALMInnerAttemptEvaluator:
@@ -140,14 +154,17 @@ class _ALMInnerAttemptEvaluator:
     def placed_on_bounds(self, x: np.ndarray, evaluation: dict):
         """``(x, evaluation)`` of an attempt's result: ``x`` clipped into the
         base box, and snapped onto the bounds it lies within rounding of
-        (:func:`_snap_onto_bounds`) unless the snap raises the total
-        (:func:`_snap_keeps_total`); a moved x is evaluated there."""
+        (:func:`_snap_onto_bounds`) unless the snap does not lower the total
+        (:func:`_snap_keeps_total`); a moved x is evaluated there. A rejected
+        snap evaluated the snapped x, which moves a stateful evaluator's live
+        state, so the kept point is evaluated afresh (not from the cache)."""
         clipped = _project_onto_bounds(x, self.request.base_bounds)
         snapped = _snap_onto_bounds(x, evaluation["grad"], self.request.base_bounds)
         if not np.array_equal(snapped, clipped):
             snapped_evaluation = self.evaluation_at(snapped)
             if _snap_keeps_total(evaluation, snapped_evaluation):
                 return snapped, snapped_evaluation
+            return clipped, self._fresh_evaluation(clipped)
         if np.array_equal(clipped, x):
             return x, evaluation
         return clipped, self.evaluation_at(clipped)
@@ -349,6 +366,27 @@ def _candidate_is_acceptable(
         moved_norm,
     )
 
+# SciPy's L-BFGS-B ``gtol`` when the options carry none.
+_LBFGSB_DEFAULT_GTOL = 1.0e-5
+
+def _inner_stop(result, x, grad, gtol: float, base_bounds) -> Optional[str]:
+    """The stationarity test an L-BFGS-B attempt's reported success passed at
+    ``x``: raw stationarity when every component of the gradient's unit
+    projection onto the base bounds (the vector the loop measures) is within
+    ``gtol``; trust-box-limited when it is not but L-BFGS-B stopped on its
+    projected gradient, which then dropped components pushing through
+    trust-box faces. None for a failure or any other stop. Older SciPy (1.10)
+    spells the message with underscores (``NORM_OF_PROJECTED_GRADIENT``)."""
+    if not bool(getattr(result, "success", False)):
+        return None
+    projected = _bound_projected_gradient(grad, x, base_bounds)
+    if np.max(np.abs(projected), initial=0.0) <= gtol:
+        return INNER_STOP_RAW_STATIONARITY
+    message = str(getattr(result, "message", "")).upper().replace("_", " ")
+    if "PROJECTED GRADIENT" in message:
+        return INNER_STOP_TRUST_BOX_LIMITED
+    return None
+
 def _within_feasibility_slack(
     current_eval: dict, candidate_eval: dict, update_feasibility_tol: float
 ) -> bool:
@@ -487,7 +525,8 @@ def _snap_onto_bounds(
     """``x`` in the box, and on a finite bound where it lies within
     ``_BOUND_SNAP_ULPS`` of it and ``grad`` pushes out of the box there: the
     rounding of a step that reached the bound. Other coordinates keep their
-    value (the stationarity test treats only x == bound as on it)."""
+    value (the stationarity test counts their outward gradient up to their
+    distance to the bound)."""
     projected = _project_onto_bounds(x, base_bounds)
     if base_bounds is None:
         return projected
@@ -560,6 +599,8 @@ def _run_alm_inner_attempts(request: ALMInnerAttemptRequest) -> ALMInnerAttemptR
     attempt_iterations = 0
     attempt_radius = request.trust_radius
     last_attempt_result = None
+    last_attempt_stop = None
+    accepted_stop = None
     current_feasible_enough = (
         request.current_max_feasibility_violation <= request.effective_feasibility_tol
     )
@@ -579,15 +620,21 @@ def _run_alm_inner_attempts(request: ALMInnerAttemptRequest) -> ALMInnerAttemptR
             request.inner_options["maxiter"],
         )
 
+    # The loop measures the L2 norm of the projection vector whose infinity
+    # norm L-BFGS-B's gtol tests: gtol is capped so a stop meets that target.
+    gtol_cap = _inner_gtol_for_l2_target(
+        request.update_stationarity_tol, request.x.size, request.base_bounds
+    )
     for attempt_index in range(1, request.settings.max_inner_attempts + 1):
-        attempts = attempt_index
         if process_inner_maxiter is not None:
             remaining_maxiter = process_inner_maxiter - attempt_iterations
             if remaining_maxiter <= 0:
                 if last_attempt_result is None:
+                    # A spent budget skips the inner solve: no attempt ran.
                     last_attempt_result = _exhausted_inner_optimizer_result(request.x)
                     last_inner_options = dict(request.inner_options)
                     last_inner_options["maxiter"] = 0
+                    last_inner_profile = "inner_skipped"
                 break
             attempt_inner_options = dict(request.inner_options)
             attempt_inner_options["maxiter"] = remaining_maxiter
@@ -604,6 +651,9 @@ def _run_alm_inner_attempts(request: ALMInnerAttemptRequest) -> ALMInnerAttemptR
             )
         )
         inner_attempt_options = dict(plan.options)
+        inner_attempt_options["gtol"] = min(
+            float(inner_attempt_options.get("gtol", _LBFGSB_DEFAULT_GTOL)), gtol_cap
+        )
         if process_inner_maxiter is not None:
             # A plan may lower the call's remaining budget, never exceed it.
             plan_maxiter = inner_attempt_options.get("maxiter", remaining_maxiter)
@@ -617,6 +667,7 @@ def _run_alm_inner_attempts(request: ALMInnerAttemptRequest) -> ALMInnerAttemptR
         )
         last_inner_options = dict(inner_attempt_options)
         last_inner_profile = plan.profile
+        attempts = attempt_index
         evaluator.attempt_iterations = 0
         try:
             result = minimize(
@@ -630,6 +681,7 @@ def _run_alm_inner_attempts(request: ALMInnerAttemptRequest) -> ALMInnerAttemptR
             )
             candidate_x = np.asarray(result.x, dtype=float).copy()
             candidate_eval = evaluator.evaluation_at(candidate_x)
+            stopped_at_kkt_gate = False
         except _EarlyStopInnerSolve as early_stop:
             result = SimpleNamespace(
                 x=early_stop.x,
@@ -639,8 +691,14 @@ def _run_alm_inner_attempts(request: ALMInnerAttemptRequest) -> ALMInnerAttemptR
             )
             candidate_x = early_stop.x
             candidate_eval = early_stop.evaluation
+            stopped_at_kkt_gate = True
         candidate_x, candidate_eval = evaluator.placed_on_bounds(candidate_x, candidate_eval)
         last_attempt_result = result
+        # The callback's KKT gate is the loop's stationarity test itself.
+        last_attempt_stop = INNER_STOP_RAW_STATIONARITY if stopped_at_kkt_gate else _inner_stop(
+            result, candidate_x, candidate_eval["grad"], inner_attempt_options["gtol"],
+            request.base_bounds,
+        )
         attempt_iterations += int(getattr(result, "nit", 0))
         moved_norm = float(np.linalg.norm(candidate_x - request.x))
         move_tolerance = _move_tolerance(request.x)
@@ -683,15 +741,11 @@ def _run_alm_inner_attempts(request: ALMInnerAttemptRequest) -> ALMInnerAttemptR
             within_slack or not smaller_box_left
         ):
             accepted_result = result
+            accepted_stop = last_attempt_stop
             accepted_eval = _attach_alm_constraint_metadata(
                 candidate_eval,
                 request.constraint_names_tuple,
                 request.constraint_blocks_tuple,
-            )
-            _require_acyclic_containers(
-                accepted_eval,
-                context="ALM accepted inner evaluation",
-                path="evaluation",
             )
             accepted_x = candidate_x
             accepted_bounds = attempt_bounds
@@ -719,6 +773,7 @@ def _run_alm_inner_attempts(request: ALMInnerAttemptRequest) -> ALMInnerAttemptR
             # a penalty cycle; otherwise no step is usable (rejected, flagged,
             # or a higher total) and the stall flags stay (False, None, False).
             accepted_result = result
+            accepted_stop = last_attempt_stop
             accepted_eval = request.current_eval
             accepted_x = request.x.copy()
             accepted_bounds = attempt_bounds
@@ -741,6 +796,7 @@ def _run_alm_inner_attempts(request: ALMInnerAttemptRequest) -> ALMInnerAttemptR
                 "ALM failed before any inner optimization result was produced."
             )
         accepted_result = last_attempt_result
+        accepted_stop = last_attempt_stop
         accepted_eval = request.current_eval
         accepted_x = request.x.copy()
         accepted_bounds = None
@@ -760,4 +816,5 @@ def _run_alm_inner_attempts(request: ALMInnerAttemptRequest) -> ALMInnerAttemptR
         forced_inner_false_success=forced_inner_false_success,
         nonfinite_candidate_evaluation=nonfinite_candidate_evaluation,
         nonfinite_candidate_fields=nonfinite_candidate_fields,
+        inner_stop=accepted_stop,
     )

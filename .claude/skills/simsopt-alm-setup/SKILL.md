@@ -168,7 +168,12 @@ Then give the user the full-run command,
    [termination.md](references/termination.md) and apply its action. Check
    `restored_best_feasible` too: a restored `x` is feasible and usable, and
    can be the start itself when no later iterate was feasible;
-   `result.last_iterate` holds the last iterate.
+   `result.last_iterate` holds the last iterate. In a `--history` file,
+   `inner_success: false` with `inner_trust_box_limited: true` means the
+   trust box, not stationarity, ended that inner solve: no action unless
+   most steps show it (then raise `trust_radius_init`). A `ValueError` that
+   names `multiplier_max` before the first evaluation means warm-start or
+   checkpoint multipliers exceed the cap: lower them or raise the cap.
 2. Change one thing per rerun, and name the reason (the table row or the
    pitfall from [pitfalls.md](references/pitfalls.md)).
 3. Stop when the run ends `converged` or `constraints_inactive_converged`,

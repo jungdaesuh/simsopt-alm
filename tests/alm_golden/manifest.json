@@ -9,18 +9,18 @@
   "openblas_coretype": "Haswell"
  },
  "source_blob_ids": {
-  "simsopt_alm/__init__.py": "a72d00dd4342899dfb791ee6502991b19b070b40",
+  "simsopt_alm/__init__.py": "5d755241c7786d55a4d29e572feed33460c94c0c",
   "simsopt_alm/_src/__init__.py": "0bd5544462ab6bb181e6dde0fbd232e2e1ff5e3f",
-  "simsopt_alm/_src/alm_math.py": "eb750378fd681c5aa012c1bd13d08f8c1ad06f2a",
+  "simsopt_alm/_src/alm_math.py": "a37480403f4efac3c5db04b14a08e8b8d4060946",
   "simsopt_alm/_src/checkpoint/__init__.py": "6f71b30eb6583fb082b94f5db7b737e71fb409d6",
   "simsopt_alm/_src/checkpoint/boundary.py": "2367b970a8dfa39a86921568cf2e099c81db7e05",
   "simsopt_alm/_src/checkpoint/codec.py": "16ef8e1200cb7eed6956d9ea4ba1cf03bfc12715",
   "simsopt_alm/_src/checkpoint/snapshot.py": "0e011208f7c7411087fdab4ce87b6396c5242df7",
   "simsopt_alm/_src/inner/__init__.py": "31c6be3475674eb07fc51eac42f25530e5931ba8",
-  "simsopt_alm/_src/inner/attempts.py": "6aec18492f28c3b94e9f2ff159479b73cb8b3b3e",
+  "simsopt_alm/_src/inner/attempts.py": "a90783761cef998b5f6f15cd8b72ade4fab96656",
   "simsopt_alm/_src/loop/__init__.py": "d67e2ab6e9da81fe2952e2470f51f491541c7522",
-  "simsopt_alm/_src/loop/history.py": "49561603dd02e6bd02e3a727b10683bca0deb2c3",
-  "simsopt_alm/_src/loop/outer.py": "df3ab45e52228b0d20541c6f9aff3efb11d2c5a5",
+  "simsopt_alm/_src/loop/history.py": "e034fb91eccbd158365165cfdb518c65bf77d697",
+  "simsopt_alm/_src/loop/outer.py": "67855fa84e55ebfbd19b647d2dbf80165d876a9a",
   "simsopt_alm/_src/policy/__init__.py": "e4c89b84c830bf9f710d81fd0c38d3ec68a3722f",
   "simsopt_alm/_src/policy/decisions.py": "41674f5a5d693d7e1ee6300d9db57813524174d1",
   "simsopt_alm/_src/policy/default.py": "f6628a52689fec7030f0b61e8f1b72e1d9fdaa8d",
@@ -28,18 +28,18 @@
   "simsopt_alm/_src/policy/plan.py": "20789e0a6122192a29046f148ca8ba1208694216",
   "simsopt_alm/_src/policy/views.py": "a23cb3d68aab71876066fe8937df787480f07d79",
   "simsopt_alm/_src/problem/__init__.py": "4869ca8388a642f07cf0ebd08dacacbcd30db815",
-  "simsopt_alm/_src/problem/evaluation.py": "e6ec94444a5fb010eb6eaaa73c4be2cd1cd2cc38",
+  "simsopt_alm/_src/problem/evaluation.py": "854579499a71a2b1c4415e14484889461fe38361",
   "simsopt_alm/_src/problem/physics.py": "6366bffa62ddc83308ccffec0c6283ba8e8a3876",
   "simsopt_alm/_src/problem/taylor.py": "e1c6d8f819931ca7f53a3d98557297b59bb1c9d4",
   "simsopt_alm/_src/public_api.py": "060be8c19c6884b1d10407c378a113d64c499581",
   "simsopt_alm/_src/settings/__init__.py": "ab606359c5efdde08c99e10ff7bdc401e5ded7b6",
   "simsopt_alm/_src/settings/settings.py": "09c7bcdc51b8f0364e44b3ab040b75bcbaec3721",
-  "simsopt_alm/_src/state.py": "c4a192565904e96a0bb1b4caf0c48d03658ce06f",
-  "simsopt_alm/_src/state_views.py": "759e80043d245a10276d13dde05f1a06703e883a",
+  "simsopt_alm/_src/state.py": "3813fbd5c6168a87ded953f3c9a3dcba4a9553df",
+  "simsopt_alm/_src/state_views.py": "a59f36dd7fc3d747c33581ad03c3ad372f122be9",
   "simsopt_alm/checkpoint.py": "668c0e9f4c9b5e9972d5540dbaa7c5e818a4071f",
   "simsopt_alm/history.py": "405fbff4d635a553651a10f5669651bfdc5b8bf2",
   "simsopt_alm/policy.py": "b1c46ea4082e8a4df3258d40b0f4c13ffe03cc37",
-  "alm_golden_scenarios.py": "104cfb15d2187ba8d7c315a1618d11431b5419e8",
+  "alm_golden_scenarios.py": "88f2d681708878f170670fd6c9e05d8e20625eb0",
   "generate_alm_golden.py": "c1b8f5215a49fef047c4bd627726995351cf89be",
   "measure_alm_golden_sensitivity.py": "b5351309acfffcba9093e004accb67c128b82683"
  },
@@ -102,98 +102,98 @@
   {
    "scenario": "penalty_ramp_to_cap",
    "fixture": "penalty_ramp_to_cap.json",
-   "sha256": "9aa0af751da58884bf80377c80df2a8e264195033f0ea23c26e4f447103c4a9e",
+   "sha256": "9223904dc3af76c69d3c8184841b616f000efba5399014b48dffa23e9ab781b5",
    "bytes": 86482
   },
   {
    "scenario": "resume_penalty_ramp_mid_run",
    "fixture": "resume_penalty_ramp_mid_run.json",
-   "sha256": "cdb4be225dedcf5b005cac835ae22b15c8c9ec152ab3ce421f1d02848646e1e2",
+   "sha256": "af38a3b750c2962af786de3e9cb1d5aec7c5fe8d12c221074e8d1977be2ef08c",
    "bytes": 90621
   },
   {
    "scenario": "hybrid_mismatch_repair",
    "fixture": "hybrid_mismatch_repair.json",
-   "sha256": "edaad2dbe374d95243034ee83d1122ccfb38bebe98f25bfa3e22e60c039892fc",
-   "bytes": 68947
+   "sha256": "389679f63b8d8b4359e1374dffa76871c7f12f0bb267dbdf1ab69254e82d006a",
+   "bytes": 69213
   },
   {
    "scenario": "hybrid_mismatch_penalty_increase",
    "fixture": "hybrid_mismatch_penalty_increase.json",
-   "sha256": "13a70b9cdd5b652bc6c8cd31955d75987ee1e91c589f3329cca066dba496caca",
-   "bytes": 47836
+   "sha256": "d37773596fe2dcd3f8a2269c8c9a3074519d2853a7c3e8fd02ea584930ef1319",
+   "bytes": 47988
   },
   {
    "scenario": "hybrid_zero_shift_split",
    "fixture": "hybrid_zero_shift_split.json",
-   "sha256": "213ad3623bd58b8806d3e043b3ce7c1855903b8bd6298c5a74de1d5fc3cd6d21",
-   "bytes": 69552
+   "sha256": "498a5e4e2ae1cdd239f999471653e95d69e88e35123beb49d4852523da0b62df",
+   "bytes": 69780
   },
   {
    "scenario": "constraints_inactive_stall",
    "fixture": "constraints_inactive_stall.json",
-   "sha256": "ee372f1b7cb3d14ba0b8d549cf12ed1a1aca683c7fd4f92474608f895255f93f",
+   "sha256": "5434aafdb9f0460a90104095e39326cece8271819e7ba1c0bbf3360074cc1bbc",
    "bytes": 28387
   },
   {
    "scenario": "plateau_restore_best_feasible",
    "fixture": "plateau_restore_best_feasible.json",
-   "sha256": "1b8693ef4fb38544d0d415337e7f6b795b26cde2d37a9b4a097d3062475f95b6",
-   "bytes": 51776
+   "sha256": "f8ccb553199b976d9ae2fbfa472f72cf817b54ef48f45993dab3fc2ee44269e7",
+   "bytes": 51890
   },
   {
    "scenario": "resume_plateau_best_feasible",
    "fixture": "resume_plateau_best_feasible.json",
-   "sha256": "a63df86536d66d3a913a6e2da9457fb543ae33ae9f392654465341479d0c3b9b",
-   "bytes": 54401
+   "sha256": "ad7406713cc40bedf194379e4c21ee50826458027ee40bb3233e96445ed1f9c4",
+   "bytes": 54518
   },
   {
    "scenario": "trust_radius_retries",
    "fixture": "trust_radius_retries.json",
-   "sha256": "ccf100e04a5bc33623009df0cecc8fd764eb00d72d429b08758658ff88364bfb",
-   "bytes": 113131
+   "sha256": "4e76fb42e1b007aea32a459dfc12010f28cae15b5b714b4938cff1abf9e09bf6",
+   "bytes": 113169
   },
   {
    "scenario": "frozen_warm_start_restore",
    "fixture": "frozen_warm_start_restore.json",
-   "sha256": "f072fad51ff0ea7c84e62611a7a1ef5a6e8f007f30ecf2af6413d1ce2c4d3d74",
-   "bytes": 155144
+   "sha256": "bdb6fe64bd5ae34c7517d85241b1eb2d5835d1c840ca79869833a5531f232c46",
+   "bytes": 155293
   },
   {
    "scenario": "cached_physics_smoothing",
    "fixture": "cached_physics_smoothing.json",
-   "sha256": "c6eaae516c3d38f00891c51595d552d8f48cd211ef6afb2bd955fe383acaa862",
+   "sha256": "a1f96efbc2156bc906e054fd5babe24904044d98416d8b2353cbd91e9e4f726b",
    "bytes": 50998
   },
   {
    "scenario": "multiplier_cap_process_budget",
    "fixture": "multiplier_cap_process_budget.json",
-   "sha256": "52281ad6555897da40bb6350830f76bcd7e21658d80f6242391e56d0474960ea",
+   "sha256": "67f1249e29083ce9c8824b001050e0ba03478b5924ea18853cf05f0f1b67743a",
    "bytes": 77880
   },
   {
    "scenario": "inner_iteration_budget",
    "fixture": "inner_iteration_budget.json",
-   "sha256": "12e1354f5d4ee87a09f21569431cdc54b686064482819428b48cb322621f44c1",
+   "sha256": "7ecf0075bfa6e246c4d9a21dd3f863b72f80cd4777a862687ad0ff826f684f58",
    "bytes": 31758
   },
   {
    "scenario": "dual_update_penalty_cap",
    "fixture": "dual_update_penalty_cap.json",
-   "sha256": "be98afcccb9c6f4651b51e35ddc164c7e8543de85b3d8a82910237f12d802438",
+   "sha256": "affed3ff4b3df50b33b1358d97f0053ea957db208fa5f24d9f6665c1c191186c",
    "bytes": 14853
   },
   {
    "scenario": "preinner_converged",
    "fixture": "preinner_converged.json",
-   "sha256": "da9cb9d48a24bf5649d593fd961d15a0481b0d1e7120a6756839e7fc9a140f14",
-   "bytes": 15501
+   "sha256": "d67c4146fec2c8c30eed8d216df795c09aff8feee3b854fc9dabbc5dc95eead8",
+   "bytes": 15513
   },
   {
    "scenario": "zero_inner_budget",
    "fixture": "zero_inner_budget.json",
-   "sha256": "c62720568a9d2f866db70cae517da02634e2ac1ef7e5e0a5a2b91376f22abcc6",
-   "bytes": 14766
+   "sha256": "c462f952c3c318d8a20e6ea49f4c1e86a5af63d889fcdb74446dc9e2e2edac50",
+   "bytes": 14809
   }
  ]
 }

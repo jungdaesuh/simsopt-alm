@@ -29,8 +29,8 @@ Each entry: the symptom, the cause, the fix.
    though f(1) - f(0) = +0.001, and it converges at the bound KKT point x = 1.
    Other SciPy builds may pick either local KKT point; the certificate holds
    at whichever point is returned. A snap onto a bound is kept only
-   on a strict reported decrease, so a near-bound improvement the totals
-   cannot represent stalls instead.
+   on a strict reported decrease; otherwise the unsnapped point stays, and
+   its outward gradient counts only up to its distance to the bound.
 3. **`maxiter` is a whole-run budget.** `inner_options["maxiter"]` counts
    L-BFGS-B iterations over every subproblem of one `minimize_alm` call, not
    per subproblem, and the call never runs more (`result.nit` minus the
@@ -38,8 +38,9 @@ Each entry: the symptom, the cause, the fix.
    most `maxiter`). A
    small value ends the run early, possibly inside an outer iteration, with
    the last step's action as the termination reason (`dual_update`,
-   `penalty_increase`, `subproblem_continue`, ..., see
-   [termination.md](termination.md)).
+   `penalty_increase`, `subproblem_continue`, ..., or
+   `inner_budget_restored_best_feasible` when a better feasible iterate is
+   restored; see [termination.md](termination.md)).
 4. **Cached evaluator with stateful physics.** `cached_alm_evaluator` returns
    the physics of the first evaluation at a bitwise-equal x. A warm-started
    inner solve (Boozer surface, VMEC restart) can land elsewhere on a second
@@ -83,7 +84,9 @@ Each entry: the symptom, the cause, the fix.
     `restore_incumbent_state_fn` are both given or both omitted
     (`ValueError`); `resume_from` cannot be combined with
     `initial_multipliers` or `initial_penalty`, and needs the checkpoint's x
-    as x0.
+    as x0. Multipliers above `multiplier_max` (from `initial_multipliers` or
+    a checkpoint written with a larger cap) raise `ValueError` before any
+    evaluation or restore: lower them yourself or raise the cap.
 12. **Taylor-testing only the augmented Lagrangian misses rows.** With zero
     multipliers an inactive row (`max(0, multiplier + penalty * g) = 0`)
     drops out of L and its gradient goes unchecked; `gradient_check.py` tests

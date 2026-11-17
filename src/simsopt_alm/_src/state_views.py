@@ -146,20 +146,30 @@ def _read_only_value(
     memo[id(value)] = read_only
     return read_only
 
-def _writable_copy(value: object) -> object:
-    """The inverse of :func:`_frozen_event_value` for plain values: writable
-    array copies, dicts, lists for frozen lists, tuples; others by reference.
+def _writable_copy(value: object, memo: Optional[Dict[int, object]] = None) -> object:
+    """An owned, writable copy of ``value``, and the inverse of
+    :func:`_frozen_event_value` for plain values: writable array copies,
+    dicts, lists for lists and frozen lists, tuples; others by reference.
     Container subclasses (namedtuples, ``OptimizeResult``) come back as plain
-    tuples and dicts; list items are not coerced to float arrays."""
+    tuples and dicts; list items are not coerced to float arrays. ``memo``
+    (by ``id``) keeps a shared subtree shared; ``value`` is acyclic."""
+    if memo is None:
+        memo = {}
+    if id(value) in memo:
+        return memo[id(value)]
+    owned: object
     if isinstance(value, np.ndarray):
-        return value.copy()
-    if isinstance(value, Mapping):
-        return {key: _writable_copy(item) for key, item in value.items()}
-    if isinstance(value, _FrozenList):
-        return [_writable_copy(item) for item in value]
-    if isinstance(value, tuple):
-        return tuple(_writable_copy(item) for item in value)
-    return value
+        owned = value.copy()
+    elif isinstance(value, Mapping):
+        owned = {key: _writable_copy(item, memo) for key, item in value.items()}
+    elif isinstance(value, (list, _FrozenList)):
+        owned = [_writable_copy(item, memo) for item in value]
+    elif isinstance(value, tuple):
+        owned = tuple(_writable_copy(item, memo) for item in value)
+    else:
+        return value
+    memo[id(value)] = owned
+    return owned
 
 def _frozen_event_incumbent(
     incumbent: Optional[ALMFeasibleIncumbent[AcceptedStateT]],

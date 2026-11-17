@@ -578,7 +578,7 @@
     "action": "penalty_cap_reached",
     "dual_update_penalty_reason": "hard_feasibility_not_improved_after_dual_update",
     "outer_termination": null,
-    "event_sha256": "79a30c15f956946d2c1befe5e511419ade0f1b5c62e8d13273e6fa2c6847a88e"
+    "event_sha256": "ca2c527a99d690b81baf757f900e2cc5532737f6887155748561e78d00cdb24b"
    },
    {
     "event": "on_outer_boundary",

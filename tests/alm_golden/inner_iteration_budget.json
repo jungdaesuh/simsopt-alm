@@ -691,7 +691,7 @@
     "action": "dual_update",
     "dual_update_penalty_reason": "hard_feasibility_not_improved_after_dual_update",
     "outer_termination": null,
-    "event_sha256": "39e9cd20d0c0dda37a4189e5fbebe903d019becb5910dae848280e5f35e9431b"
+    "event_sha256": "2ff863ba465127817dcc4f894a1d10b9d0d9a83c0107409b5ed166148af13f9f"
    },
    {
     "event": "on_outer_boundary",
@@ -1262,7 +1262,7 @@
     "action": "dual_update",
     "dual_update_penalty_reason": null,
     "outer_termination": null,
-    "event_sha256": "bb182fa51c7b231bec6bd81b0db047494ed50599b2d462e655c41b8604d673eb"
+    "event_sha256": "8dafe20911bc7905d93af8014a6010d96955af04ffeb68779801bf7284fa4e14"
    },
    {
     "event": "on_outer_boundary",

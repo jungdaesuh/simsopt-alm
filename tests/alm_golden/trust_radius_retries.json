@@ -216,7 +216,7 @@
      "x0_cap"
     ],
     "inner_iterations": 10,
-    "inner_success": true,
+    "inner_success": false,
     "inner_message": "CONVERGENCE: NORM OF PROJECTED GRADIENT <= PGTOL",
     "penalty": "0x1.4000000000000p+3",
     "penalty_values": [
@@ -292,6 +292,7 @@
     "conditioning_penalty_grad_ratio": "0x1.199999999999ap+1",
     "penalty_gradient_norm": "0x1.b800000000000p+4",
     "sufficient_decrease_measure": "0x1.6000000000000p+1",
+    "inner_trust_box_limited": true,
     "action": "penalty_increase",
     "raw_signed_constraint_values": null,
     "normalized_signed_constraint_values": [
@@ -5028,7 +5029,7 @@
     "action": "penalty_increase",
     "dual_update_penalty_reason": null,
     "outer_termination": null,
-    "event_sha256": "4443d61ecd0d32830ae1809aa38430292b216d986565efce0d6d6a8467de488f"
+    "event_sha256": "4a4c7e2cb3c62465083450d8b0a1b4d86f9a363441c118bab7e52a7d56e722f7"
    },
    {
     "event": "snapshot_accepted_state",
@@ -5254,7 +5255,7 @@
     "action": "penalty_increase",
     "dual_update_penalty_reason": null,
     "outer_termination": null,
-    "event_sha256": "d7683387b742416b814d928ed49dfe81217a11e023a0734c890fdb336ac14c2a"
+    "event_sha256": "eb18aecc9d2ba4d1c1df19da07054f8b7ac0c93a3fd6684447ca5890c36c234f"
    },
    {
     "event": "snapshot_accepted_state",
@@ -5613,7 +5614,7 @@
     "action": "dual_update",
     "dual_update_penalty_reason": null,
     "outer_termination": null,
-    "event_sha256": "fffbff22df43258d93a37c91147c249cafdfd91030016547ee39403405d940ed"
+    "event_sha256": "08f9faceeb2b70aea09c5188d9ee68a0943dd0ed46027ef4eae5e94a8a5c14ba"
    },
    {
     "event": "snapshot_accepted_state",
@@ -5863,7 +5864,7 @@
     "action": "dual_update",
     "dual_update_penalty_reason": null,
     "outer_termination": "max_outer",
-    "event_sha256": "17714292b386a6f59a84d3ae1700a7819107764c4c47f7c5a8d5b2e0ae1dbb81"
+    "event_sha256": "746c582c0808f665ddfd73cfa22be106b9e12e6ff9a97e01d4c5764d1d999492"
    },
    {
     "event": "snapshot_accepted_state",

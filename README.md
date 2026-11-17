@@ -99,9 +99,10 @@ KKT point at the shifted multipliers `λ⁺ = max(0, λ + ρ g)`:
 
 - feasibility: the maximum violation is at most `feasibility_tol` (for a
   hybrid problem, in both the smooth rows that L uses and the exact rows);
-- stationarity: the norm of the augmented Lagrangian's gradient, without the
-  components that point out of the box at an active `base_bounds` bound, is
-  at most `stationarity_tol`;
+- stationarity: the norm of the augmented Lagrangian's gradient (with
+  `base_bounds`, of its unit projection onto the box, where a component that
+  points out of the box counts only up to its distance to the bound) is at
+  most `stationarity_tol`;
 - complementarity: the gap `Σ_i λ⁺_i max(0, -g_i)` is at most
   `feasibility_tol` (absolute, in the units of f: scale f to O(1));
 - and no hybrid signal mismatch (a row whose smooth value still pushes

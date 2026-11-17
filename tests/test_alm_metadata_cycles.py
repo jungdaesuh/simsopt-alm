@@ -100,7 +100,9 @@ class AlmEvaluationCycleTests(unittest.TestCase):
 
         with self.assertRaises(ValueError) as caught:
             _solve(_halfspace_evaluator(extra_keys_at, []))
-        self.assertIn("ALM accepted inner evaluation is cyclic", str(caught.exception))
+        # Owning nested diagnostics rejects a cycle before copying it,
+        # at the trial's contract check rather than after acceptance.
+        self.assertIn("ALM inner trial evaluation is cyclic", str(caught.exception))
         self.assertIn(path_message, str(caught.exception))
 
     def test_shared_subtree_is_accepted_and_stays_shared(self):

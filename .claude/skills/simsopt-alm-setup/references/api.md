@@ -25,7 +25,7 @@ and the help of each module named below.
 | `ALMEvaluator` | `simsopt_alm` | Protocol `(x, multipliers, penalty) -> ALMEvaluation`. |
 | `ALMOuterStepEvent` | `simsopt_alm` | What `on_outer_step` receives once per continuation step. |
 | `ALMOuterBoundary` | `simsopt_alm` | What `on_outer_boundary` receives after each outer iteration; `resume_from` takes a non-final one. |
-| `ALMHistoryRecorder` | `simsopt_alm.history` | Opt-in history: pass `recorder.record` as `on_outer_step`, read `recorder.history()`. An entry's `constraint_values` is the signed g (as `result.constraint_values`), `violation_values` the per-row violation (`feasibility_values`). |
+| `ALMHistoryRecorder` | `simsopt_alm.history` | Opt-in history: pass `recorder.record` as `on_outer_step`, read `recorder.history()`. An entry's `constraint_values` is the signed g (as `result.constraint_values`), `violation_values` the per-row violation (`feasibility_values`). `inner_success` is False when no inner solve ran (`inner_profile` `"inner_skipped"`) and when L-BFGS-B stopped only because the trust box held its projected gradient (`inner_trust_box_limited: true`: normal while the subproblem minimizer lies outside the box; if most steps are, a larger `trust_radius_init` lets each one go further). |
 | `alm_checkpointing` | `simsopt_alm.checkpoint` | `alm_checkpointing(inner_options, resume_state, completed_outer_callback)` returns the `inner_options`, `resume_from` and `on_outer_boundary` arguments of one checkpointed run. |
 | `ALMCheckpointing` | `simsopt_alm.checkpoint` | The frozen triple `alm_checkpointing` returns. |
 | `ALMTransitionSnapshot` | `simsopt_alm.checkpoint` | Immutable checkpoint (no Jacobians): `x`, `total_inner_iterations`, `completed_outer_iterations`, `resume_eligible`, `accepted_state`, ... Built by `alm_checkpointing`, which encodes every evaluation value (arrays and lists come back as tuples). |
@@ -85,8 +85,9 @@ re-evaluates the same x with new multipliers or a new penalty. The dict needs
 `base_grad` (f without penalty terms, used to rank incumbents and for the KKT
 residual). An optional `stationarity_norm` that is not `||grad||` is the
 evaluator's own stationarity measure, used as given (so it must account for
-`base_bounds`); otherwise the solver measures `||grad||` without the
-components pointing out of the box at an active bound. The solver checks every dict where it enters (outer iterate and
+`base_bounds`); otherwise the solver measures `||grad||`, with `base_bounds`
+of the gradient's unit projection onto the box (a component pointing out of
+the box counts only up to its distance to the bound). The solver checks every dict where it enters (outer iterate and
 each inner trial): a required key absent or None raises `KeyError`
 (`constraint_grads` included, even with every row inactive); `grad` and each
 of the one-per-row `constraint_grads` must have x's shape, and
@@ -101,9 +102,11 @@ must be a `bool` or `numpy.bool_`: 0, None or any other type raises
 point rejects the trial (the line search backtracks); at an outer iterate
 either raises `ValueError`. Where the dict enters, the solver also takes its
 own copy of every array it reads (`grad`, the constraint, feasibility and
-dual-update values, the hybrid quartet, each `constraint_grads` row), so an
-evaluator may return arrays it reuses or refills in place (simsopt's cached
-`J()`/`dJ()` results, one buffer per call): no `.copy()` is needed.
+dual-update values, the hybrid quartet, each `constraint_grads` row) and of
+every array, dict, list and tuple under the other keys, nested ones too
+(a shared subtree stays shared; other objects are kept by reference), so an
+evaluator may return arrays and diagnostics it reuses or refills in place
+(simsopt's cached `J()`/`dJ()` results, one buffer per call): no `.copy()` is needed.
 
 - **Stateless physics** (depends on x alone): `cached_alm_evaluator(physics)`.
   Call its `cache_clear()` whenever anything else the physics reads changes
@@ -183,9 +186,12 @@ def hybrid_physics(base_value, base_grad, surrogate, hard, constraint_grads):
   restored state, the live state put back after) and drops it if it is no
   longer hard-feasible, so a restored result is judged by the final problem.
 - `snapshot_accepted_state_fn`, `restore_incumbent_state_fn`: stateful physics.
-- `initial_multipliers` (nonnegative, one per row), `initial_penalty` (one
-  positive scalar, shared by every row): warm start from an earlier result;
-  not with `resume_from`.
+- `initial_multipliers` (nonnegative, one per row, at most
+  `settings.multiplier_max`: `ValueError` otherwise, never clamped),
+  `initial_penalty` (one positive scalar, shared by every row): warm start
+  from an earlier result; not with `resume_from`. A `resume_from` whose
+  multipliers (or best feasible iterate's) exceed `multiplier_max` raises
+  `ValueError` before your state is restored.
 - `constraint_blocks`: one group label per row (reports only).
 - `base_bounds`: box bounds on x, a sequence of `(lower, upper)` pairs or an
   object with `lb`/`ub`. x0 is projected onto the box (as L-BFGS-B does); a

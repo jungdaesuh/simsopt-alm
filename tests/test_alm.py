@@ -379,36 +379,46 @@ class AlmLibrarySizeBudgetTests(unittest.TestCase):
         # snapshot.py split checkpoint.py's 601). The stable pickle identities
         # then raised them: each public class and function gained its
         # @set_module line, each defining module the import (core package
-        # 5292 -> 5387 with public_api.py, the decorator).
+        # 5292 -> 5387 with public_api.py, the decorator). The 0.2.0 behavior fixes
+        # (CHANGELOG.md) raised: alm_math.py +34 (the unit projection vector and the gtol
+        # bridge, the overflow stop), attempts.py +57 (the gtol cap, the
+        # inner_stop label, the skipped profile, the fresh evaluation after a
+        # rejected snap), outer.py +68 (the multiplier-cap checks, the
+        # overflow and spent-budget restore reasons), evaluation.py +8 (owned
+        # nested diagnostics), state.py +15 (inner_stop, succeeded),
+        # state_views.py +10 (the copy memo); history.py fell 659 -> 652.
         budgets = {
-            "_src/alm_math.py": 684,
+            "_src/alm_math.py": 718,
             "_src/checkpoint/boundary.py": 288,
             "_src/checkpoint/codec.py": 200,
             "_src/checkpoint/snapshot.py": 408,
-            "_src/inner/attempts.py": 763,
-            "_src/loop/history.py": 659,
-            "_src/loop/outer.py": 1596,
+            "_src/inner/attempts.py": 820,
+            "_src/loop/history.py": 652,
+            "_src/loop/outer.py": 1664,
             "_src/policy/decisions.py": 90,
             "_src/policy/default.py": 383,
             "_src/policy/hybrid.py": 55,
             "_src/policy/plan.py": 18,
             "_src/policy/views.py": 91,
-            "_src/problem/evaluation.py": 385,
+            "_src/problem/evaluation.py": 393,
             "_src/problem/taylor.py": 203,
             "_src/public_api.py": 40,
             "_src/settings/settings.py": 135,
-            "_src/state.py": 243,
-            "_src/state_views.py": 195,
+            "_src/state.py": 258,
+            "_src/state_views.py": 205,
         }
         for filename, budget in budgets.items():
             with self.subTest(module=filename):
                 self._assert_line_budget(filename, budget)
 
     def test_definition_line_budgets(self):
+        # The 0.2.0 behavior fixes: minimize_alm +15 (the resume multiplier-cap checks, the
+        # spent-budget restore reason); _execute_step_decision fell 174 -> 162
+        # (the penalty stop result moved to _penalty_increase_stop_result).
         budgets = (
             ("_src/loop/outer.py", "_run_alm_continuation_step", 238),
-            ("_src/loop/outer.py", "_execute_step_decision", 174),
-            ("_src/loop/outer.py", "minimize_alm", 206),
+            ("_src/loop/outer.py", "_execute_step_decision", 162),
+            ("_src/loop/outer.py", "minimize_alm", 221),
             ("_src/checkpoint/snapshot.py", "ALMTransitionSnapshot", 132),
         )
         for filename, name, budget in budgets:
@@ -420,6 +430,7 @@ class AlmLibrarySizeBudgetTests(unittest.TestCase):
         # vocabulary, default policy, hybrid rules, inner solve, boundaries
         # and problem API: every implementation module but the opt-in history
         # and checkpoint plugins (and the package __init__ docstrings).
+        # The 0.2.0 behavior fixes: 5387 -> 5579 (the module budgets).
         plugins = {"_src/loop/history.py", "_src/checkpoint/snapshot.py", "_src/checkpoint/codec.py"}
         core_files = [filename for filename in LIBRARY_MODULE_FILES if filename not in plugins]
         self.assertEqual(len(core_files), len(LIBRARY_MODULE_FILES) - len(plugins))
@@ -429,8 +440,8 @@ class AlmLibrarySizeBudgetTests(unittest.TestCase):
         )
         self.assertLessEqual(
             line_count,
-            5387,
-            f"the core package has {line_count} lines; budget is 5387",
+            5579,
+            f"the core package has {line_count} lines; budget is 5579",
         )
 
 

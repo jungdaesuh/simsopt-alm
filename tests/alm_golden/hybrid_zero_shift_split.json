@@ -295,7 +295,7 @@
      "gap"
     ],
     "inner_iterations": 1,
-    "inner_success": true,
+    "inner_success": false,
     "inner_message": "CONVERGENCE: NORM OF PROJECTED GRADIENT <= PGTOL",
     "penalty": "0x1.4000000000000p+3",
     "penalty_values": [
@@ -371,6 +371,7 @@
     "conditioning_penalty_grad_ratio": "0x0.0p+0",
     "penalty_gradient_norm": "0x0.0p+0",
     "sufficient_decrease_measure": "0x0.0p+0",
+    "inner_trust_box_limited": true,
     "subproblem_limit_reason": null,
     "action": "subproblem_continue",
     "raw_signed_constraint_values": null,
@@ -421,7 +422,7 @@
      "gap"
     ],
     "inner_iterations": 1,
-    "inner_success": true,
+    "inner_success": false,
     "inner_message": "CONVERGENCE: NORM OF PROJECTED GRADIENT <= PGTOL",
     "penalty": "0x1.4000000000000p+3",
     "penalty_values": [
@@ -497,6 +498,7 @@
     "conditioning_penalty_grad_ratio": "0x0.0p+0",
     "penalty_gradient_norm": "0x0.0p+0",
     "sufficient_decrease_measure": "0x0.0p+0",
+    "inner_trust_box_limited": true,
     "subproblem_limit_reason": null,
     "action": "subproblem_continue",
     "raw_signed_constraint_values": null,
@@ -547,7 +549,7 @@
      "gap"
     ],
     "inner_iterations": 1,
-    "inner_success": true,
+    "inner_success": false,
     "inner_message": "CONVERGENCE: NORM OF PROJECTED GRADIENT <= PGTOL",
     "penalty": "0x1.4000000000000p+3",
     "penalty_values": [
@@ -623,6 +625,7 @@
     "conditioning_penalty_grad_ratio": "0x0.0p+0",
     "penalty_gradient_norm": "0x0.0p+0",
     "sufficient_decrease_measure": "0x0.0p+0",
+    "inner_trust_box_limited": true,
     "subproblem_limit_reason": null,
     "action": "subproblem_continue",
     "raw_signed_constraint_values": null,
@@ -673,7 +676,7 @@
      "gap"
     ],
     "inner_iterations": 1,
-    "inner_success": true,
+    "inner_success": false,
     "inner_message": "CONVERGENCE: NORM OF PROJECTED GRADIENT <= PGTOL",
     "penalty": "0x1.9000000000000p+6",
     "penalty_values": [
@@ -749,6 +752,7 @@
     "conditioning_penalty_grad_ratio": "0x0.0p+0",
     "penalty_gradient_norm": "0x0.0p+0",
     "sufficient_decrease_measure": "0x1.6f43afad2c480p-7",
+    "inner_trust_box_limited": true,
     "action": "penalty_increase",
     "raw_signed_constraint_values": null,
     "normalized_signed_constraint_values": [
@@ -798,7 +802,7 @@
      "gap"
     ],
     "inner_iterations": 1,
-    "inner_success": true,
+    "inner_success": false,
     "inner_message": "CONVERGENCE: NORM OF PROJECTED GRADIENT <= PGTOL",
     "penalty": "0x1.f400000000000p+9",
     "penalty_values": [
@@ -874,6 +878,7 @@
     "conditioning_penalty_grad_ratio": "0x0.0p+0",
     "penalty_gradient_norm": "0x0.0p+0",
     "sufficient_decrease_measure": "0x1.08383417bce80p-5",
+    "inner_trust_box_limited": true,
     "action": "penalty_increase",
     "raw_signed_constraint_values": null,
     "normalized_signed_constraint_values": [
@@ -923,7 +928,7 @@
      "gap"
     ],
     "inner_iterations": 3,
-    "inner_success": true,
+    "inner_success": false,
     "inner_message": "CONVERGENCE: NORM OF PROJECTED GRADIENT <= PGTOL",
     "penalty": "0x1.3880000000000p+13",
     "penalty_values": [
@@ -999,6 +1004,7 @@
     "conditioning_penalty_grad_ratio": "0x1.4113a74fc65bdp-6",
     "penalty_gradient_norm": "0x1.670bd2a59fe28p-2",
     "sufficient_decrease_measure": "0x1.99db5e9eb1c60p-5",
+    "inner_trust_box_limited": true,
     "action": "penalty_increase",
     "outer_termination": "max_outer",
     "raw_signed_constraint_values": null,
@@ -1189,7 +1195,7 @@
     "action": "subproblem_continue",
     "dual_update_penalty_reason": null,
     "outer_termination": null,
-    "event_sha256": "9c08380acff17a2b84b516a8200534d48f225a799351eaabc929624f95f014c1"
+    "event_sha256": "e07d84c5d98c67d904a6ff3a99d717f86a531ea15f0be04bbe53fbee824ed10b"
    },
    {
     "event": "evaluate_problem",
@@ -1309,7 +1315,7 @@
     "action": "subproblem_continue",
     "dual_update_penalty_reason": null,
     "outer_termination": null,
-    "event_sha256": "daf90304ebd0cbb7de3c2d6ff7c5b5f9f69c3424a30b0465c13b406dfe56d26e"
+    "event_sha256": "59c689eeaf72e3cb957cecb49570c1d42df3fc5bd3e49bb17f813302f2305348"
    },
    {
     "event": "evaluate_problem",
@@ -1429,7 +1435,7 @@
     "action": "subproblem_continue",
     "dual_update_penalty_reason": null,
     "outer_termination": null,
-    "event_sha256": "24f6e303673084568d106270e955cee3bb2879552dc397509ca97226557cf2de"
+    "event_sha256": "b9329d2c11f43e525a54b404c63096445f9e104249913ce5d6049e8e1590497b"
    },
    {
     "event": "evaluate_problem",
@@ -1560,7 +1566,7 @@
     "action": "penalty_increase",
     "dual_update_penalty_reason": null,
     "outer_termination": null,
-    "event_sha256": "342a0515c3feabfba67ca3015a2d67f5262a496641e05f49fa2db7179d1daa1f"
+    "event_sha256": "7fbaeae1e8ef0dc4ee83db8289158c8c67a8ebcb2eea57b84f00df506d4e9204"
    },
    {
     "event": "snapshot_accepted_state",
@@ -1788,7 +1794,7 @@
     "action": "penalty_increase",
     "dual_update_penalty_reason": null,
     "outer_termination": null,
-    "event_sha256": "7480fa5df0bbabc011098cfb9da5a27c8caffc9ef4e248751230d794c53a535d"
+    "event_sha256": "cf175fc27fcf0b58ff3fd7822fdb452ae7125487ee18d1ca61c442d4632e387d"
    },
    {
     "event": "snapshot_accepted_state",
@@ -2090,7 +2096,7 @@
     "action": "penalty_increase",
     "dual_update_penalty_reason": null,
     "outer_termination": "max_outer",
-    "event_sha256": "19d25cb95d3ee7055c5fad5798390eb6dfc4e1b6613d20fae2d3e6bea336403b"
+    "event_sha256": "fddffd0c234b2761ec2169c1502a8b8f5d2af37d8503c250b80d024372fe0d12"
    },
    {
     "event": "restore_incumbent_state",

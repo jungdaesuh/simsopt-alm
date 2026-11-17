@@ -286,10 +286,10 @@ HISTORY_FLAGS = (
 
 # The termination reasons of a run its spent inner maxiter budget ended: the
 # latest step's action, one that ends a step without returning (the "Inner
-# budget spent" table of the skill's termination.md). A best-feasible
-# restore renames it max_outer_restored_best_feasible, which the outer limit
-# returns too.
+# budget spent" table of the skill's termination.md), or
+# inner_budget_restored_best_feasible after a best-feasible restore.
 BUDGET_SPENT_TERMINATIONS = frozenset((
+    "inner_budget_restored_best_feasible",
     "dual_update",
     "penalty_increase",
     "sufficient_decrease_hold",

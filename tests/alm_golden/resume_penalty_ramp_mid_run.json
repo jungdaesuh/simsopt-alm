@@ -784,7 +784,7 @@
      "action": "penalty_increase",
      "dual_update_penalty_reason": null,
      "outer_termination": null,
-     "event_sha256": "6f7bfdf4cca4a50a774ffe9027cffa4f54afa14c1166c43da2e7683052f7d798"
+     "event_sha256": "b261971134df09f90f0a596af4888f7980ec6e09670cf50e29d7fe236327caee"
     },
     {
      "event": "snapshot_accepted_state",
@@ -962,7 +962,7 @@
      "action": "sufficient_decrease_hold",
      "dual_update_penalty_reason": null,
      "outer_termination": null,
-     "event_sha256": "5bb6e2d7f6aa0e0c9176ae3094f41028c71777d3a40debb1abcc9ad0e78ef5ae"
+     "event_sha256": "e03ba8b9871ea1afc2ac459fabb6fe73bbcb892ec912380bcc0604712374fcd1"
     },
     {
      "event": "snapshot_accepted_state",
@@ -1077,7 +1077,7 @@
      "action": "infeasible_stall_penalty_increase",
      "dual_update_penalty_reason": null,
      "outer_termination": null,
-     "event_sha256": "f468cae2872ac76b864d8bb95695a293b316ed01af0e7b4948626610162febdb"
+     "event_sha256": "b9a1e7715677bdd5b008990bdce33e30f58a8afdb9c5943e08aa5524e363b09a"
     },
     {
      "event": "snapshot_accepted_state",
@@ -1279,7 +1279,7 @@
      "action": "dual_update",
      "dual_update_penalty_reason": null,
      "outer_termination": null,
-     "event_sha256": "c1bdc6d799da295ad632f06ef0ad0fc9c9e01f49f54c4ff8fcee5f5ee2159f46"
+     "event_sha256": "e2481fdb8dfc18f6d126f27f4dc0fc37cdfc7b4e275309d0df7f7445e7d36c0a"
     },
     {
      "event": "snapshot_accepted_state",
@@ -2596,7 +2596,7 @@
      "action": "dual_update",
      "dual_update_penalty_reason": null,
      "outer_termination": null,
-     "event_sha256": "c7de71d1164512110d06c76fe006be1b077f1d15bf2862aaf81fcc47fdbc6d35"
+     "event_sha256": "f6f5c0defa4ccb1971e97a7672e5451e67fe69cd3815af8f69176bb76e2dd2f8"
     },
     {
      "event": "snapshot_accepted_state",
@@ -2822,7 +2822,7 @@
      "action": "dual_update",
      "dual_update_penalty_reason": null,
      "outer_termination": null,
-     "event_sha256": "bc34d0582a4f1f932e266881e1ae0fe22157de96d9f0055ca6a5fa360bd3c351"
+     "event_sha256": "8b4ce0f629ac90eafe71549691ae8f1ed9395bf8da0bf543afab9436d020dad9"
     },
     {
      "event": "snapshot_accepted_state",
@@ -3048,7 +3048,7 @@
      "action": "dual_update",
      "dual_update_penalty_reason": null,
      "outer_termination": null,
-     "event_sha256": "ffe3abde10ea74cbb8b103eae7316c6b87cab07085d1fc7953afa60d4d0b8e22"
+     "event_sha256": "1fc93d438738434fc0674a1654f02fc6938b2240d3b552eaf2cce26c7f97fc9a"
     },
     {
      "event": "snapshot_accepted_state",
@@ -3250,7 +3250,7 @@
      "action": "penalty_cap_reached",
      "dual_update_penalty_reason": null,
      "outer_termination": null,
-     "event_sha256": "0aab3bb1431b701451090001a5b74ed046977b993b4a80fc4607342865648353"
+     "event_sha256": "3780df9f937fd0b71ba46f49d0840fae375e20cbdd961de4eb2fb02fbc81423c"
     },
     {
      "event": "snapshot_accepted_state",

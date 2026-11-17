@@ -27,7 +27,7 @@ at the start of each outer iteration.
 
 | Reason | Success | Meaning | Action |
 |---|---|---|---|
-| `converged` | yes | An approximate KKT point at the returned point (not global optimality, not descent from the start; see [pitfalls.md](pitfalls.md) on offsets), at the stated tolerances, with the shifted multipliers λ⁺ = max(0, λ + ρg): max violation <= `feasibility_tol` (the evaluator's `feasibility_values`, the hard channel, and the positive part of the g that L uses, which for the hybrid quartet is the surrogate); augmented-gradient norm <= `stationarity_tol` (with `base_bounds`, components on an active bound that point out of the box do not count); and the complementarity gap Σ_i λ⁺_i max(0, -g_i) <= `feasibility_tol`, absolute in f's units (nonnegative per-row terms, so rows cannot cancel; unchanged when a row is rescaled, g -> Mg, λ -> λ/M, ρ -> ρ/M²; activity bands play no part). No hybrid signal mismatch judged at `feasibility_tol` (the relaxed early gate only routes steps), no binding multiplier cap. Limit: a nonconvex row steep enough that λ⁺_i x slack stays under the tolerance while λ⁺_i ∇g_i cancels ∇f can still pass; no finite tolerance excludes it. | Accept. Check the physics at `result.x` (the runner's `finish` summary). |
+| `converged` | yes | An approximate KKT point at the returned point (not global optimality, not descent from the start; see [pitfalls.md](pitfalls.md) on offsets), at the stated tolerances, with the shifted multipliers λ⁺ = max(0, λ + ρg): max violation <= `feasibility_tol` (the evaluator's `feasibility_values`, the hard channel, and the positive part of the g that L uses, which for the hybrid quartet is the surrogate); augmented-gradient norm <= `stationarity_tol` (with `base_bounds`, of the gradient's unit projection onto the box: a component that points out of the box counts only up to its distance to the bound, so one on its bound does not count); and the complementarity gap Σ_i λ⁺_i max(0, -g_i) <= `feasibility_tol`, absolute in f's units (nonnegative per-row terms, so rows cannot cancel; unchanged when a row is rescaled, g -> Mg, λ -> λ/M, ρ -> ρ/M²; activity bands play no part). No hybrid signal mismatch judged at `feasibility_tol` (the relaxed early gate only routes steps), no binding multiplier cap. Limit: a nonconvex row steep enough that λ⁺_i x slack stays under the tolerance while λ⁺_i ∇g_i cancels ∇f can still pass; no finite tolerance excludes it. | Accept. Check the physics at `result.x` (the runner's `finish` summary). |
 | `constraints_inactive_converged` | yes | Hybrid quartet only: every hard row is strictly inactive (no surrogate activity, zero shift) and the same approximate-KKT test holds. | Accept. The constraints did not bind; check whether the thresholds are the ones you meant. |
 
 ## Stopped early
@@ -39,6 +39,8 @@ at the start of each outer iteration.
 | `process_budget_exhausted` | no | Your `accepted_callback` raised `ALMProcessBudgetExhausted` (a budget you enforce, e.g. wall clock). | Resume from the last checkpoint: `run_alm.py --resume <dir>/outer_NNN.pkl`. |
 | `penalty_cap_reached` | no | The next penalty raise would exceed `penalty_max`; no better feasible iterate to restore. | Usually an infeasible or badly scaled problem: run `sign_check.py`, check the scale warnings, relax thresholds that may conflict. Raise `penalty_max` only when the rows are O(1). |
 | `penalty_cap_reached_restored_best_feasible` | no | As `penalty_cap_reached`, and `result.x` is the restored best hard-feasible iterate. | `result.x` is feasible and usable; for a better objective treat it as `penalty_cap_reached`. |
+| `penalty_overflow` | no | The next penalty raise overflowed to inf (possible only when `penalty_max` is None or near the float limit, or `penalty_scale` is huge); the run kept its finite penalty, and no better feasible iterate was restored. A checkpoint of this stop is terminal, not resumable. | Treat it as `penalty_cap_reached`: the problem is likely infeasible or badly scaled. Set a finite `penalty_max` (the default 1e8) so the run stops at a cap instead. |
+| `penalty_overflow_restored_best_feasible` | no | As `penalty_overflow`, and `result.x` is the restored best hard-feasible iterate. | `result.x` is feasible and usable; for a better objective treat it as `penalty_overflow`. |
 
 ## Outer-iteration limit
 
@@ -57,7 +59,7 @@ or start a new `minimize_alm` at `result.x` with
 | `max_outer_after_penalty_increase` | no | The last outer iteration raised the penalty: infeasibility did not shrink enough. | Check for conflicting constraints (relax a threshold), row scales, then raise `max_outer_iterations` or `penalty_init`. |
 | `max_outer_after_subproblem_limit_penalty_increase` | no | Hard-feasible, but the subproblem hit `max_subproblem_continuations` without meeting the multiplier-update test. | Raise `inner_options["maxiter"]` or `max_subproblem_continuations`, or loosen `stationarity_tol`. |
 | `max_outer_after_signal_mismatch_penalty_increase` | no | Hybrid quartet only: a stalled signal mismatch raised the penalty on the last outer iteration. A mismatch is a real disagreement: hard-feasible, yet a row whose surrogate still pushes (a live surrogate shift) has a surrogate value more than the feasibility gate away from its hard value. Rows whose channels agree to the gate, or that carry no shift, never mismatch, even when their activity differs. | Lower the smoothing temperature (surrogate closer to the hard value), or set `continue_on_signal_mismatch=True`, or drop the quartet (smooth rows only); then raise `max_outer_iterations`. |
-| `max_outer_restored_best_feasible` | no | The outer limit or the inner budget ran out, and the final iterate was hard-infeasible or worse than the best feasible one, which `result.x` now is. | `result.x` is feasible and usable; raise `max_outer_iterations` or `inner_options["maxiter"]` for a better one. |
+| `max_outer_restored_best_feasible` | no | The outer limit ran out, and the final iterate was hard-infeasible or worse than the best feasible one, which `result.x` now is. | `result.x` is feasible and usable; raise `max_outer_iterations` for a better one. |
 
 ## Inner budget spent
 
@@ -68,7 +70,9 @@ resumed from (`resume_from.state.total_inner_iterations`; 0 for a fresh call),
 because `result.nit` counts the iterations before the resume too. When it is
 used up the run stops before the next step, between two outer iterations or
 inside one, and the reason is the **action name of the last step** (unless a
-better feasible iterate is restored: then `max_outer_restored_best_feasible`).
+better feasible iterate is restored: then `inner_budget_restored_best_feasible`).
+A step that starts on a spent budget runs no inner solve: its event's `inner`
+has 0 attempts, `inner_profile` `"inner_skipped"` and no optimizer success.
 A run stopped inside an outer iteration writes no `outer_NNN.pkl` for it:
 raise `maxiter` and resume from the one before (`run_alm.py --resume`), which
 redoes that outer iteration.
@@ -83,6 +87,7 @@ redoes that outer iteration.
 | `signal_mismatch_penalty_increase` | no | Hybrid quartet only; budget spent after a stalled signal mismatch. | As `dual_update`; see `max_outer_after_signal_mismatch_penalty_increase`. |
 | `signal_mismatch_subproblem_limit_penalty_increase` | no | Hybrid quartet only; budget spent after a mismatch subproblem hit its limit. | As `dual_update`. |
 | `subproblem_continue` | no | Budget spent right after a subproblem continuation, inside an outer iteration. | As `dual_update`. |
+| `inner_budget_restored_best_feasible` | no | Budget spent, and the final iterate was hard-infeasible or worse than the best feasible one, which `result.x` now is. | `result.x` is feasible and usable; raise `inner_options["maxiter"]` for a better one, or resume from the last checkpoint with a fresh budget. |
 
 ## Never returned
 

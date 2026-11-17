@@ -338,16 +338,19 @@ def _next_penalty(
     *,
     penalty_scale: float,
     penalty_max: Optional[float],
-) -> Tuple[float, bool, float]:
+) -> Tuple[float, bool, Optional[float]]:
+    """The finite next penalty, whether the cap bound it, and the finite
+    requested value. A request that overflows to inf is None: the penalty
+    stays and the loop stops with ``penalty_overflow``."""
     requested_penalty = penalty * penalty_scale
+    if not np.isfinite(requested_penalty):
+        return penalty, False, None
     if penalty_max is None:
-        if not np.isfinite(requested_penalty):
-            return penalty, True, requested_penalty
         return requested_penalty, False, requested_penalty
 
     if penalty_max <= 0.0:
         raise ValueError("ALM penalty_max must be positive when provided")
-    if not np.isfinite(requested_penalty) or requested_penalty > penalty_max:
+    if requested_penalty > penalty_max:
         return penalty_max, True, requested_penalty
     return requested_penalty, False, requested_penalty
 
@@ -626,20 +629,51 @@ def _bound_reduced_stationarity_norm(
 ) -> float:
     """The loop's stationarity at ``x``: an evaluator's own
     ``stationarity_norm`` (one that is not ``||grad||``) as given; otherwise
-    ``||grad||`` without the components pointing out of the box where ``x``
-    equals a base bound (``(lower, upper)`` pairs) exactly: the bound's
-    multiplier holds them. The x0 clip and L-BFGS-B's projection put a
-    coordinate exactly on its bound; any other x is interior or outside."""
+    the L2 norm of the unit projection vector onto the base bounds
+    (:func:`_bound_projected_gradient`), the vector whose infinity norm
+    L-BFGS-B's ``gtol`` test reads."""
     stationarity_norm = _augmented_stationarity_norm(evaluation)
     if base_bounds is None:
         return stationarity_norm
-    lower, upper = np.asarray(base_bounds, dtype=float).T
     grad = np.asarray(evaluation["grad"], dtype=float).reshape(-1)
-    x_array = np.asarray(x, dtype=float).reshape(-1)
-    blocked = ((x_array == upper) & (grad < 0.0)) | ((x_array == lower) & (grad > 0.0))
-    if not np.any(blocked) or stationarity_norm != float(np.linalg.norm(grad)):
+    if stationarity_norm != float(np.linalg.norm(grad)):
         return stationarity_norm
-    return float(np.linalg.norm(np.where(blocked, 0.0, grad)))
+    return float(np.linalg.norm(_bound_projected_gradient(grad, x, base_bounds)))
+
+def _bound_projected_gradient(
+    gradient,
+    x,
+    bounds: Optional[Sequence[Tuple[Optional[float], Optional[float]]]],
+) -> np.ndarray:
+    """The unit projection vector ``x - P(x - gradient)`` onto ``bounds``
+    (``(lower, upper)`` pairs, a None endpoint unbounded; None: no box),
+    computed as the gradient clipped to ``[x - upper, x - lower]``: a
+    component pushing out of the box counts up to the distance to its bound,
+    so a coordinate on its bound contributes 0 and a fixed one always 0."""
+    grad = np.asarray(gradient, dtype=float).reshape(-1)
+    if bounds is None or grad.size == 0:
+        return grad.copy()
+    lower, upper = np.asarray([
+        (-np.inf if lower is None else lower, np.inf if upper is None else upper)
+        for lower, upper in bounds
+    ], dtype=float).T
+    x_array = np.asarray(x, dtype=float).reshape(-1)
+    return np.clip(grad, x_array - upper, x_array - lower)
+
+def _inner_gtol_for_l2_target(
+    stationarity_tol: float,
+    dimension: int,
+    base_bounds: Optional[Sequence[Tuple[float, float]]],
+) -> float:
+    """The L-BFGS-B ``gtol`` (an infinity-norm test on the projection vector)
+    that guarantees the loop's L2 target ``stationarity_tol`` on the same
+    vector: ``stationarity_tol / sqrt(n)``, n the coordinates that are not
+    fixed (lower == upper) by the base bounds. A trust box does not change n."""
+    free_dimension = dimension
+    if base_bounds is not None:
+        lower, upper = np.asarray(base_bounds, dtype=float).T
+        free_dimension = int(np.count_nonzero(lower != upper))
+    return float(stationarity_tol) / np.sqrt(max(free_dimension, 1))
 
 def _routed_kkt_stationarity_norm(
     evaluation: dict,

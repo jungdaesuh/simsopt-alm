@@ -1070,13 +1070,15 @@ class AlmBoundStationarityTests(unittest.TestCase):
         self.assertTrue(result.success, result.message)
         np.testing.assert_allclose(result.x, [0.0], atol=1.0e-12)
 
-    def test_the_reduction_zeroes_only_blocked_components(self):
+    def test_the_projection_clips_components_to_unit_bound_distances(self):
+        # The unit projection x - P(x - grad) counts a component
+        # pushing out of the box up to its distance to the bound.
         bounds = [(0.0, 1.0), (0.0, 1.0), (-np.inf, np.inf)]
         x = np.array([1.0, 0.0, 0.5])
         for grad, expected in (
             (np.array([-3.0, 4.0, 0.0]), 0.0),
-            (np.array([3.0, -4.0, 0.0]), 5.0),
-            (np.array([-3.0, -4.0, 12.0]), np.hypot(4.0, 12.0)),
+            (np.array([3.0, -4.0, 0.0]), np.sqrt(2.0)),
+            (np.array([-3.0, -4.0, 12.0]), np.hypot(1.0, 12.0)),
         ):
             with self.subTest(grad=grad):
                 evaluation = {"grad": grad, "stationarity_norm": float(np.linalg.norm(grad))}
@@ -1097,9 +1099,9 @@ class AlmBoundStationarityTests(unittest.TestCase):
                     1.0,
                 )
 
-    def test_a_point_just_inside_the_box_is_not_on_its_bound(self):
-        # Only x equal to the bound is on it: the x0 clip and L-BFGS-B's
-        # projection put coordinates exactly on the bound values.
+    def test_a_point_just_inside_the_box_uses_its_unit_projection_distance(self):
+        # A unit projected step truncates the outward gradient
+        # to the remaining distance, as L-BFGS-B does, before reaching a bound.
         for bound in (1.0, 1.0e12):
             inside = np.nextafter(bound, -np.inf)
             with self.subTest(bound=bound):
@@ -1107,7 +1109,7 @@ class AlmBoundStationarityTests(unittest.TestCase):
                     alm_math._bound_reduced_stationarity_norm(
                         {"grad": np.array([-1.0])}, np.array([inside]), [(-np.inf, bound)]
                     ),
-                    1.0,
+                    bound - inside,
                 )
 
     def test_a_steep_objective_just_inside_the_upper_bound_reaches_it(self):
@@ -1124,7 +1126,7 @@ class AlmBoundStationarityTests(unittest.TestCase):
         self.assertTrue(result.success, result.message)
         np.testing.assert_array_equal(result.x, [upper])
 
-    def test_a_smooth_objective_two_ulp_inside_the_bound_reaches_it(self):
+    def test_a_smooth_objective_two_ulp_inside_the_bound_meets_projected_tolerance(self):
         # f = tanh(1e16 (1 - x)) at x0 = 1 - 2 eps: f = 0.9997, optimum f(1) = 0.
         scale = 1.0e16
 
@@ -1139,7 +1141,10 @@ class AlmBoundStationarityTests(unittest.TestCase):
             evaluate, 1.0 - 2.0 * np.finfo(float).eps, 0.0, 1.0, base_bounds=[(0.0, 1.0)],
         )
         self.assertTrue(result.success, result.message)
-        np.testing.assert_array_equal(result.x, [1.0])
+        # Two ulp from the bound, the projected gradient is
+        # already within tolerance, so x need not reach the bound.
+        self.assertLessEqual(1.0 - result.x[0], 2.0 * np.finfo(float).eps)
+        self.assertLessEqual(result.stationarity_norm, alm.ALMSettings().stationarity_tol)
 
     def test_an_optimum_on_a_fixed_coordinate_converges(self):
         for slope in (-1.0, 1.0):

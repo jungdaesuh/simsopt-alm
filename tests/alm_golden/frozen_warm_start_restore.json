@@ -255,7 +255,7 @@
      "x0_cap"
     ],
     "inner_iterations": 1,
-    "inner_success": true,
+    "inner_success": false,
     "inner_message": "CONVERGENCE: NORM OF PROJECTED GRADIENT <= PGTOL",
     "penalty": "0x1.0000000000000p+0",
     "penalty_values": [
@@ -331,6 +331,7 @@
     "conditioning_penalty_grad_ratio": "0x0.0p+0",
     "penalty_gradient_norm": "0x0.0p+0",
     "sufficient_decrease_measure": "0x0.0p+0",
+    "inner_trust_box_limited": true,
     "subproblem_limit_reason": null,
     "action": "subproblem_continue",
     "raw_signed_constraint_values": null,
@@ -381,7 +382,7 @@
      "x0_cap"
     ],
     "inner_iterations": 1,
-    "inner_success": true,
+    "inner_success": false,
     "inner_message": "CONVERGENCE: NORM OF PROJECTED GRADIENT <= PGTOL",
     "penalty": "0x1.0000000000000p+0",
     "penalty_values": [
@@ -457,6 +458,7 @@
     "conditioning_penalty_grad_ratio": "0x0.0p+0",
     "penalty_gradient_norm": "0x0.0p+0",
     "sufficient_decrease_measure": "0x0.0p+0",
+    "inner_trust_box_limited": true,
     "subproblem_limit_reason": null,
     "action": "subproblem_continue",
     "raw_signed_constraint_values": null,
@@ -507,7 +509,7 @@
      "x0_cap"
     ],
     "inner_iterations": 3,
-    "inner_success": true,
+    "inner_success": false,
     "inner_message": "CONVERGENCE: NORM OF PROJECTED GRADIENT <= PGTOL",
     "penalty": "0x1.4000000000000p+3",
     "penalty_values": [
@@ -583,6 +585,7 @@
     "conditioning_penalty_grad_ratio": "0x1.b3bea3677d46dp-4",
     "penalty_gradient_norm": "0x1.e000000000000p+0",
     "sufficient_decrease_measure": "0x1.8000000000000p-3",
+    "inner_trust_box_limited": true,
     "action": "penalty_increase",
     "raw_signed_constraint_values": null,
     "normalized_signed_constraint_values": [
@@ -632,7 +635,7 @@
      "x0_cap"
     ],
     "inner_iterations": 2,
-    "inner_success": true,
+    "inner_success": false,
     "inner_message": "CONVERGENCE: NORM OF PROJECTED GRADIENT <= PGTOL",
     "penalty": "0x1.9000000000000p+6",
     "penalty_values": [
@@ -708,6 +711,7 @@
     "conditioning_penalty_grad_ratio": "0x1.09119896dff75p+2",
     "penalty_gradient_norm": "0x1.1364000000000p+6",
     "sufficient_decrease_measure": "0x1.6080000000000p-1",
+    "inner_trust_box_limited": true,
     "action": "penalty_increase",
     "raw_signed_constraint_values": null,
     "normalized_signed_constraint_values": [
@@ -929,7 +933,7 @@
     "inner_maxls": 20,
     "inner_maxfun": null,
     "inner_profile": "boxed",
-    "inner_lbfgsb_projected_gradient_norm": "0x1.1a5a5a5a5a576p+4",
+    "inner_lbfgsb_projected_gradient_norm": "0x1.1de1e1e1e1e1ap+0",
     "inner_attempts": 1,
     "accepted_move_norm": "0x0.0p+0",
     "accepted_move_norm_scaled": "0x0.0p+0",
@@ -1054,7 +1058,7 @@
     "inner_maxls": 20,
     "inner_maxfun": null,
     "inner_profile": "boxed",
-    "inner_lbfgsb_projected_gradient_norm": "0x1.60f0f0f0f0eeep+7",
+    "inner_lbfgsb_projected_gradient_norm": "0x1.1de1e1e1e1e1ap+0",
     "inner_attempts": 1,
     "accepted_move_norm": "0x0.0p+0",
     "accepted_move_norm_scaled": "0x0.0p+0",
@@ -1179,7 +1183,7 @@
     "inner_maxls": 20,
     "inner_maxfun": null,
     "inner_profile": "boxed",
-    "inner_lbfgsb_projected_gradient_norm": "0x1.b92d2d2d2d2acp+10",
+    "inner_lbfgsb_projected_gradient_norm": "0x1.1de1e1e1e1e1ap+0",
     "inner_attempts": 1,
     "accepted_move_norm": "0x0.0p+0",
     "accepted_move_norm_scaled": "0x0.0p+0",
@@ -1304,7 +1308,7 @@
     "inner_maxls": 20,
     "inner_maxfun": null,
     "inner_profile": "boxed",
-    "inner_lbfgsb_projected_gradient_norm": "0x1.13bc3c3c3c3acp+14",
+    "inner_lbfgsb_projected_gradient_norm": "0x1.1de1e1e1e1e1ap+0",
     "inner_attempts": 1,
     "accepted_move_norm": "0x0.0p+0",
     "accepted_move_norm_scaled": "0x0.0p+0",
@@ -1429,7 +1433,7 @@
     "inner_maxls": 20,
     "inner_maxfun": null,
     "inner_profile": "boxed",
-    "inner_lbfgsb_projected_gradient_norm": "0x1.58ab4b4b4b498p+17",
+    "inner_lbfgsb_projected_gradient_norm": "0x1.1de1e1e1e1e1ap+0",
     "inner_attempts": 1,
     "accepted_move_norm": "0x0.0p+0",
     "accepted_move_norm_scaled": "0x0.0p+0",
@@ -1647,7 +1651,7 @@
     "action": "subproblem_continue",
     "dual_update_penalty_reason": null,
     "outer_termination": null,
-    "event_sha256": "08f38c489ff949cfe2670870cb8bacae77b4d84d9c88a63de5e1b379818be3be"
+    "event_sha256": "98d35846b91d5676e31c62fb6f3d39fed6ec198a8b20166599ae2ff38d89c17e"
    },
    {
     "event": "evaluate_problem",
@@ -1767,7 +1771,7 @@
     "action": "subproblem_continue",
     "dual_update_penalty_reason": null,
     "outer_termination": null,
-    "event_sha256": "c7c751658d50f215bc12ef9949b34fd72599f4ea58b895f062df197113c38d59"
+    "event_sha256": "fd371a1c41b591e67bcb7e66ade55ca4da4c4b6a4474258102691e9c26d4cebc"
    },
    {
     "event": "evaluate_problem",
@@ -1972,7 +1976,7 @@
     "action": "penalty_increase",
     "dual_update_penalty_reason": null,
     "outer_termination": null,
-    "event_sha256": "1beed8b5aec057dd1296a84bd0a98304be91691d02ceb61df1918f028d089138"
+    "event_sha256": "3893c27d2addae8483b0c3a4f579e3f745219e1f2a941545bcc8db8359d09217"
    },
    {
     "event": "snapshot_accepted_state",
@@ -2261,7 +2265,7 @@
     "action": "penalty_increase",
     "dual_update_penalty_reason": null,
     "outer_termination": null,
-    "event_sha256": "5585e3f1bc71c5fb0da4696c05aef47f61c645b6a668c86d45f2c4e740b27371"
+    "event_sha256": "e19a9373fd34c375703012b63b4ec0998c23b4a49fe1abe5b43914a7ba4da42f"
    },
    {
     "event": "snapshot_accepted_state",
@@ -2635,7 +2639,7 @@
     "action": "dual_update",
     "dual_update_penalty_reason": null,
     "outer_termination": null,
-    "event_sha256": "d027c6a5c4f35c6f2a1bba282196e2b19c4aab606edef1bbebd0b2a9ba6e5131"
+    "event_sha256": "829c5785643298f63534209dfb16e552f96494bc10a99f43c37072e10e9d8c3c"
    },
    {
     "event": "snapshot_accepted_state",
@@ -3173,7 +3177,7 @@
     "action": "infeasible_stall_penalty_increase",
     "dual_update_penalty_reason": null,
     "outer_termination": null,
-    "event_sha256": "77e6514467e1e24c48fcb09c024d3098c3e9c175e4a76da4aaad861a164a0cef"
+    "event_sha256": "73289952377bc8fe56ade08e6a7c3a59cd52da69be14e68f1e4948a6ae1d9079"
    },
    {
     "event": "snapshot_accepted_state",
@@ -3735,7 +3739,7 @@
     "action": "infeasible_stall_penalty_increase",
     "dual_update_penalty_reason": null,
     "outer_termination": null,
-    "event_sha256": "cbfde2ed2b083e6a87ad23e7a1b3ed0caf589ff53a56c3250335cdc0b00b6fd3"
+    "event_sha256": "7680b3addc53b886eef4fe88c1aac9c1064fe52a1f3862181e928e849e38b7a5"
    },
    {
     "event": "snapshot_accepted_state",
@@ -4273,7 +4277,7 @@
     "action": "infeasible_stall_penalty_increase",
     "dual_update_penalty_reason": null,
     "outer_termination": null,
-    "event_sha256": "c211ad123abcad9c35415c723a852f6c686374848eaa811a8e28d04879c89274"
+    "event_sha256": "f4b0d726a9d6cbbbf9666813ca12d0c798012cff7dc5279d9ab5aca5904dfb9a"
    },
    {
     "event": "snapshot_accepted_state",
@@ -4811,7 +4815,7 @@
     "action": "infeasible_stall_penalty_increase",
     "dual_update_penalty_reason": null,
     "outer_termination": null,
-    "event_sha256": "5cc00562fc85bd0d95fda8b53bfc47b10b24531ebf5ff76abdd2b2a29bbf7734"
+    "event_sha256": "1c23cec05c4b2c483e099f3c3d504879e81af2c105a33e1422003bb45aee8c59"
    },
    {
     "event": "snapshot_accepted_state",
@@ -5349,7 +5353,7 @@
     "action": "penalty_cap_reached",
     "dual_update_penalty_reason": null,
     "outer_termination": null,
-    "event_sha256": "fd32e103ee9689d83c5032ad7c70e71aea4dda1c1ceef1150b1a94a79ba997f0"
+    "event_sha256": "1a9690a30850243a11246e59d31adf9925e7218dcaa564b7a52e879a13f57c4a"
    },
    {
     "event": "restore_incumbent_state",

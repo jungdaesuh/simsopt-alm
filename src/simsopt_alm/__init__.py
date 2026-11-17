@@ -14,9 +14,10 @@ returns, with ``cache_clear()``).
 Optional keys: ``base_value`` / ``base_total`` / ``physics_total`` (objective
 without penalty terms, used to rank incumbents), ``base_grad`` / ``metric_grad``
 (its gradient, for stationarity), ``stationarity_norm`` (otherwise the solver
-measures ``||grad||``, without the components pointing out of the box at an
-active ``base_bounds`` bound; a value that is not ``||grad||`` is the
-evaluator's own measure, used as given, so it must account for the bounds),
+measures ``||grad||``, with ``base_bounds`` of the gradient's unit projection
+onto the box, where a component pushing out counts up to the distance to its
+bound; a value that is not ``||grad||`` is the evaluator's own measure, used
+as given, so it must account for the bounds),
 ``constraint_scales``, ``constraint_activity_tolerances``,
 ``nonfinite_evaluation`` (the point is unusable: a trial point is rejected,
 an outer iterate raises ``ValueError`` as a non-finite value does), and
@@ -28,11 +29,11 @@ builder's summaries, raw and normalized rows); an application types its own
 keys by subclassing it. Any other key is kept as a diagnostic. Where an
 evaluation enters, the solver copies every array it reads (``grad``, the
 constraint, feasibility and dual-update values, the hybrid quartet, each
-``constraint_grads`` row and the other declared value arrays), so an
-evaluator may return buffers it reuses or refills in place. Events and the
-result copy the mappings, lists and tuples in an evaluation, so none may
-contain itself (a ``ValueError`` names the path; a shared subtree is fine);
-other objects pass by reference.
+``constraint_grads`` row and the other declared value arrays) and every
+array, mapping, list and tuple of the other keys, nested ones too, so an
+evaluator may return buffers and diagnostics it reuses or refills in place.
+None of those containers may contain itself (a ``ValueError`` names the path;
+a shared subtree stays shared); other objects pass by reference.
 
 Hybrid signals: an evaluator that smooths g returns all four of
 ``hard_signed_constraint_values``, ``hard_violation_values``,
@@ -101,14 +102,18 @@ need. It holds:
 
 - ``outer_iteration``, ``continuation_iteration``, ``constraint_names``.
 - The decision: ``action`` (e.g. ``dual_update``, ``penalty_increase``,
-  ``subproblem_continue``, ``converged``, ``penalty_cap_reached``),
+  ``subproblem_continue``, ``converged``, ``penalty_cap_reached``,
+  ``penalty_overflow``),
   ``outer_termination`` (``max_outer`` / ``process_budget_exhausted`` or
   None), ``subproblem_limit_reason``, ``signal_mismatch_repair``,
   ``feasible_stall_count``.
 - The iterate: ``start_x`` and ``start`` (the outer iterate measured before
   the inner solve), ``inner`` (None when the start already met the KKT gate;
   else the accepted ``x`` and ``measured`` iterate, iteration and attempt
-  counts, optimizer status, last box and options, stall flags, progress,
+  counts (0 attempts and ``inner_profile`` ``"inner_skipped"`` when a spent
+  budget skipped the solve), optimizer status and ``inner_stop``
+  (``raw_stationarity``, ``trust_box_limited`` or None; ``succeeded`` excludes
+  a trust-box-limited stop), last box and options, stall flags, progress,
   feasibility delta and the ALGENCAN sufficient-decrease measure and
   reference), and the property ``measured``. A measurement carries the
   evaluation, the multipliers and penalty it used, g, feasibility, routing
@@ -151,8 +156,8 @@ decision as given, so the success guarantees hold for
 ``DefaultContinuationPolicy`` and for policies that keep its vetoes:
 ``converged`` means an approximate KKT point at the shifted multipliers
 ``max(0, multipliers + penalty * g)`` (violations within ``feasibility_tol``,
-augmented-gradient norm within ``stationarity_tol``, without the components
-that point out of the box at an active ``base_bounds`` bound, and
+augmented-gradient norm within ``stationarity_tol``, of its unit projection
+onto the ``base_bounds`` box when given, and
 complementarity gap ``sum(shift * max(0, -g))`` within ``feasibility_tol``),
 with no hybrid disagreement and no binding multiplier cap. Both tolerances are
 absolute in the objective's units, so scale f to O(1) (e.g. divide it by its

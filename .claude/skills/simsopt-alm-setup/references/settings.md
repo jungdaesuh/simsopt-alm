@@ -15,16 +15,16 @@ tolerances.
 | `max_subproblem_continuations` | 20 | Extra re-solves of one subproblem within an outer iteration (the loop runs n + 1) before the penalty is raised. | `max_outer_after_subproblem_limit_penalty_increase`, or every outer iteration ends in `max_outer`. |
 | `penalty_init` | 1.0 | Initial penalty, shared by every row. | Rows stay violated while f improves (raise to 10 to 100); the first subproblem overshoots into infeasibility of a stateful solve (lower). |
 | `penalty_scale` | 10.0 | Factor of each penalty raise (> 1). | Raises make the iterate jump and a warm-started inner solve fails (use 2 to 5). |
-| `penalty_max` | 1e8 | Largest penalty; a raise past it ends the run (`penalty_cap_reached`). None removes the cap. | Rarely: a run that needs a larger penalty usually has badly scaled or conflicting rows. |
+| `penalty_max` | 1e8 | Largest penalty; a raise past it ends the run (`penalty_cap_reached`). None removes the cap; a raise that then overflows to inf ends the run with `penalty_overflow`, keeping the finite penalty. | Rarely: a run that needs a larger penalty usually has badly scaled or conflicting rows. |
 | `feasibility_tol` | 1e-6 | Largest row violation that counts as feasible, in the rows' units. Also the complementarity-gap tolerance, absolute in f's units: Σ λ⁺_i max(0, -g_i) <= `feasibility_tol`, with λ⁺ = max(0, λ + ρ g) the shifted multipliers. On the feasible side the gap is f - ℓ(x, λ⁺), where ℓ(x, λ⁺) = f + Σ λ⁺_i g_i is the ordinary Lagrangian (not the augmented one), so an offset added to f changes nothing; scale f to O(1). | Scaled rows: 1e-4 is a violation of 0.01% of a bound; anything below the accuracy of the row's physics is unreachable. |
-| `stationarity_tol` | 1e-6 | Largest augmented-gradient norm that counts as stationary, in f's units per dof; with `base_bounds`, components on an active bound that point out of the box do not count. | Set it to what f's gradient accuracy allows (a noisy or discretized f cannot reach 1e-6); scale f first. |
+| `stationarity_tol` | 1e-6 | Largest augmented-gradient norm that counts as stationary, in f's units per dof; with `base_bounds`, the norm of the gradient's unit projection onto the box, where a component that points out of the box counts only up to its distance to the bound. | Set it to what f's gradient accuracy allows (a noisy or discretized f cannot reach 1e-6); scale f first. |
 | `trust_radius_init` | None | Initial trust radius of each inner L-BFGS-B attempt: a box of half-width radius x max(1, abs(x_i)) around the iterate. None: no box; a given radius must be positive (`ValueError` otherwise). | A stateful inner solve (Newton warm start) fails on long trial steps: a box keeps the trials near the accepted point. |
 | `trust_radius_min` | 1e-4 | Smallest radius. An attempt whose step is rejected (a rejected or unusable trial, or a higher total) keeps the start iterate at it; a step that only exceeds the feasibility slack (max violation above max(the scheduled tolerance, the start's)) is accepted there, and the outer loop raises the penalty. | Rarely. |
 | `trust_radius_shrink` | 0.5 | Radius factor after a rejected attempt, in (0, 1). | Rarely. |
 | `trust_radius_grow` | 1.5 | Radius factor after an accepted step that used at least half the radius (> 1). | Rarely. |
 | `max_inner_attempts` | 4 | L-BFGS-B attempts per subproblem; a rejected attempt, or one beyond the feasibility slack, retries with a shrunk radius (only with a trust radius; without one the step beyond the slack is accepted). | Rarely; with a trust radius, more attempts tolerate more rejected trials. |
 | `relaxed_feasibility_gate_cap` | 0.01 | Cap on the loose early feasibility gate that classifies active rows for routing and the dual update: max(`feasibility_tol`, min(scheduled tolerance, cap)). Convergence is judged at `feasibility_tol`, not this gate. | Rarely. |
-| `multiplier_max` | 1e6 | Largest multiplier; a clamped update blocks convergence until a later update is not clamped. | Multipliers pin at the cap with O(1) rows: a row is nearly infeasible or conflicting; fix the problem first. |
+| `multiplier_max` | 1e6 | Largest multiplier; a clamped update blocks convergence until a later update is not clamped. `initial_multipliers`, or a resumed checkpoint's multipliers (its best feasible iterate's too), above it raise `ValueError` before any evaluation; they are never clamped. | Multipliers pin at the cap with O(1) rows: a row is nearly infeasible or conflicting; fix the problem first. |
 | `history_max_entries` | 512 | Entries `ALMHistoryRecorder.from_settings` keeps (None: all); `minimize_alm` itself keeps no history. | Long runs whose full history you want. |
 | `continue_on_signal_mismatch` | False | Hybrid quartet only: a stalled mismatch (always a row with a live surrogate shift) keeps re-solving the subproblem instead of raising the penalty. | `signal_mismatch_*` reasons with a smooth surrogate you trust. |
 | `penalty_sufficient_decrease_tau` | 0.5 | ALGENCAN's tau: an infeasible step holds the penalty when the infeasibility measure fell to <= tau x its previous value. | Rarely; smaller raises the penalty sooner. |
@@ -49,8 +49,15 @@ The fifth `minimize_alm` argument is the options dict of scipy's L-BFGS-B:
   [termination.md](termination.md)); `result.outer_iterations` counts the
   outer iterations that ran a step. A resumed run gets the budget minus the
   checkpoint's `total_inner_iterations` (`run_alm.py --resume` does this).
+  A step that starts on a spent budget runs no inner solve (0 attempts,
+  `inner_profile` `"inner_skipped"`, no optimizer success).
 - `gtol`: raised to at least min(1e-4, 0.1 x the scheduled stationarity
-  tolerance), so each subproblem stops near the current target.
+  tolerance), so each subproblem stops near the current target, then capped
+  at that tolerance / sqrt(n), n the dofs `base_bounds` does not fix: an
+  L-BFGS-B stop on `gtol` (a per-component test) then meets the solver's
+  norm test, unless a trust box (`trust_radius_init`) held the stop, whose
+  projected gradient then drops the components pushing through the box's
+  faces (the history flags it `inner_trust_box_limited`).
 - `maxls`: line-search steps, default 20. `maxcor`, `ftol`, `maxfun`: passed
   through (validated positive).
 

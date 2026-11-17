@@ -16,7 +16,7 @@ from __future__ import annotations
 from dataclasses import dataclass, replace
 from enum import Enum
 from functools import partial
-from typing import Callable, Dict, Generic, List, Mapping, Optional, Sequence, Set, Tuple
+from typing import Callable, Dict, Generic, List, Literal, Mapping, Optional, Sequence, Set, Tuple
 
 import numpy as np
 
@@ -76,6 +76,19 @@ def _require_alm_penalty_within_cap(
             f"settings.penalty_max ({settings.penalty_max})"
         )
     return penalty_f
+
+def _require_alm_multipliers_within_cap(
+    multipliers: np.ndarray,
+    settings: ALMSettings,
+    *,
+    label: str,
+) -> None:
+    """Reject supplied multipliers above ``settings.multiplier_max``; the
+    caller's state is never clamped."""
+    if settings.multiplier_max is not None and np.any(
+        np.asarray(multipliers, dtype=float) > settings.multiplier_max
+    ):
+        raise ValueError(f"{label} must be <= settings.multiplier_max ({settings.multiplier_max})")
 
 @dataclass
 class ALMRunState(Generic[AcceptedStateT]):
@@ -137,12 +150,16 @@ class ALMRunState(Generic[AcceptedStateT]):
 
 @dataclass(frozen=True)
 class ALMPenaltyIncreaseResult:
+    """A penalty raise: the finite next penalty, the re-evaluation at it, and
+    the stop it forces (None: the run continues)."""
+
     penalty: float
     penalty_cap_reached: bool
     penalty_cap_requested: Optional[float]
     update_feasibility_tol: float
     update_stationarity_tol: float
     penalty_update_state: ALMIterateMeasurement
+    termination_reason: Optional[Literal["penalty_cap_reached", "penalty_overflow"]]
 
 @dataclass(frozen=True)
 class _ALMRun(Generic[AcceptedStateT]):
@@ -283,6 +300,7 @@ def _normalize_alm_run_inputs(
         if initial_multipliers is not None
         else np.zeros(len(constraint_names), dtype=float)
     )
+    _require_alm_multipliers_within_cap(multipliers, settings, label="initial ALM multipliers")
     penalty = _require_alm_penalty_within_cap(
         float(initial_penalty)
         if initial_penalty is not None
@@ -310,7 +328,9 @@ def _apply_alm_penalty_increase(
     run: _ALMRun, run_state: ALMRunState
 ) -> ALMPenaltyIncreaseResult:
     """The next penalty and the re-evaluation at it (at ``run_state``'s x and
-    multipliers)."""
+    multipliers). A request above ``penalty_max`` stops the run at the cap; one
+    that overflows to inf keeps the penalty and stops it with
+    ``penalty_overflow``."""
     settings = run.settings
     next_penalty, cap_hit, requested_penalty = _next_penalty(
         run_state.penalty,
@@ -354,6 +374,11 @@ def _apply_alm_penalty_increase(
         update_feasibility_tol=next_feasibility_tol,
         update_stationarity_tol=next_stationarity_tol,
         penalty_update_state=penalty_update_state,
+        termination_reason=(
+            "penalty_overflow"
+            if requested_penalty is None
+            else "penalty_cap_reached" if cap_hit else None
+        ),
     )
 
 @set_module("simsopt_alm")
@@ -391,8 +416,9 @@ class ALMResult:
     ``evaluation["feasibility_values"]``); ``max_violation`` the largest
     of the evaluator's ``feasibility_values``; ``stationarity_norm`` the
     augmented-gradient norm (the evaluator's ``stationarity_norm`` when given;
-    at a base bound, without the components pointing out of the box, whose
-    full value stays in ``evaluation``) and ``kkt_stationarity_norm`` the active-set KKT residual (None without the
+    with ``base_bounds``, of the gradient's unit projection onto the box, a
+    component pushing out counted up to its distance to the bound, whose full
+    value stays in ``evaluation``) and ``kkt_stationarity_norm`` the active-set KKT residual (None without the
     gradients it needs); ``multipliers`` and ``penalty`` the ones that
     evaluation used; ``evaluation`` an owned copy of the evaluator's dict,
     read-only all the way down as in an event. ``nit`` counts L-BFGS-B
@@ -761,8 +787,9 @@ def _execute_step_decision(
 ) -> _ALMContinuationStepResult:
     """Carry out the policy's post-inner ``decision``: update the carriers,
     publish the step exactly once, and return its result. A converge, a stop
-    or a penalty raise that hits the cap RETURNs; a continue continues the
-    subproblem; a dual update, raise or hold ends the outer iteration."""
+    or a penalty raise that hits the cap or overflows RETURNs; a continue
+    continues the subproblem; a dual update, raise or hold ends the outer
+    iteration."""
     run_state.feasible_stall_count = decision.feasible_stall_count
     measured = context.inner.measured
     if isinstance(decision, ALMConverge):
@@ -886,9 +913,9 @@ def _execute_step_decision(
 
     # Raise the penalty (with the dual update, or for a raise decision).
     penalty_transition = _apply_alm_penalty_increase(context.run, run_state)
-    cap_reached = penalty_transition.penalty_cap_reached
+    increase_termination = penalty_transition.termination_reason
     run_state.penalty = penalty_transition.penalty
-    run_state.penalty_cap_reached = cap_reached
+    run_state.penalty_cap_reached = penalty_transition.penalty_cap_reached
     run_state.penalty_cap_requested = penalty_transition.penalty_cap_requested
     run_state.update_feasibility_tol = penalty_transition.update_feasibility_tol
     run_state.update_stationarity_tol = penalty_transition.update_stationarity_tol
@@ -896,37 +923,62 @@ def _execute_step_decision(
     run_state.exhausted_termination = _exhausted_termination(
         context, max_outer_termination=decision.max_outer_termination, action=action
     )
-    # A capped raise keeps the dual-update reason on its event.
+    # A raise that stops the run publishes its stop as the action; a capped
+    # raise keeps the dual-update reason on its event.
     _publish_outer_step(
         context,
         run_state,
-        action="penalty_cap_reached" if cap_reached else action,
-        outer_termination=None if cap_reached else _max_outer_termination(context),
+        action=increase_termination or action,
+        outer_termination=None if increase_termination else _max_outer_termination(context),
         subproblem_limit_reason=subproblem_limit_reason,
         signal_mismatch_repair=signal_mismatch_repair,
         dual_update=dual_update,
         penalty_update=penalty_transition.penalty_update_state,
         dual_update_penalty_reason=dual_update_penalty_reason,
     )
-    if not cap_reached:
+    if increase_termination is None:
         return _ALMContinuationStepResult(_ALMContinuationDecision.BREAK_OUTER)
     return _ALMContinuationStepResult(
         _ALMContinuationDecision.RETURN,
-        _build_alm_failure_result_with_optional_restore(
-            context.run,
-            run_state,
-            last_outer_iteration=context.outer_iteration,
-            termination_reason="penalty_cap_reached",
+        _penalty_increase_stop_result(context, run_state, penalty_transition),
+    )
+
+def _penalty_increase_stop_result(
+    context: _ContinuationContext[AcceptedStateT],
+    run_state: ALMRunState[AcceptedStateT],
+    penalty_transition: ALMPenaltyIncreaseResult,
+) -> ALMResult:
+    """The failed result of a penalty raise that stops the run: the request
+    exceeded ``penalty_max``, or overflowed to inf (the penalty kept)."""
+    stop = partial(
+        _build_alm_failure_result_with_optional_restore,
+        context.run,
+        run_state,
+        last_outer_iteration=context.outer_iteration,
+    )
+    if penalty_transition.termination_reason == "penalty_overflow":
+        return stop(
+            termination_reason="penalty_overflow",
             message_prefix=(
-                "ALM stopped after the requested penalty update "
-                f"{penalty_transition.penalty_cap_requested:.3e} exceeded "
-                f"the configured penalty cap {run_state.penalty:.3e}."
+                "ALM stopped because the requested penalty increase overflowed; "
+                f"retained finite penalty {run_state.penalty:.3e}."
             ),
             restored_message_prefix=(
-                "ALM stopped at the penalty cap after restoring best feasible iterate"
+                "ALM stopped after penalty overflow and restored best feasible iterate"
             ),
-            restored_termination_reason="penalty_cap_reached_restored_best_feasible",
+            restored_termination_reason="penalty_overflow_restored_best_feasible",
+        )
+    return stop(
+        termination_reason="penalty_cap_reached",
+        message_prefix=(
+            "ALM stopped after the requested penalty update "
+            f"{penalty_transition.penalty_cap_requested:.3e} exceeded "
+            f"the configured penalty cap {run_state.penalty:.3e}."
         ),
+        restored_message_prefix=(
+            "ALM stopped at the penalty cap after restoring best feasible iterate"
+        ),
+        restored_termination_reason="penalty_cap_reached_restored_best_feasible",
     )
 
 def _sufficient_decrease_measure(
@@ -1075,6 +1127,7 @@ def _inner_solve_outcome(
         feasibility_delta_tolerance=feasibility_delta_tolerance,
         sufficient_decrease_measure=sufficient_decrease_measure,
         sufficient_decrease_reference=sufficient_decrease_reference,
+        inner_stop=attempt.inner_stop,
     )
 
 def _run_alm_continuation_step(
@@ -1433,6 +1486,16 @@ def minimize_alm(
     if resume_from is not None:
         _validate_resume_boundary(resume_from)
         resumed = resume_from.state
+        # Before the caller's state is restored or anything is evaluated.
+        _require_alm_multipliers_within_cap(
+            resumed.multipliers, settings, label="resume ALM multipliers"
+        )
+        if resumed.best_feasible is not None:
+            _require_alm_multipliers_within_cap(
+                resumed.best_feasible.multipliers,
+                settings,
+                label="resume best-feasible ALM multipliers",
+            )
         resume_x = np.asarray(resumed.x, dtype=float)
         # A checkpoint of a run with these bounds lies inside them; one
         # outside came from other bounds, and projecting it would not
@@ -1572,25 +1635,30 @@ def minimize_alm(
             context="ALM resumed final state evaluation",
         )
 
-    final_result = _build_alm_failure_result_with_optional_restore(
+    stop = partial(
+        _build_alm_failure_result_with_optional_restore,
         run,
         run_state,
         last_outer_iteration=last_outer_iteration,
-        termination_reason=(
-            run_state.last_action if budget_spent else run_state.exhausted_termination
-        ),
-        message_prefix=(
-            "ALM spent the inner maxiter budget"
-            if budget_spent
-            else "ALM exhausted outer iterations (max outer iterations reached)"
-        ),
-        restored_message_prefix=(
-            "ALM spent the inner maxiter budget after restoring best feasible iterate"
-            if budget_spent
-            else "ALM exhausted outer iterations after restoring best feasible "
-            "iterate (max outer iterations reached)"
-        ),
-        restored_termination_reason="max_outer_restored_best_feasible",
     )
+    if budget_spent:
+        final_result = stop(
+            termination_reason=run_state.last_action,
+            message_prefix="ALM spent the inner maxiter budget",
+            restored_message_prefix=(
+                "ALM spent the inner maxiter budget after restoring best feasible iterate"
+            ),
+            restored_termination_reason="inner_budget_restored_best_feasible",
+        )
+    else:
+        final_result = stop(
+            termination_reason=run_state.exhausted_termination,
+            message_prefix="ALM exhausted outer iterations (max outer iterations reached)",
+            restored_message_prefix=(
+                "ALM exhausted outer iterations after restoring best feasible "
+                "iterate (max outer iterations reached)"
+            ),
+            restored_termination_reason="max_outer_restored_best_feasible",
+        )
     _publish_outer_boundary(run, run_state, last_outer_iteration, final_result)
     return final_result

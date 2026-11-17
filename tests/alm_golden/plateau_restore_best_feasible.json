@@ -201,7 +201,7 @@
      "x0_cap"
     ],
     "inner_iterations": 1,
-    "inner_success": true,
+    "inner_success": false,
     "inner_message": "CONVERGENCE: NORM OF PROJECTED GRADIENT <= PGTOL",
     "penalty": "0x1.0000000000000p+0",
     "penalty_values": [
@@ -277,6 +277,7 @@
     "conditioning_penalty_grad_ratio": "0x1.98c6318c6318cp+0",
     "penalty_gradient_norm": "0x1.db33333333333p+4",
     "sufficient_decrease_measure": "0x1.3333333333334p-2",
+    "inner_trust_box_limited": true,
     "subproblem_limit_reason": null,
     "action": "subproblem_continue",
     "raw_signed_constraint_values": null,
@@ -327,7 +328,7 @@
      "x0_cap"
     ],
     "inner_iterations": 1,
-    "inner_success": true,
+    "inner_success": false,
     "inner_message": "CONVERGENCE: NORM OF PROJECTED GRADIENT <= PGTOL",
     "penalty": "0x1.0000000000000p+0",
     "penalty_values": [
@@ -403,6 +404,7 @@
     "conditioning_penalty_grad_ratio": "0x1.83f80fe03f80fp+0",
     "penalty_gradient_norm": "0x1.d533333333333p+4",
     "sufficient_decrease_measure": "0x1.599999999999ap-1",
+    "inner_trust_box_limited": true,
     "subproblem_limit_reason": null,
     "action": "subproblem_continue",
     "raw_signed_constraint_values": null,
@@ -453,7 +455,7 @@
      "x0_cap"
     ],
     "inner_iterations": 1,
-    "inner_success": true,
+    "inner_success": false,
     "inner_message": "CONVERGENCE: NORM OF PROJECTED GRADIENT <= PGTOL",
     "penalty": "0x1.4000000000000p+3",
     "penalty_values": [
@@ -529,6 +531,7 @@
     "conditioning_penalty_grad_ratio": "0x1.b8bb8bb8bb8bbp-1",
     "penalty_gradient_norm": "0x1.1a00000000000p+4",
     "sufficient_decrease_measure": "0x1.3cccccccccccdp+0",
+    "inner_trust_box_limited": true,
     "subproblem_limit_reason": "max_subproblem_continuations",
     "action": "subproblem_limit_penalty_increase",
     "raw_signed_constraint_values": null,
@@ -626,7 +629,7 @@
     "inner_maxls": 20,
     "inner_maxfun": null,
     "inner_profile": "boxed",
-    "inner_lbfgsb_projected_gradient_norm": "0x1.6ccccccccccd0p+1",
+    "inner_lbfgsb_projected_gradient_norm": "0x1.b000000000000p-1",
     "inner_attempts": 1,
     "accepted_move_norm": "0x0.0p+0",
     "accepted_move_norm_scaled": "0x0.0p+0",
@@ -752,7 +755,7 @@
     "inner_maxls": 20,
     "inner_maxfun": null,
     "inner_profile": "boxed",
-    "inner_lbfgsb_projected_gradient_norm": "0x1.6ccccccccccd0p+1",
+    "inner_lbfgsb_projected_gradient_norm": "0x1.b000000000000p-1",
     "inner_attempts": 1,
     "accepted_move_norm": "0x0.0p+0",
     "accepted_move_norm_scaled": "0x0.0p+0",
@@ -958,7 +961,7 @@
     "action": "subproblem_continue",
     "dual_update_penalty_reason": null,
     "outer_termination": null,
-    "event_sha256": "27aa54492bf4ac124f049dd81fe1e2c09722523a93d3b4a4eb71a1da2443926d"
+    "event_sha256": "4de74c9877be1735a91236f8bb9685c8353a5cb4fb871e2de43ffb9cf241cfc6"
    },
    {
     "event": "evaluate_problem",
@@ -1065,7 +1068,7 @@
     "action": "subproblem_continue",
     "dual_update_penalty_reason": null,
     "outer_termination": null,
-    "event_sha256": "0966c8db077e13f57119b8a79306433f7b3726e266ae153aa57fe9e70fc9345d"
+    "event_sha256": "7dd6de0d0157aefd099bbdd30b07f9b9efcc475a2adeb2d92409c9ef86d272a6"
    },
    {
     "event": "evaluate_problem",
@@ -1196,7 +1199,7 @@
     "action": "subproblem_limit_penalty_increase",
     "dual_update_penalty_reason": null,
     "outer_termination": null,
-    "event_sha256": "e149c583f4765dae573de67d8d4f4f6f00a3f10637c84f6e2b8755517cf83eee"
+    "event_sha256": "666de6898c7df70b164e68103ec6fe4009c7d8ca851d052bf4fb9467ae4c4b52"
    },
    {
     "event": "snapshot_accepted_state",
@@ -1496,7 +1499,7 @@
     "action": "subproblem_continue",
     "dual_update_penalty_reason": null,
     "outer_termination": null,
-    "event_sha256": "3ee1bb9cef52582a20aef849d256c5f044ca47f251e0493cdf75516f039ff997"
+    "event_sha256": "60bbda4999345d9dd00227af330edda27e7966b849bae6fa9d4241ff8299bf25"
    },
    {
     "event": "evaluate_problem",
@@ -1699,7 +1702,7 @@
     "action": "subproblem_limit",
     "dual_update_penalty_reason": null,
     "outer_termination": null,
-    "event_sha256": "1255eab221efdd12097f61c69ec4b295e1914ae4201a0ab117d3871122bec468"
+    "event_sha256": "6eff14a9f9e5da64f6f545d5f2fa1789c93ccb416ed3af3a26758b4a6d384ba7"
    },
    {
     "event": "restore_incumbent_state",

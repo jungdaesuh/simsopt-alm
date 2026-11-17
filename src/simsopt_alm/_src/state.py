@@ -64,6 +64,10 @@ class ALMIterateMeasurement:
     effective_feasibility_tol: float
 
 
+# ALMInnerSolveOutcome.inner_stop values (see inner.attempts._inner_stop).
+INNER_STOP_RAW_STATIONARITY = "raw_stationarity"
+INNER_STOP_TRUST_BOX_LIMITED = "trust_box_limited"
+
 @set_module("simsopt_alm")
 @dataclass(frozen=True)
 class ALMInnerSolveOutcome:
@@ -73,6 +77,11 @@ class ALMInnerSolveOutcome:
     trial was rejected); ``bounds`` and ``inner_options`` are the last
     attempt's box (None: unbounded) and L-BFGS-B options. The
     ``sufficient_decrease_*`` pair is the ALGENCAN measure and its reference.
+    ``optimizer_success`` is L-BFGS-B's own flag (False when a spent budget
+    skipped the solve: ``attempts`` 0, ``inner_profile`` ``"inner_skipped"``);
+    ``inner_stop`` says which stationarity test that success passed
+    (``"raw_stationarity"``, ``"trust_box_limited"``; None: neither, or no
+    success), and :attr:`succeeded` excludes a trust-box-limited stop.
     """
 
     x: np.ndarray
@@ -94,6 +103,12 @@ class ALMInnerSolveOutcome:
     feasibility_delta_tolerance: float
     sufficient_decrease_measure: float
     sufficient_decrease_reference: float
+    inner_stop: Optional[str] = None
+
+    @property
+    def succeeded(self) -> bool:
+        """L-BFGS-B's success unless the trust box, not stationarity, ended it."""
+        return self.optimizer_success and self.inner_stop != INNER_STOP_TRUST_BOX_LIMITED
 
 AcceptedStateT = TypeVar("AcceptedStateT")
 
