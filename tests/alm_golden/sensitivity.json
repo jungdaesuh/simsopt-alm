@@ -174,7 +174,7 @@
   "simsopt_alm/_src/checkpoint/codec.py": "16ef8e1200cb7eed6956d9ea4ba1cf03bfc12715",
   "simsopt_alm/_src/checkpoint/snapshot.py": "0e011208f7c7411087fdab4ce87b6396c5242df7",
   "simsopt_alm/_src/inner/__init__.py": "31c6be3475674eb07fc51eac42f25530e5931ba8",
-  "simsopt_alm/_src/inner/attempts.py": "b6d661946253dacd183ecc01de571beba7a3f086",
+  "simsopt_alm/_src/inner/attempts.py": "08fe3ceda1e5a7138153f2a383ec9fbb5b75950d",
   "simsopt_alm/_src/loop/__init__.py": "d67e2ab6e9da81fe2952e2470f51f491541c7522",
   "simsopt_alm/_src/loop/history.py": "e034fb91eccbd158365165cfdb518c65bf77d697",
   "simsopt_alm/_src/loop/outer.py": "1969ddb37a33279a182983e9178edec0a672c890",

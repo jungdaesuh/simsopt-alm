@@ -6,8 +6,10 @@ correct outcome; each failed at 1b7387b74.
 
 import dataclasses
 import unittest
+from unittest.mock import patch
 
 import numpy as np
+from scipy.optimize import minimize as scipy_minimize
 
 import simsopt_alm as alm
 from simsopt_alm import ALMSettings, augmented_inequality_objective, minimize_alm
@@ -419,6 +421,26 @@ class TaylorOwnershipTests(unittest.TestCase):
 
 class InnerPlanBudgetTests(unittest.TestCase):
     """B6 (inner.py): a custom plan's maxiter ran past the call's budget."""
+
+    def test_history_fits_the_final_attempt_budget(self):
+        class TwoIterationPlan(DefaultContinuationPolicy):
+            def inner_plan(self, view):
+                return ALMInnerPlan("two", dict(super().inner_plan(view).options, maxiter=2))
+
+        for requested, budget, expected in ((300, 1, 1), (np.int64(300), 3, 2),
+                                            (1, 3, 1), (None, 3, 2)):
+            with self.subTest(maxcor=requested, budget=budget):
+                options = {"maxiter": budget}
+                if requested is not None:
+                    options["maxcor"] = requested
+                original = dict(options)
+                events = []
+                with patch("simsopt_alm._src.inner.attempts.minimize", wraps=scipy_minimize) as solve:
+                    minimize_alm([0.0], ["g"], pulled_out, ALMSettings(max_outer_iterations=1),
+                                 options, continuation_policy=TwoIterationPlan(), on_outer_step=events.append)
+                self.assertEqual(solve.call_args_list[0].kwargs["options"].get("maxcor"), expected)
+                self.assertEqual(events[0].inner.inner_options["maxcor"], expected)
+                self.assertEqual(options, original)
 
     def test_a_plan_cannot_raise_maxiter_past_the_call_budget(self):
         class GenerousPlan(DefaultContinuationPolicy):
