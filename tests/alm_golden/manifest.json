@@ -9,18 +9,18 @@
   "openblas_coretype": "Haswell"
  },
  "source_blob_ids": {
-  "simsopt_alm/__init__.py": "5d755241c7786d55a4d29e572feed33460c94c0c",
+  "simsopt_alm/__init__.py": "f0717de06a021cd1b6480e36a097318d8d142962",
   "simsopt_alm/_src/__init__.py": "0bd5544462ab6bb181e6dde0fbd232e2e1ff5e3f",
-  "simsopt_alm/_src/alm_math.py": "a37480403f4efac3c5db04b14a08e8b8d4060946",
+  "simsopt_alm/_src/alm_math.py": "9377a80578af8caf76d8eda157ca249e5ea59dd5",
   "simsopt_alm/_src/checkpoint/__init__.py": "6f71b30eb6583fb082b94f5db7b737e71fb409d6",
   "simsopt_alm/_src/checkpoint/boundary.py": "2367b970a8dfa39a86921568cf2e099c81db7e05",
   "simsopt_alm/_src/checkpoint/codec.py": "16ef8e1200cb7eed6956d9ea4ba1cf03bfc12715",
   "simsopt_alm/_src/checkpoint/snapshot.py": "0e011208f7c7411087fdab4ce87b6396c5242df7",
   "simsopt_alm/_src/inner/__init__.py": "31c6be3475674eb07fc51eac42f25530e5931ba8",
-  "simsopt_alm/_src/inner/attempts.py": "a90783761cef998b5f6f15cd8b72ade4fab96656",
+  "simsopt_alm/_src/inner/attempts.py": "b6d661946253dacd183ecc01de571beba7a3f086",
   "simsopt_alm/_src/loop/__init__.py": "d67e2ab6e9da81fe2952e2470f51f491541c7522",
   "simsopt_alm/_src/loop/history.py": "e034fb91eccbd158365165cfdb518c65bf77d697",
-  "simsopt_alm/_src/loop/outer.py": "67855fa84e55ebfbd19b647d2dbf80165d876a9a",
+  "simsopt_alm/_src/loop/outer.py": "1969ddb37a33279a182983e9178edec0a672c890",
   "simsopt_alm/_src/policy/__init__.py": "e4c89b84c830bf9f710d81fd0c38d3ec68a3722f",
   "simsopt_alm/_src/policy/decisions.py": "41674f5a5d693d7e1ee6300d9db57813524174d1",
   "simsopt_alm/_src/policy/default.py": "f6628a52689fec7030f0b61e8f1b72e1d9fdaa8d",
@@ -28,7 +28,7 @@
   "simsopt_alm/_src/policy/plan.py": "20789e0a6122192a29046f148ca8ba1208694216",
   "simsopt_alm/_src/policy/views.py": "a23cb3d68aab71876066fe8937df787480f07d79",
   "simsopt_alm/_src/problem/__init__.py": "4869ca8388a642f07cf0ebd08dacacbcd30db815",
-  "simsopt_alm/_src/problem/evaluation.py": "854579499a71a2b1c4415e14484889461fe38361",
+  "simsopt_alm/_src/problem/evaluation.py": "484cb1681598abd0f8ff5b1b443fb8c3edc3591f",
   "simsopt_alm/_src/problem/physics.py": "6366bffa62ddc83308ccffec0c6283ba8e8a3876",
   "simsopt_alm/_src/problem/taylor.py": "e1c6d8f819931ca7f53a3d98557297b59bb1c9d4",
   "simsopt_alm/_src/public_api.py": "060be8c19c6884b1d10407c378a113d64c499581",
@@ -39,9 +39,9 @@
   "simsopt_alm/checkpoint.py": "668c0e9f4c9b5e9972d5540dbaa7c5e818a4071f",
   "simsopt_alm/history.py": "405fbff4d635a553651a10f5669651bfdc5b8bf2",
   "simsopt_alm/policy.py": "b1c46ea4082e8a4df3258d40b0f4c13ffe03cc37",
-  "alm_golden_scenarios.py": "88f2d681708878f170670fd6c9e05d8e20625eb0",
+  "alm_golden_scenarios.py": "429485e4e0c7a894b4bb6cb2b08e6ff391783c3c",
   "generate_alm_golden.py": "c1b8f5215a49fef047c4bd627726995351cf89be",
-  "measure_alm_golden_sensitivity.py": "b5351309acfffcba9093e004accb67c128b82683"
+  "measure_alm_golden_sensitivity.py": "b2215ccbbdaae8f2689d569806d871f8ccdbdc39"
  },
  "outcome_union": [
   "action:constraints_inactive_converged",
@@ -82,7 +82,7 @@
   "termination:constraints_inactive_converged",
   "termination:constraints_inactive_stall",
   "termination:converged",
-  "termination:dual_update",
+  "termination:inner_budget_restored_best_feasible",
   "termination:max_outer_after_dual_update",
   "termination:max_outer_after_signal_mismatch_penalty_increase",
   "termination:max_outer_restored_best_feasible",
@@ -102,25 +102,25 @@
   {
    "scenario": "penalty_ramp_to_cap",
    "fixture": "penalty_ramp_to_cap.json",
-   "sha256": "9223904dc3af76c69d3c8184841b616f000efba5399014b48dffa23e9ab781b5",
+   "sha256": "4b5478a1c721217a850b7e4f928675e05a101c230d76e3214528e93364542a63",
    "bytes": 86482
   },
   {
    "scenario": "resume_penalty_ramp_mid_run",
    "fixture": "resume_penalty_ramp_mid_run.json",
-   "sha256": "af38a3b750c2962af786de3e9cb1d5aec7c5fe8d12c221074e8d1977be2ef08c",
+   "sha256": "ba348744441ae611e179d300b38c4991dd81bdc46b808b01074fa5d55b4cb915",
    "bytes": 90621
   },
   {
    "scenario": "hybrid_mismatch_repair",
    "fixture": "hybrid_mismatch_repair.json",
-   "sha256": "389679f63b8d8b4359e1374dffa76871c7f12f0bb267dbdf1ab69254e82d006a",
+   "sha256": "e859f902de4cf341f67f722858ccb4d4efe0566aecdaf6fcf498231647363172",
    "bytes": 69213
   },
   {
    "scenario": "hybrid_mismatch_penalty_increase",
    "fixture": "hybrid_mismatch_penalty_increase.json",
-   "sha256": "d37773596fe2dcd3f8a2269c8c9a3074519d2853a7c3e8fd02ea584930ef1319",
+   "sha256": "370b5463e0359019cf69e69a2fad391a443c80a2a92122926dcab0ce4328351b",
    "bytes": 47988
   },
   {
@@ -132,55 +132,55 @@
   {
    "scenario": "constraints_inactive_stall",
    "fixture": "constraints_inactive_stall.json",
-   "sha256": "5434aafdb9f0460a90104095e39326cece8271819e7ba1c0bbf3360074cc1bbc",
-   "bytes": 28387
+   "sha256": "b59807d9d67630a24e2327009b22d47aef9396a21696cfd0b1cfb0a6d57001d3",
+   "bytes": 39073
   },
   {
    "scenario": "plateau_restore_best_feasible",
    "fixture": "plateau_restore_best_feasible.json",
-   "sha256": "f8ccb553199b976d9ae2fbfa472f72cf817b54ef48f45993dab3fc2ee44269e7",
-   "bytes": 51890
+   "sha256": "1b7326400bb8f8d8f490ed67cfc545ffd902c4402922cc557bb90d91f301fe54",
+   "bytes": 83760
   },
   {
    "scenario": "resume_plateau_best_feasible",
    "fixture": "resume_plateau_best_feasible.json",
-   "sha256": "ad7406713cc40bedf194379e4c21ee50826458027ee40bb3233e96445ed1f9c4",
-   "bytes": 54518
+   "sha256": "ecd44f346449264d418e5a05619e57d1a0b79e4a126fc5989b5d5ff0ad31252a",
+   "bytes": 88304
   },
   {
    "scenario": "trust_radius_retries",
    "fixture": "trust_radius_retries.json",
-   "sha256": "4e76fb42e1b007aea32a459dfc12010f28cae15b5b714b4938cff1abf9e09bf6",
+   "sha256": "d8be1607b282c65fe6e2b6eb13e22ea951803848a616dfac23ff84ca0f54abac",
    "bytes": 113169
   },
   {
    "scenario": "frozen_warm_start_restore",
    "fixture": "frozen_warm_start_restore.json",
-   "sha256": "bdb6fe64bd5ae34c7517d85241b1eb2d5835d1c840ca79869833a5531f232c46",
+   "sha256": "c0cdbc04072e93f962e20fb34dc4f46304e4244f2e13619f602cdf0602fbb3af",
    "bytes": 155293
   },
   {
    "scenario": "cached_physics_smoothing",
    "fixture": "cached_physics_smoothing.json",
-   "sha256": "a1f96efbc2156bc906e054fd5babe24904044d98416d8b2353cbd91e9e4f726b",
-   "bytes": 50998
+   "sha256": "768940f54b2cb4d43b5378f02681ee168debae009c96d951e66d9396bfb284d3",
+   "bytes": 52614
   },
   {
    "scenario": "multiplier_cap_process_budget",
    "fixture": "multiplier_cap_process_budget.json",
-   "sha256": "67f1249e29083ce9c8824b001050e0ba03478b5924ea18853cf05f0f1b67743a",
-   "bytes": 77880
+   "sha256": "2b71f3329ab229fccc8f1d9f5c080ae6528e00d56d587d08f890aa9b04227159",
+   "bytes": 78618
   },
   {
    "scenario": "inner_iteration_budget",
    "fixture": "inner_iteration_budget.json",
-   "sha256": "7ecf0075bfa6e246c4d9a21dd3f863b72f80cd4777a862687ad0ff826f684f58",
-   "bytes": 31758
+   "sha256": "b7e780a0cacf2ae3645de80806f5c6a6598076c746b4f2ae3379c6ade8287533",
+   "bytes": 38304
   },
   {
    "scenario": "dual_update_penalty_cap",
    "fixture": "dual_update_penalty_cap.json",
-   "sha256": "affed3ff4b3df50b33b1358d97f0053ea957db208fa5f24d9f6665c1c191186c",
+   "sha256": "6f730842dce4ff5973f84597d1429bc41ec3cc09cd633f451501e8e5af26f44e",
    "bytes": 14853
   },
   {

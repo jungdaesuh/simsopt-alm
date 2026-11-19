@@ -41,12 +41,18 @@ not produce. For every scenario it records:
 * ``spread``: per boundary quantity, the largest deviation from the golden
   (``alm_golden_scenarios.boundary_deviations``) over the calibration runs.
 
-Calibration uses ``SEEDS`` (144 samples over ``ULPS``), validation
-``HOLDOUT_SEEDS`` (96 more); ``always_observed`` spans both. The measurement
+Calibration uses ``SEEDS`` (384 samples over ``ULPS``), validation
+``HOLDOUT_SEEDS`` (192 more); ``always_observed`` spans both. The measurement
 fails, asking for more calibration seeds, when a held-out run of a numeric
 scenario leaves its tolerances or path, or a held-out run of a label-only
 scenario reaches an outcome outside ``observed_outcomes``: each recorded
 outcome set is closed under the held-out samples.
+
+The accepted-inner retention update exposed a new plateau termination at
+held-out seed 101 with 2 ulps. That case remains a focused regression and
+part of the original held-out set. Calibration grew from seeds 1-36 to 1-96;
+seeds 200-223 were reserved before remeasurement as additional unseen checks.
+The noise model, numeric ceilings and correctness assertions are unchanged.
 
 The replay test sets each numeric tolerance to ``10 x max(spread, eps)``.
 Rerun from the repository root (the package's directory) whenever the
@@ -78,8 +84,8 @@ from generate_alm_golden import (
 )
 
 ULPS = (1, 2, 3, 4)
-SEEDS = tuple(range(1, 37))
-HOLDOUT_SEEDS = tuple(range(100, 124))
+SEEDS = tuple(range(1, 97))
+HOLDOUT_SEEDS = tuple(range(100, 124)) + tuple(range(200, 224))
 TOLERANCE_FACTOR = 10.0
 # A regression of this relative size must fail the numeric replay.
 NUMERIC_REPLAY_CEILING = 1e-10

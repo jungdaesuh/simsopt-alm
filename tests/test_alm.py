@@ -387,20 +387,24 @@ class AlmLibrarySizeBudgetTests(unittest.TestCase):
         # overflow and spent-budget restore reasons), evaluation.py +8 (owned
         # nested diagnostics), state.py +15 (inner_stop, succeeded),
         # state_views.py +10 (the copy memo); history.py fell 659 -> 652.
+        # +29 math: exponent-scaled PHR values, including subnormal and zero rows.
+        # +6 attempts, +54 outer: retain feasible inner iterates with matching
+        # snapshots and attach the optimizer result only at its own endpoint.
+        # +5 outer, +3 evaluation: rejection checks and pre-restore cap checks.
         budgets = {
-            "_src/alm_math.py": 718,
+            "_src/alm_math.py": 747,
             "_src/checkpoint/boundary.py": 288,
             "_src/checkpoint/codec.py": 200,
             "_src/checkpoint/snapshot.py": 408,
-            "_src/inner/attempts.py": 820,
+            "_src/inner/attempts.py": 831,
             "_src/loop/history.py": 652,
-            "_src/loop/outer.py": 1664,
+            "_src/loop/outer.py": 1723,
             "_src/policy/decisions.py": 90,
             "_src/policy/default.py": 383,
             "_src/policy/hybrid.py": 55,
             "_src/policy/plan.py": 18,
             "_src/policy/views.py": 91,
-            "_src/problem/evaluation.py": 393,
+            "_src/problem/evaluation.py": 396,
             "_src/problem/taylor.py": 203,
             "_src/public_api.py": 40,
             "_src/settings/settings.py": 135,
@@ -415,10 +419,12 @@ class AlmLibrarySizeBudgetTests(unittest.TestCase):
         # The 0.2.0 behavior fixes: minimize_alm +15 (the resume multiplier-cap checks, the
         # spent-budget restore reason); _execute_step_decision fell 174 -> 162
         # (the penalty stop result moved to _penalty_increase_stop_result).
+        # +19 continuation: retain inner incumbents; +5 facade: snapshot hook.
+        # +4 facade: validate resumed incumbent caps before state restoration.
         budgets = (
-            ("_src/loop/outer.py", "_run_alm_continuation_step", 238),
+            ("_src/loop/outer.py", "_run_alm_continuation_step", 257),
             ("_src/loop/outer.py", "_execute_step_decision", 162),
-            ("_src/loop/outer.py", "minimize_alm", 221),
+            ("_src/loop/outer.py", "minimize_alm", 230),
             ("_src/checkpoint/snapshot.py", "ALMTransitionSnapshot", 132),
         )
         for filename, name, budget in budgets:
@@ -431,6 +437,8 @@ class AlmLibrarySizeBudgetTests(unittest.TestCase):
         # and problem API: every implementation module but the opt-in history
         # and checkpoint plugins (and the package __init__ docstrings).
         # The 0.2.0 behavior fixes: 5387 -> 5579 (the module budgets).
+        # +29 scalar arithmetic; +65 accepted-inner incumbent retention and row metadata.
+        # +8 rejection checks and pre-restore resume validation.
         plugins = {"_src/loop/history.py", "_src/checkpoint/snapshot.py", "_src/checkpoint/codec.py"}
         core_files = [filename for filename in LIBRARY_MODULE_FILES if filename not in plugins]
         self.assertEqual(len(core_files), len(LIBRARY_MODULE_FILES) - len(plugins))
@@ -440,8 +448,8 @@ class AlmLibrarySizeBudgetTests(unittest.TestCase):
         )
         self.assertLessEqual(
             line_count,
-            5579,
-            f"the core package has {line_count} lines; budget is 5579",
+            5681,
+            f"the core package has {line_count} lines; budget is 5681",
         )
 
 

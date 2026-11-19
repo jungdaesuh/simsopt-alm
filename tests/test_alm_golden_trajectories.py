@@ -38,12 +38,15 @@ from pathlib import Path
 from types import MappingProxyType
 from unittest.mock import patch
 
+import numpy as np
+
 from simsopt_alm import ALMResult
 
 GOLDEN_DIR = Path(__file__).resolve().parent / "alm_golden"
 if str(GOLDEN_DIR) not in sys.path:
     sys.path.insert(0, str(GOLDEN_DIR))
 import alm_golden_scenarios as golden  # noqa: E402
+from measure_alm_golden_sensitivity import _perturbed_run  # noqa: E402
 from generate_alm_golden import INTENDED_OUTCOMES, alm_source_blob_ids  # noqa: E402
 
 MANIFEST = golden.load_manifest()
@@ -54,8 +57,8 @@ _golden = golden.load_golden
 # measure_alm_golden_sensitivity.py (its docstring states the noise model: the
 # evaluator's x moved by 1-4 ulp of max(||x||_inf, 1), every returned float
 # scaled by 1 + 1-4 ulp, x0 moved by 1 ulp; deterministic in the evaluation's
-# inputs, as another CPU or BLAS build would be). 144 calibration samples per
-# scenario set the observed outcomes and spreads; 96 held-out samples must stay
+# inputs, as another CPU or BLAS build would be). 384 calibration samples per
+# scenario set the observed outcomes and spreads; 192 held-out samples must stay
 # within the numeric tolerances and reach no unobserved outcome, so every
 # recorded outcome set is closed under them.
 # A scenario whose outcomes or path changed under that noise, or whose values
@@ -64,25 +67,8 @@ _golden = golden.load_golden
 # tolerance = tolerance_factor x max(spread, eps). Measured on x86_64, numpy
 # 2.4.6, SciPy 1.17.1, OpenBLAS Haswell kernels.
 #
-#   label-only scenario (first change seen)          intended outcome not
-#                                                    reached in every sample
-#   penalty_ramp_to_cap, resume_penalty_ramp_mid_run termination:penalty_cap_reached
-#       (1 ulp flips the final-vs-best-feasible restore)
-#   hybrid_mismatch_penalty_increase (same flip)    termination:max_outer_after_
-#                                                    signal_mismatch_penalty_increase
-#   plateau_restore_best_feasible,
-#   resume_plateau_best_feasible (an inner retry)    -
-#   frozen_warm_start_restore (an infeasible stall)  action:infeasible_stall_penalty_increase
-#   cached_physics_smoothing (outer-step count)      -
-#   constraints_inactive_stall (whether L-BFGS-B
-#       counts an iteration at the frozen start)     -
-#
-#   numeric replay, largest tolerance over scenarios:
-#   x              1.6e-13  (trust_radius_retries)
-#   objective      9.7e-14  (toy_convex)
-#   max_violation  1.7e-13  (trust_radius_retries)
-#   multipliers    3.1e-12  (toy_convex)
-#   penalty        2.2e-15  (every scenario: eps)
+# The measured per-scenario classifications and numeric spreads below come
+# directly from sensitivity.json; none are maintained as duplicate constants.
 SENSITIVITY = golden.load_sensitivity()
 NUMERIC_REPLAY_CEILING = SENSITIVITY["noise"]["numeric_replay_ceiling"]
 LABEL_ONLY_SCENARIOS = MappingProxyType({
@@ -114,6 +100,33 @@ BOUNDARY_TOLERANCES = MappingProxyType({
 def _fresh_run(name: str) -> dict:
     """One run of scenario ``name`` per test process (runs are deterministic)."""
     return golden.SCENARIOS_BY_NAME[name].run()
+
+
+class FrozenGatePerturbationTests(unittest.TestCase):
+    def test_frozen_gate_admits_roundoff_but_rejects_trial_movement(self):
+        start = np.array([0.0, 1.0])
+        gate = golden.AcceptedStateGate(accepted_x=start, step_norm_limit=0.0)
+        evaluate = gate.gate(golden.far_target_evaluate)
+        perturbed = np.nextafter(start, np.inf) + 4.0 * golden.EPS
+        self.assertTrue(evaluate(perturbed, np.zeros(1), 1.0).get("search_step_success", True))
+        self.assertFalse(evaluate(start + 1e-6, np.zeros(1), 1.0)["search_step_success"])
+
+    def test_perturbed_frozen_scenario_reaches_the_inactive_stall_path(self):
+        trajectory = _perturbed_run(
+            golden.SCENARIOS_BY_NAME["constraints_inactive_stall"], 4, 1
+        )
+        self.assertIn("action:constraints_inactive_stall", golden.scenario_outcomes(trajectory))
+        self.assertEqual(golden.result_invariant_violations(trajectory), [])
+
+    def test_original_plateau_holdout_keeps_a_feasible_restored_result(self):
+        trajectory = _perturbed_run(
+            golden.SCENARIOS_BY_NAME["plateau_restore_best_feasible"], 2, 101
+        )
+        self.assertIn(
+            "termination:max_outer_restored_best_feasible",
+            golden.scenario_outcomes(trajectory),
+        )
+        self.assertEqual(golden.result_invariant_violations(trajectory), [])
 
 
 class AlmGoldenFixtureSetTests(unittest.TestCase):

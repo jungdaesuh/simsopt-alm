@@ -13,7 +13,8 @@
   "dual_update_penalty_raise",
   "flag:dual_update_penalty_increase",
   "inner_maxiter_budget_spent",
-  "termination:dual_update"
+  "restored:final_iterate_infeasible",
+  "termination:inner_budget_restored_best_feasible"
  ],
  "trajectory": {
   "result": {
@@ -25,14 +26,14 @@
       2
      ],
      "data": [
-      "0x1.801d7e8093789p+0",
-      "0x1.003afd0126f10p-1"
+      "0x1.7fe3e58f7ab69p+0",
+      "0x1.ff8f963dead9fp-2"
      ]
     },
     "success": false,
-    "termination_reason": "dual_update",
-    "message": "ALM spent the inner maxiter budget: max_violation=9.001e-04, stationarity=1.273e-01",
-    "objective": "0x1.ff14272aa15dap-2",
+    "termination_reason": "inner_budget_restored_best_feasible",
+    "message": "ALM spent the inner maxiter budget after restoring best feasible iterate: max_violation=0.000e+00, stationarity=2.511e-01",
+    "objective": "0x1.007076194286bp-1",
     "constraint_names": {
      "$tuple": [
       "sum_cap",
@@ -45,40 +46,40 @@
       2
      ],
      "data": [
-      "0x1.d7e8093788000p-11",
-      "-0x1.801d7e8093789p+0"
+      "-0x1.c1a7085497800p-11",
+      "-0x1.7fe3e58f7ab69p+0"
      ]
     },
-    "max_violation": "0x1.d7e8093788000p-11",
+    "max_violation": "0x0.0p+0",
     "multipliers": {
      "$ndarray": "<f8",
      "shape": [
       2
      ],
      "data": [
-      "0x1.ff8a05fdb2190p-1",
+      "0x1.d1745d1745d10p-1",
       "0x0.0p+0"
      ]
     },
     "penalty": "0x1.9000000000000p+6",
-    "stationarity_norm": "0x1.04b1a44bc61d0p-3",
-    "kkt_stationarity_norm": "0x1.6a09e667f3bcdp-52",
+    "stationarity_norm": "0x1.0117b14a83bdep-2",
+    "kkt_stationarity_norm": null,
     "nit": 5,
     "outer_iterations": 2,
-    "restored_best_feasible": false,
-    "restored_best_feasible_reason": null,
+    "restored_best_feasible": true,
+    "restored_best_feasible_reason": "final_iterate_infeasible",
     "evaluation": {
      "$mappingproxy": {
-      "total": "0x1.000541a2520b4p-1",
-      "base_value": "0x1.ff14272aa15dap-2",
+      "total": "0x1.000f168dd1d96p-1",
+      "base_value": "0x1.007076194286bp-1",
       "base_grad": {
        "$ndarray": "<f8",
        "shape": [
         2
        ],
        "data": [
-        "-0x1.ff8a05fdb21dcp-1",
-        "-0x1.ff8a05fdb21e0p-1"
+        "-0x1.003834e10a92ep+0",
+        "-0x1.003834e10a930p+0"
        ]
       },
       "grad": {
@@ -87,8 +88,8 @@
         2
        ],
        "data": [
-        "0x1.70ad4733621a0p-4",
-        "0x1.70ad473362180p-4"
+        "-0x1.6b9571ec48810p-3",
+        "-0x1.6b9571ec48820p-3"
        ]
       },
       "constraint_values": {
@@ -97,8 +98,8 @@
         2
        ],
        "data": [
-        "0x1.d7e8093788000p-11",
-        "-0x1.801d7e8093789p+0"
+        "-0x1.c1a7085497800p-11",
+        "-0x1.7fe3e58f7ab69p+0"
        ]
       },
       "constraint_grads": {
@@ -131,8 +132,8 @@
         2
        ],
        "data": [
-        "0x1.d7e8093788000p-11",
-        "-0x1.801d7e8093789p+0"
+        "-0x1.c1a7085497800p-11",
+        "-0x1.7fe3e58f7ab69p+0"
        ]
       },
       "feasibility_values": {
@@ -141,20 +142,20 @@
         2
        ],
        "data": [
-        "0x1.d7e8093788000p-11",
+        "0x0.0p+0",
         "0x0.0p+0"
        ]
       },
-      "max_violation": "0x1.d7e8093788000p-11",
-      "max_feasibility_violation": "0x1.d7e8093788000p-11",
-      "stationarity_norm": "0x1.04b1a44bc61d0p-3",
+      "max_violation": "0x0.0p+0",
+      "max_feasibility_violation": "0x0.0p+0",
+      "stationarity_norm": "0x1.0117b14a83bdep-2",
       "positive_shift_values": {
        "$ndarray": "<f8",
        "shape": [
         2
        ],
        "data": [
-        "0x1.16cfd7720f308p+0",
+        "0x1.a58b0d4703058p-1",
         "0x0.0p+0"
        ]
       },
@@ -164,29 +165,13 @@
         2
        ],
        "data": [
-        "0x1.ecb8340571a16p-11",
+        "-0x1.857e2dc2b553fp-11",
         "0x0.0p+0"
        ]
       }
      }
     },
-    "inner_result": {
-     "$namespace": {
-      "x": {
-       "$ndarray": "<f8",
-       "shape": [
-        2
-       ],
-       "data": [
-        "0x1.801d7e8093789p+0",
-        "0x1.003afd0126f10p-1"
-       ]
-      },
-      "nit": 4,
-      "success": true,
-      "message": "ALM inner solve satisfied the KKT stationarity gate."
-     }
-    },
+    "inner_result": null,
     "last_iterate": {
      "$dataclass": "ALMLastIterate",
      "fields": {
@@ -346,7 +331,7 @@
      "0x0.0p+0"
     ],
     "augmented_term_by_constraint": [
-     "0x1.fbc4c2a50657dp-2",
+     "0x1.fbc4c2a50657ep-2",
      "0x0.0p+0"
     ],
     "active_pressure_by_constraint": [
@@ -361,7 +346,7 @@
      false,
      false
     ],
-    "objective_to_augmented_term_ratio": "0x1.aaaaaaaaaaabap-1",
+    "objective_to_augmented_term_ratio": "0x1.aaaaaaaaaaab9p-1",
     "augmented_gradient_norm": "0x1.9b68574794f90p+3",
     "surrogate_kkt_stationarity_norm": "0x1.6a09e667f3bcdp-53",
     "multiplier_interpretation": "differentiable_alm_multipliers",
@@ -691,7 +676,7 @@
     "action": "dual_update",
     "dual_update_penalty_reason": "hard_feasibility_not_improved_after_dual_update",
     "outer_termination": null,
-    "event_sha256": "2ff863ba465127817dcc4f894a1d10b9d0d9a83c0107409b5ed166148af13f9f"
+    "event_sha256": "1379dcc5c674ed6b26b23ee773f31ed854c2cbca2e651da7139a699defc8c130"
    },
    {
     "event": "on_outer_boundary",
@@ -1262,7 +1247,7 @@
     "action": "dual_update",
     "dual_update_penalty_reason": null,
     "outer_termination": null,
-    "event_sha256": "8dafe20911bc7905d93af8014a6010d96955af04ffeb68779801bf7284fa4e14"
+    "event_sha256": "2e7d0ef5e7fe0f7eb69643511cd70504b328c6271d2e3ef67037408d65a8cc44"
    },
    {
     "event": "on_outer_boundary",
@@ -1275,7 +1260,7 @@
     "event": "on_outer_boundary",
     "completed_outer_iterations": 2,
     "completed_action": "dual_update",
-    "termination_reason": "dual_update",
+    "termination_reason": "inner_budget_restored_best_feasible",
     "resume_eligible": false
    }
   ],
@@ -1379,7 +1364,172 @@
       ]
      },
      "sufficient_decrease_penalty": "0x1.9000000000000p+6",
-     "best_feasible": null,
+     "best_feasible": {
+      "$dataclass": "ALMFeasibleIncumbentSnapshot",
+      "fields": {
+       "x": {
+        "$tuple": [
+         "0x1.7fe3e58f7ab69p+0",
+         "0x1.ff8f963dead9fp-2"
+        ]
+       },
+       "evaluation": {
+        "$tuple": [
+         {
+          "$tuple": [
+           "augmented_term_by_constraint",
+           {
+            "$tuple": [
+             "__alm_sequence__",
+             {
+              "$tuple": [
+               "-0x1.857e2dc2b553fp-11",
+               "0x0.0p+0"
+              ]
+             }
+            ]
+           }
+          ]
+         },
+         {
+          "$tuple": [
+           "base_grad",
+           {
+            "$tuple": [
+             "__alm_sequence__",
+             {
+              "$tuple": [
+               "-0x1.003834e10a92ep+0",
+               "-0x1.003834e10a930p+0"
+              ]
+             }
+            ]
+           }
+          ]
+         },
+         {
+          "$tuple": [
+           "base_value",
+           "0x1.007076194286bp-1"
+          ]
+         },
+         {
+          "$tuple": [
+           "constraint_values",
+           {
+            "$tuple": [
+             "__alm_sequence__",
+             {
+              "$tuple": [
+               "-0x1.c1a7085497800p-11",
+               "-0x1.7fe3e58f7ab69p+0"
+              ]
+             }
+            ]
+           }
+          ]
+         },
+         {
+          "$tuple": [
+           "dual_update_values",
+           {
+            "$tuple": [
+             "__alm_sequence__",
+             {
+              "$tuple": [
+               "-0x1.c1a7085497800p-11",
+               "-0x1.7fe3e58f7ab69p+0"
+              ]
+             }
+            ]
+           }
+          ]
+         },
+         {
+          "$tuple": [
+           "feasibility_values",
+           {
+            "$tuple": [
+             "__alm_sequence__",
+             {
+              "$tuple": [
+               "0x0.0p+0",
+               "0x0.0p+0"
+              ]
+             }
+            ]
+           }
+          ]
+         },
+         {
+          "$tuple": [
+           "grad",
+           {
+            "$tuple": [
+             "__alm_sequence__",
+             {
+              "$tuple": [
+               "-0x1.6b9571ec48810p-3",
+               "-0x1.6b9571ec48820p-3"
+              ]
+             }
+            ]
+           }
+          ]
+         },
+         {
+          "$tuple": [
+           "max_feasibility_violation",
+           "0x0.0p+0"
+          ]
+         },
+         {
+          "$tuple": [
+           "max_violation",
+           "0x0.0p+0"
+          ]
+         },
+         {
+          "$tuple": [
+           "positive_shift_values",
+           {
+            "$tuple": [
+             "__alm_sequence__",
+             {
+              "$tuple": [
+               "0x1.a58b0d4703058p-1",
+               "0x0.0p+0"
+              ]
+             }
+            ]
+           }
+          ]
+         },
+         {
+          "$tuple": [
+           "stationarity_norm",
+           "0x1.0117b14a83bdep-2"
+          ]
+         },
+         {
+          "$tuple": [
+           "total",
+           "0x1.000f168dd1d96p-1"
+          ]
+         }
+        ]
+       },
+       "multipliers": {
+        "$tuple": [
+         "0x1.d1745d1745d10p-1",
+         "0x0.0p+0"
+        ]
+       },
+       "penalty": "0x1.9000000000000p+6",
+       "accepted_state": null,
+       "geometry_identity": null
+      }
+     },
      "completed_action": "dual_update",
      "termination_reason": null,
      "resume_eligible": true,
@@ -1407,8 +1557,8 @@
     "fields": {
      "x": {
       "$tuple": [
-       "0x1.801d7e8093789p+0",
-       "0x1.003afd0126f10p-1"
+       "0x1.7fe3e58f7ab69p+0",
+       "0x1.ff8f963dead9fp-2"
       ]
      },
      "accepted_state": null,
@@ -1423,7 +1573,7 @@
      "completed_outer_iterations": 2,
      "multipliers": {
       "$tuple": [
-       "0x1.ff8a05fdb2190p-1",
+       "0x1.d1745d1745d10p-1",
        "0x0.0p+0"
       ]
      },
@@ -1440,9 +1590,174 @@
       ]
      },
      "sufficient_decrease_penalty": "0x1.9000000000000p+6",
-     "best_feasible": null,
+     "best_feasible": {
+      "$dataclass": "ALMFeasibleIncumbentSnapshot",
+      "fields": {
+       "x": {
+        "$tuple": [
+         "0x1.7fe3e58f7ab69p+0",
+         "0x1.ff8f963dead9fp-2"
+        ]
+       },
+       "evaluation": {
+        "$tuple": [
+         {
+          "$tuple": [
+           "augmented_term_by_constraint",
+           {
+            "$tuple": [
+             "__alm_sequence__",
+             {
+              "$tuple": [
+               "-0x1.857e2dc2b553fp-11",
+               "0x0.0p+0"
+              ]
+             }
+            ]
+           }
+          ]
+         },
+         {
+          "$tuple": [
+           "base_grad",
+           {
+            "$tuple": [
+             "__alm_sequence__",
+             {
+              "$tuple": [
+               "-0x1.003834e10a92ep+0",
+               "-0x1.003834e10a930p+0"
+              ]
+             }
+            ]
+           }
+          ]
+         },
+         {
+          "$tuple": [
+           "base_value",
+           "0x1.007076194286bp-1"
+          ]
+         },
+         {
+          "$tuple": [
+           "constraint_values",
+           {
+            "$tuple": [
+             "__alm_sequence__",
+             {
+              "$tuple": [
+               "-0x1.c1a7085497800p-11",
+               "-0x1.7fe3e58f7ab69p+0"
+              ]
+             }
+            ]
+           }
+          ]
+         },
+         {
+          "$tuple": [
+           "dual_update_values",
+           {
+            "$tuple": [
+             "__alm_sequence__",
+             {
+              "$tuple": [
+               "-0x1.c1a7085497800p-11",
+               "-0x1.7fe3e58f7ab69p+0"
+              ]
+             }
+            ]
+           }
+          ]
+         },
+         {
+          "$tuple": [
+           "feasibility_values",
+           {
+            "$tuple": [
+             "__alm_sequence__",
+             {
+              "$tuple": [
+               "0x0.0p+0",
+               "0x0.0p+0"
+              ]
+             }
+            ]
+           }
+          ]
+         },
+         {
+          "$tuple": [
+           "grad",
+           {
+            "$tuple": [
+             "__alm_sequence__",
+             {
+              "$tuple": [
+               "-0x1.6b9571ec48810p-3",
+               "-0x1.6b9571ec48820p-3"
+              ]
+             }
+            ]
+           }
+          ]
+         },
+         {
+          "$tuple": [
+           "max_feasibility_violation",
+           "0x0.0p+0"
+          ]
+         },
+         {
+          "$tuple": [
+           "max_violation",
+           "0x0.0p+0"
+          ]
+         },
+         {
+          "$tuple": [
+           "positive_shift_values",
+           {
+            "$tuple": [
+             "__alm_sequence__",
+             {
+              "$tuple": [
+               "0x1.a58b0d4703058p-1",
+               "0x0.0p+0"
+              ]
+             }
+            ]
+           }
+          ]
+         },
+         {
+          "$tuple": [
+           "stationarity_norm",
+           "0x1.0117b14a83bdep-2"
+          ]
+         },
+         {
+          "$tuple": [
+           "total",
+           "0x1.000f168dd1d96p-1"
+          ]
+         }
+        ]
+       },
+       "multipliers": {
+        "$tuple": [
+         "0x1.d1745d1745d10p-1",
+         "0x0.0p+0"
+        ]
+       },
+       "penalty": "0x1.9000000000000p+6",
+       "accepted_state": null,
+       "geometry_identity": null
+      }
+     },
      "completed_action": "dual_update",
-     "termination_reason": "dual_update",
+     "termination_reason": "inner_budget_restored_best_feasible",
      "resume_eligible": false,
      "total_inner_iterations": 5,
      "cap_binding_detected": false,

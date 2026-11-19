@@ -205,6 +205,12 @@ class BoozerQAProblem:
         """``snapshot_accepted_state_fn``."""
         return self.accepted
 
+    def snapshot_inner(self, coil_dofs):
+        """Snapshot the accepted inner iterate without promoting outer state."""
+        if not np.array_equal(coil_dofs, self.iterate.coil_dofs):
+            raise RuntimeError("inner snapshot at coils other than the current iterate")
+        return self.iterate
+
     def restore_incumbent(self, solution):
         """``restore_incumbent_state_fn``: ``minimize_alm`` went back to an earlier iterate."""
         # minimize_alm evaluates nothing after this, so the coils stay whatever the caller sets.
@@ -317,6 +323,7 @@ def main():
         inner_callback=problem.accept_inner_iterate,
         accepted_callback=problem.accept_outer_iterate,
         snapshot_accepted_state_fn=problem.snapshot_accepted,
+        snapshot_inner_state_fn=problem.snapshot_inner,
         restore_incumbent_state_fn=problem.restore_incumbent,
     )
     print(result.message)

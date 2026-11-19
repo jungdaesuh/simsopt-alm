@@ -856,7 +856,7 @@
      "0x1.1a5a5a5a5a58ep+4"
     ],
     "augmented_term_by_constraint": [
-     "0x1.8e9dacbbcad5cp+0"
+     "0x1.8e9dacbbcad5bp+0"
     ],
     "active_pressure_by_constraint": [
      "0x1.8e9dacbbcad5bp+1"
@@ -867,7 +867,7 @@
     "surrogate_hard_sign_mismatch_by_constraint": [
      false
     ],
-    "objective_to_augmented_term_ratio": "0x1.9000000000044p+5",
+    "objective_to_augmented_term_ratio": "0x1.9000000000045p+5",
     "augmented_gradient_norm": "0x1.8000000000000p-44",
     "surrogate_kkt_stationarity_norm": "0x0.0p+0",
     "multiplier_interpretation": "differentiable_alm_multipliers",
@@ -1106,7 +1106,7 @@
      "0x1.bd96969696943p+10"
     ],
     "augmented_term_by_constraint": [
-     "0x1.3da5a5a5a5a23p+7"
+     "0x1.3da5a5a5a5a24p+7"
     ],
     "active_pressure_by_constraint": [
      "0x1.3a886a4c2e0c9p+8"
@@ -1117,7 +1117,7 @@
     "surrogate_hard_sign_mismatch_by_constraint": [
      false
     ],
-    "objective_to_augmented_term_ratio": "0x1.f5f5f5f5f5fb9p-2",
+    "objective_to_augmented_term_ratio": "0x1.f5f5f5f5f5fb7p-2",
     "augmented_gradient_norm": "0x1.b92d2d2d2d2acp+10",
     "surrogate_kkt_stationarity_norm": "0x0.0p+0",
     "multiplier_interpretation": "differentiable_alm_multipliers",
@@ -1204,8 +1204,8 @@
     "multiplier_cap_binding": false,
     "multiplier_cap_binding_indices": [],
     "conditioning_base_objective": "0x1.376b2ef2b67a5p+6",
-    "conditioning_penalty_objective": "0x1.860d4985c1f9fp+10",
-    "conditioning_penalty_objective_ratio": "0x1.40a3d70a3d6d1p+4",
+    "conditioning_penalty_objective": "0x1.860d4985c1fa1p+10",
+    "conditioning_penalty_objective_ratio": "0x1.40a3d70a3d6d2p+4",
     "conditioning_total_grad_norm": "0x1.13bc3c3c3c3acp+14",
     "conditioning_base_grad_norm": "0x1.1a5a5a5a5a5a6p+4",
     "conditioning_penalty_grad_norm": "0x1.1402d2d2d2d15p+14",
@@ -1231,7 +1231,7 @@
      "0x1.1402d2d2d2d15p+14"
     ],
     "augmented_term_by_constraint": [
-     "0x1.860d4985c1f9fp+10"
+     "0x1.860d4985c1fa1p+10"
     ],
     "active_pressure_by_constraint": [
      "0x1.85a9a21a93075p+11"
@@ -1242,7 +1242,7 @@
     "surrogate_hard_sign_mismatch_by_constraint": [
      false
     ],
-    "objective_to_augmented_term_ratio": "0x1.98c84dab2d7ebp-5",
+    "objective_to_augmented_term_ratio": "0x1.98c84dab2d7e9p-5",
     "augmented_gradient_norm": "0x1.13bc3c3c3c3acp+14",
     "surrogate_kkt_stationarity_norm": "0x0.0p+0",
     "multiplier_interpretation": "differentiable_alm_multipliers",
@@ -2639,7 +2639,7 @@
     "action": "dual_update",
     "dual_update_penalty_reason": null,
     "outer_termination": null,
-    "event_sha256": "829c5785643298f63534209dfb16e552f96494bc10a99f43c37072e10e9d8c3c"
+    "event_sha256": "16caba857822030bc98886c2cb0000967f8cd442b07a7c4d5eff914846bb5715"
    },
    {
     "event": "snapshot_accepted_state",
@@ -3739,7 +3739,7 @@
     "action": "infeasible_stall_penalty_increase",
     "dual_update_penalty_reason": null,
     "outer_termination": null,
-    "event_sha256": "7680b3addc53b886eef4fe88c1aac9c1064fe52a1f3862181e928e849e38b7a5"
+    "event_sha256": "adb99e54fe77d5bf751f7a7a9f70bdc36bd399641c3225a82ad1263c174313a5"
    },
    {
     "event": "snapshot_accepted_state",
@@ -4277,7 +4277,7 @@
     "action": "infeasible_stall_penalty_increase",
     "dual_update_penalty_reason": null,
     "outer_termination": null,
-    "event_sha256": "f4b0d726a9d6cbbbf9666813ca12d0c798012cff7dc5279d9ab5aca5904dfb9a"
+    "event_sha256": "ad2f35ed6ccdb62515c5817c19225aad9ebb304d9fb23c6c8c2f0af393b5ff0a"
    },
    {
     "event": "snapshot_accepted_state",
@@ -4815,7 +4815,7 @@
     "action": "infeasible_stall_penalty_increase",
     "dual_update_penalty_reason": null,
     "outer_termination": null,
-    "event_sha256": "1c23cec05c4b2c483e099f3c3d504879e81af2c105a33e1422003bb45aee8c59"
+    "event_sha256": "ecc793284c697f56e8272a5a20abf8abc9e407da20e9c2da0df032fad1c9b188"
    },
    {
     "event": "snapshot_accepted_state",

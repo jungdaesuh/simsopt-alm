@@ -21,7 +21,7 @@ as given, so it must account for the bounds),
 ``constraint_scales``, ``constraint_activity_tolerances``,
 ``nonfinite_evaluation`` (the point is unusable: a trial point is rejected,
 an outer iterate raises ``ValueError`` as a non-finite value does), and
-``search_step_success=False`` (reject the trial step). With ``base_bounds``,
+``search_step_success=False`` (reject the trial step, or raise ``ValueError`` at the outer iterate). With ``base_bounds``,
 x0 is projected onto the box (as L-BFGS-B does), and a ``resume_from`` whose
 x lies outside it raises ``ValueError``.
 :class:`ALMEvaluation` declares these and the other keys the solver owns (the
@@ -46,7 +46,10 @@ under a disagreement is a rule of ``DefaultContinuationPolicy``
 Stateful evaluators (e.g. warm-started inner solves) pass both
 ``snapshot_accepted_state_fn() -> state`` and ``restore_incumbent_state_fn(state)``;
 the solver snapshots accepted iterates and restores one when it returns a
-best-feasible incumbent or resumes. The result is a frozen :class:`ALMResult`:
+best-feasible incumbent or resumes. For a stateful evaluator to retain improving
+inner iterates too, supply ``snapshot_inner_state_fn(x)`` and return a restorable
+state for that coordinate, or None to skip it. Stateless evaluators automatically
+retain improving hard-feasible inner iterates. The result is a frozen :class:`ALMResult`:
 x, objective, signed g, max violation, multipliers, penalty, success,
 termination reason and message, stationarity norms, iteration counts, the
 restore flag and reason, the final evaluation, the last inner result and the
