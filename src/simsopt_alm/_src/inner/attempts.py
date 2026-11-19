@@ -3,23 +3,17 @@
 :func:`_run_alm_inner_attempts` minimizes the augmented Lagrangian at fixed
 multipliers and penalty from the loop's current iterate
 (:class:`ALMInnerAttemptRequest`) and returns the accepted iterate, or the
-start iterate when no attempt produced a usable step
-(:class:`ALMInnerAttemptResult`). It hides how: the evaluator
-cache and its early stop once the dual-update gate holds, the elevated
-fallback for a non-finite trial, the trust box (intersected with the
-caller's bounds), the acceptance and infeasible-stall tests with their
-tolerances, the one shrink/grow trust rule, the policy's inner plan (its
-``gtol`` capped so that a stop meets the loop's stationarity target) and
-stalled-trial retry, this process's ``maxiter``, and which stationarity test
-an attempt's reported success passed (:func:`_inner_stop`). The loop also reads
-two judgments that share those tolerances:
-:func:`_feasibility_improvement_and_floor` and
-:func:`_made_meaningful_inner_progress`.
+start iterate when no attempt produced a usable step (:class:`ALMInnerAttemptResult`).
+It owns the evaluator cache, nonfinite fallback, trust box and stalled-trial retries.
+Each attempt obeys the remaining iteration budget and the loop's stationarity gate.
+The outer loop shares its progress tolerances through :func:`_feasibility_improvement_and_floor`
+and :func:`_made_meaningful_inner_progress`.
 """
 
 from __future__ import annotations
 
 from dataclasses import dataclass
+from numbers import Integral
 from types import SimpleNamespace
 from typing import Callable, List, Optional, Tuple
 
@@ -671,6 +665,12 @@ def _run_alm_inner_attempts(request: ALMInnerAttemptRequest) -> ALMInnerAttemptR
             inner_attempt_options["maxiter"] = min(
                 _positive_alm_integer("inner plan maxiter", plan_maxiter), remaining_maxiter
             )
+        # A fresh L-BFGS-B call can add at most one correction pair per iteration.
+        # SciPy defaults to 10 pairs and 15,000 iterations when the plan omits them.
+        maxcor = inner_attempt_options.get("maxcor", 10)
+        maxiter = inner_attempt_options.get("maxiter", 15_000)
+        if isinstance(maxcor, Integral) and isinstance(maxiter, Integral) and 0 < maxiter < maxcor:
+            inner_attempt_options["maxcor"] = int(maxiter)
         attempt_bounds = _build_box_bounds(
             request.x,
             attempt_radius,
