@@ -636,7 +636,7 @@
      "0x1.03da5119ce089p+1"
     ],
     "augmented_term_by_constraint": [
-     "0x1.519e0d2985cedp-6"
+     "0x1.519e0d2985cecp-6"
     ],
     "active_pressure_by_constraint": [
      "0x1.519e0d2985cecp-5"
@@ -647,7 +647,7 @@
     "surrogate_hard_sign_mismatch_by_constraint": [
      true
     ],
-    "objective_to_augmented_term_ratio": "0x1.ec62c338c5c3bp+11",
+    "objective_to_augmented_term_ratio": "0x1.ec62c338c5c3cp+11",
     "augmented_gradient_norm": "0x1.00414eb087a97p+4",
     "surrogate_kkt_stationarity_norm": "0x1.ff1463ba5b408p+2",
     "multiplier_interpretation": "differentiable_alm_multipliers",
@@ -1329,7 +1329,7 @@
     "action": "subproblem_continue",
     "dual_update_penalty_reason": null,
     "outer_termination": "max_outer",
-    "event_sha256": "b5441a720ec27268cb917a78fae0edf0e279a25db90e1c268fe17164b9d97423"
+    "event_sha256": "de62754ea3628fcd0d40c8e43bb6ed59902bfc0bcaca1b6f1ed41648c20f56cb"
    },
    {
     "event": "evaluate_problem",
@@ -1473,7 +1473,7 @@
     "action": "signal_mismatch_penalty_increase",
     "dual_update_penalty_reason": null,
     "outer_termination": "max_outer",
-    "event_sha256": "9bfbb418e90751bbf06750cd1bb88020df200c11d738dcdd8fabcf09e2ddf5a1"
+    "event_sha256": "d0c30b97c14a1491b140d51d1617488a64d0c8faad83db38ed3cc85708d63b79"
    },
    {
     "event": "snapshot_accepted_state",

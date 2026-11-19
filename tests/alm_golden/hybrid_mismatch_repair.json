@@ -150,7 +150,7 @@
         1
        ],
        "data": [
-        "0x1.5c5df4a09fb00p-4"
+        "0x1.5c5df4a09faffp-4"
        ]
       },
       "hard_signed_constraint_values": {
@@ -897,7 +897,7 @@
      "0x1.07f50afadfecbp+2"
     ],
     "augmented_term_by_constraint": [
-     "0x1.5c5df4a09fb00p-4"
+     "0x1.5c5df4a09faffp-4"
     ],
     "active_pressure_by_constraint": [
      "0x1.5c5df4a09faffp-3"
@@ -908,7 +908,7 @@
     "surrogate_hard_sign_mismatch_by_constraint": [
      true
     ],
-    "objective_to_augmented_term_ratio": "0x1.d8d1f0e1a6729p+9",
+    "objective_to_augmented_term_ratio": "0x1.d8d1f0e1a672ap+9",
     "augmented_gradient_norm": "0x1.be1c8da70855ap+3",
     "surrogate_kkt_stationarity_norm": "0x1.f7f41cb156269p+2",
     "multiplier_interpretation": "differentiable_alm_multipliers",
@@ -1892,7 +1892,7 @@
     "action": "signal_mismatch_subproblem_limit_penalty_increase",
     "dual_update_penalty_reason": null,
     "outer_termination": null,
-    "event_sha256": "0e2091ca335f3d98903f27bac730d9f77b149d192bb8d74627acfc2b094b6de2"
+    "event_sha256": "ccf0b9b43de62a9e354ceef2a6ccb1e842e2b55db75fb7807e495b123a559051"
    },
    {
     "event": "snapshot_accepted_state",
@@ -2070,7 +2070,7 @@
     "action": "subproblem_continue",
     "dual_update_penalty_reason": null,
     "outer_termination": "max_outer",
-    "event_sha256": "7f296aae801cd373f2c4f6628578c9d41b4c084af85df8a604058b8ac2cb0604"
+    "event_sha256": "da4490d866ccc09fac7b54690a0d3900fa1c857eca5a6130656e965035431ef8"
    },
    {
     "event": "evaluate_problem",
@@ -2177,7 +2177,7 @@
     "action": "subproblem_continue",
     "dual_update_penalty_reason": null,
     "outer_termination": "max_outer",
-    "event_sha256": "4479122ed48b75fdbea93a13b5a4b416899523a2e5e2cd8b0549c93c0bf075a3"
+    "event_sha256": "883fd0280dc1e827d9b52619b4e653f5fad7767a7e82f0856b03baa1b2e13c0e"
    },
    {
     "event": "evaluate_problem",
@@ -2308,7 +2308,7 @@
     "action": "penalty_increase",
     "dual_update_penalty_reason": null,
     "outer_termination": "max_outer",
-    "event_sha256": "812d2582717af737e133d257db51b32acaf2ca82f080a0de2d661f54ec462fbc"
+    "event_sha256": "6a4f094ef1665912903a052060c96b56e30b24645cc105c41387bc7876606244"
    },
    {
     "event": "restore_incumbent_state",
@@ -2409,7 +2409,7 @@
              "__alm_sequence__",
              {
               "$tuple": [
-               "0x1.32e8286a0f992p-8"
+               "0x1.32e8286a0f993p-8"
               ]
              }
             ]
@@ -2724,7 +2724,7 @@
              "__alm_sequence__",
              {
               "$tuple": [
-               "0x1.5c5df4a09fb00p-4"
+               "0x1.5c5df4a09faffp-4"
               ]
              }
             ]

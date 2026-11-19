@@ -1489,8 +1489,9 @@ class AlmLibraryTrustRadiusCharacterizationTests(unittest.TestCase):
     gets ``DefaultContinuationPolicy``: it boxes each inner solve and shrinks
     or grows the radius by the one core trust rule, with no inner-work caps, no
     false-success retry (``max_inner_attempts=1`` leaves it no attempt to use)
-    and no radius growth on a continuation. The pinned path is exact (dyadic
-    radii and iterates); the result digest is pinned for the numpy and SciPy
+    and no radius growth on a continuation. The pinned outer path uses
+    dyadic radii; the restored incumbent may be an inner accepted point.
+    The result digest is pinned for the numpy and SciPy
     the goldens were recorded with.
     """
 
@@ -1545,13 +1546,15 @@ class AlmLibraryTrustRadiusCharacterizationTests(unittest.TestCase):
         if golden.bitwise_environment():
             self.assertEqual(golden.encoded_digest(result), pins["digest"])
 
+    # The best feasible accepted inner point improves f from 88.03125
+    # (the old outer-only incumbent) to 82.30976242011388.
     DEFAULT_PINS = {
         "termination_reason": "max_outer_restored_best_feasible",
         "restored": True,
         "counts": (14, 6),
-        "x": ["0x1.4000000000000p-1", "0x1.4000000000000p-1"],
+        "x": ["0x1.dae4d8e3fdd21p-1", "0x1.0000000000000p+0"],
         "trust_radius": "0x1.4400000000000p+0",
-        "penalty": "0x1.0000000000000p+0",
+        "penalty": "0x1.9000000000000p+6",
         "steps": [
             (1, 0, "subproblem_continue", "boxed", 1, "0x1.8000000000000p-2"),
             (1, 1, "subproblem_continue", "boxed", 1, "0x1.2000000000000p-1"),
@@ -1563,7 +1566,7 @@ class AlmLibraryTrustRadiusCharacterizationTests(unittest.TestCase):
             (6, 0, "dual_update", "boxed", 1, "0x1.4400000000000p+0"),
         ],
         # The result digest covers every field, last_iterate included.
-        "digest": "d2aad8950fae9d00debdcd32bd1f174324eb016d6ab7a145c939d1c2af46ecfa",
+        "digest": "ec8863cbaa1d70750b6f36945ebc8de8a5a14cbe30f1df35463b244d8f740c52",
     }
 
     def test_library_radius_without_a_policy_takes_the_default_path(self):

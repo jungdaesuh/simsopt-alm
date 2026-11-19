@@ -325,6 +325,7 @@ def _checked_evaluation(
     constraint_names_tuple: Tuple[str, ...],
     constraint_blocks_tuple: Optional[Tuple[str, ...]],
     context: str,
+    require_accepted: bool = True,
 ) -> dict:
     """The evaluation at ``(x, multipliers, penalty_argument)`` with the
     constraint metadata attached (an owned dict). Raises as
@@ -343,6 +344,8 @@ def _checked_evaluation(
         constraint_blocks_tuple,
     )
     _require_finite_evaluation(evaluation, context=context)
+    if require_accepted and _search_step_rejected(evaluation):
+        raise ValueError(f"{context}: evaluator rejected this point (search_step_success=False)")
     return evaluation
 
 def _measure_iterate(

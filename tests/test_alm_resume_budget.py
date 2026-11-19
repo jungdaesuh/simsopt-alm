@@ -3,7 +3,8 @@
 ``inner_options["maxiter"]`` budgets one ``minimize_alm`` call's L-BFGS-B
 iterations: every step's inner solve gets what the call has left, so the
 call never runs more, and a spent budget ends the run before its next step,
-with the latest step's action as the termination reason. A budget spent
+with the latest step's action as the termination reason unless a better
+hard-feasible accepted inner point is restored. A budget spent
 inside an outer iteration ends the run there, and that outer publishes only
 the terminal boundary. A caller resuming from a boundary passes the run's
 budget minus the boundary's ``state.total_inner_iterations``. With that
@@ -107,12 +108,19 @@ def _bits(value) -> object:
 
 
 def _result_record(result) -> dict:
-    return {name: _bits(getattr(result, name)) for name in COMPARED_RESULT_FIELDS}
+    values = {name: getattr(result, name) for name in COMPARED_RESULT_FIELDS}
+    # ALMOuterBoundary documents this sequence representation difference
+    # when a restored incumbent passed through an in-process checkpoint.
+    evaluation = dict(result.evaluation)
+    if "constraint_grads" in evaluation:
+        evaluation["constraint_grads"] = tuple(evaluation["constraint_grads"])
+    values["evaluation"] = evaluation
+    return {name: _bits(value) for name, value in values.items()}
 
 
-# An infeasible start (f's unconstrained minimizer, x0 + x1 <= 2 violated): a
-# spent budget then ends on the latest step's action, where a feasible start
-# would be restored as the best hard-feasible iterate.
+# An infeasible start (f's unconstrained minimizer, x0 + x1 <= 2 violated).
+# Accepted feasible inner points can become incumbents before an endpoint
+# crosses the cap; an exhausted budget then restores the best of those points.
 X0 = np.array([2.0, 1.0])
 
 
@@ -189,11 +197,31 @@ class ResumeContinuesTheUninterruptedRunTests(unittest.TestCase):
         # then publishes only the terminal boundary. The run converges after
         # 11 iterations.
         spent_where = {}
+        feasible_before_overshoot = _run(3)[0].x
         for run_maxiter in range(1, 11):
             with self.subTest(run_maxiter=run_maxiter):
                 result, steps, boundaries = _run(run_maxiter)
                 self.assertEqual(result.nit, run_maxiter)
-                self.assertEqual(result.termination_reason, steps[-1][2])
+                self.assertEqual(boundaries[-1].completed_action, steps[-1][2])
+                self.assertEqual(boundaries[-1].termination_reason, result.termination_reason)
+                self.assertEqual(result.last_iterate.x.tobytes(), steps[-1][4])
+                if run_maxiter <= 3:
+                    self.assertEqual(result.termination_reason, steps[-1][2])
+                    self.assertFalse(result.restored_best_feasible)
+                    np.testing.assert_array_equal(result.x, result.last_iterate.x)
+                else:
+                    self.assertEqual(
+                        result.termination_reason, "inner_budget_restored_best_feasible"
+                    )
+                    self.assertTrue(result.restored_best_feasible)
+                    self.assertEqual(result.restored_best_feasible_reason, "final_iterate_infeasible")
+                    np.testing.assert_array_equal(result.x, feasible_before_overshoot)
+                    self.assertLessEqual(result.max_violation, SETTINGS.feasibility_tol)
+                    self.assertGreater(
+                        toy_physics(result.last_iterate.x).constraint_values[0],
+                        SETTINGS.feasibility_tol,
+                    )
+                    self.assertEqual(result.objective, toy_physics(result.x).base_value)
                 exhausted = self.assert_every_boundary_resumes_identically(run_maxiter)
                 spent_where[run_maxiter] = (
                     "boundary" if exhausted else "inside_outer",

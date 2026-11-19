@@ -29,14 +29,14 @@
       2
      ],
      "data": [
-      "0x0.0p+0",
-      "0x0.0p+0"
+      "0x1.7fbc836f34f15p+0",
+      "0x1.fef20dbcd3c4ep-2"
      ]
     },
     "success": false,
     "termination_reason": "process_budget_exhausted",
-    "message": "ALM stopped after exhausting the this-process accepted-iteration budget: max_violation=0.000e+00, stationarity=4.472e+00",
-    "objective": "0x1.4000000000000p+2",
+    "message": "ALM stopped after exhausting the this-process accepted-iteration budget: max_violation=0.000e+00, stationarity=1.417e+00",
+    "objective": "0x1.010e396cedd67p-1",
     "constraint_names": {
      "$tuple": [
       "sum_cap",
@@ -49,8 +49,8 @@
       2
      ],
      "data": [
-      "-0x1.0000000000000p+1",
-      "-0x0.0p+0"
+      "-0x1.0df2432c3b000p-9",
+      "-0x1.7fbc836f34f15p+0"
      ]
     },
     "max_violation": "0x0.0p+0",
@@ -60,29 +60,29 @@
       2
      ],
      "data": [
-      "0x0.0p+0",
+      "0x1.0000000000000p-1",
       "0x0.0p+0"
      ]
     },
-    "penalty": "0x1.4000000000000p+3",
-    "stationarity_norm": "0x1.1e3779b97f4a8p+2",
-    "kkt_stationarity_norm": "0x1.1e3779b97f4a8p+2",
+    "penalty": "0x1.f400000000000p+9",
+    "stationarity_norm": "0x1.6ac8c7e9aed3ap+0",
+    "kkt_stationarity_norm": null,
     "nit": 13,
     "outer_iterations": 6,
     "restored_best_feasible": true,
     "restored_best_feasible_reason": "final_iterate_infeasible",
     "evaluation": {
      "$mappingproxy": {
-      "total": "0x1.4000000000000p+2",
-      "base_value": "0x1.4000000000000p+2",
+      "total": "0x1.00fdd71f1ae4cp-1",
+      "base_value": "0x1.010e396cedd67p-1",
       "base_grad": {
        "$ndarray": "<f8",
        "shape": [
         2
        ],
        "data": [
-        "-0x1.0000000000000p+2",
-        "-0x1.0000000000000p+1"
+        "-0x1.0086f921961d6p+0",
+        "-0x1.0086f921961d9p+0"
        ]
       },
       "grad": {
@@ -91,8 +91,8 @@
         2
        ],
        "data": [
-        "-0x1.0000000000000p+2",
-        "-0x1.0000000000000p+1"
+        "-0x1.0086f921961d6p+0",
+        "-0x1.0086f921961d9p+0"
        ]
       },
       "constraint_values": {
@@ -101,8 +101,8 @@
         2
        ],
        "data": [
-        "-0x1.0000000000000p+1",
-        "-0x0.0p+0"
+        "-0x1.0df2432c3b000p-9",
+        "-0x1.7fbc836f34f15p+0"
        ]
       },
       "constraint_grads": {
@@ -135,8 +135,8 @@
         2
        ],
        "data": [
-        "-0x1.0000000000000p+1",
-        "-0x0.0p+0"
+        "-0x1.0df2432c3b000p-9",
+        "-0x1.7fbc836f34f15p+0"
        ]
       },
       "feasibility_values": {
@@ -151,7 +151,7 @@
       },
       "max_violation": "0x0.0p+0",
       "max_feasibility_violation": "0x0.0p+0",
-      "stationarity_norm": "0x1.1e3779b97f4a8p+2",
+      "stationarity_norm": "0x1.6ac8c7e9aed3ap+0",
       "positive_shift_values": {
        "$ndarray": "<f8",
        "shape": [
@@ -168,7 +168,7 @@
         2
        ],
        "data": [
-        "0x0.0p+0",
+        "-0x1.0624dd2f1a9fcp-13",
         "0x0.0p+0"
        ]
       }
@@ -1063,7 +1063,7 @@
     "action": "dual_update",
     "dual_update_penalty_reason": "hard_feasibility_not_improved_after_dual_update",
     "outer_termination": null,
-    "event_sha256": "7edfb760ffbeddaff76027fbb84113beb7d8dafa92c2d8882c205c263e2b0f03"
+    "event_sha256": "38e986a5756e1a1220e36b12449a02293e76d6587e977b7b59d55f29ccd8220a"
    },
    {
     "event": "on_outer_boundary",
@@ -1120,8 +1120,8 @@
       2
      ],
      "data": [
-      "0x0.0p+0",
-      "0x0.0p+0"
+      "0x1.3e287baff40efp+0",
+      "0x1.3e287baff40efp-1"
      ]
     },
     "multipliers": {
@@ -1609,7 +1609,7 @@
     "action": "dual_update",
     "dual_update_penalty_reason": null,
     "outer_termination": null,
-    "event_sha256": "93badbdde510fa7adbcad4554182d1a4bd46b5e333e3bc7304b2c09794da51fb"
+    "event_sha256": "ba7318712581937780996878ed9525aa96f437e65ea7b4a626d01e88dab7e512"
    },
    {
     "event": "on_outer_boundary",
@@ -1666,8 +1666,8 @@
       2
      ],
      "data": [
-      "0x0.0p+0",
-      "0x0.0p+0"
+      "0x1.7fb8cf6bea362p+0",
+      "0x1.fee33dafa8d7fp-2"
      ]
     },
     "multipliers": {
@@ -1676,11 +1676,11 @@
       2
      ],
      "data": [
-      "0x0.0p+0",
+      "0x1.0000000000000p-1",
       "0x0.0p+0"
      ]
     },
-    "penalty": "0x1.4000000000000p+3",
+    "penalty": "0x1.9000000000000p+6",
     "total_finite": true
    },
    {
@@ -1753,7 +1753,7 @@
     "action": "dual_update",
     "dual_update_penalty_reason": null,
     "outer_termination": null,
-    "event_sha256": "930d2888eadc83a97663065d06f28a93d065e2ecfb0522c46f2d78a153db8e96"
+    "event_sha256": "48d90c813d5ea056c3db85b593821170305332dd17a27d4e745c487fa6cda8c4"
    },
    {
     "event": "on_outer_boundary",
@@ -1810,8 +1810,8 @@
       2
      ],
      "data": [
-      "0x0.0p+0",
-      "0x0.0p+0"
+      "0x1.7fb8cf6bea362p+0",
+      "0x1.fee33dafa8d7fp-2"
      ]
     },
     "multipliers": {
@@ -1820,11 +1820,11 @@
       2
      ],
      "data": [
-      "0x0.0p+0",
+      "0x1.0000000000000p-1",
       "0x0.0p+0"
      ]
     },
-    "penalty": "0x1.4000000000000p+3",
+    "penalty": "0x1.9000000000000p+6",
     "total_finite": true
    },
    {
@@ -1897,7 +1897,7 @@
     "action": "dual_update",
     "dual_update_penalty_reason": null,
     "outer_termination": null,
-    "event_sha256": "8b00592dbc9eeca6e42e8ea104c6a457482369ae700bd1aeb610349c622bc8a8"
+    "event_sha256": "5a175462183c948af968660ba57a354961fe6f63c92094687f95df6f07be5325"
    },
    {
     "event": "on_outer_boundary",
@@ -1954,8 +1954,8 @@
       2
      ],
      "data": [
-      "0x0.0p+0",
-      "0x0.0p+0"
+      "0x1.7fb8cf6bea362p+0",
+      "0x1.fee33dafa8d7fp-2"
      ]
     },
     "multipliers": {
@@ -1964,11 +1964,11 @@
       2
      ],
      "data": [
-      "0x0.0p+0",
+      "0x1.0000000000000p-1",
       "0x0.0p+0"
      ]
     },
-    "penalty": "0x1.4000000000000p+3",
+    "penalty": "0x1.9000000000000p+6",
     "total_finite": true
    },
    {
@@ -2028,7 +2028,7 @@
     "action": "infeasible_stall_penalty_increase",
     "dual_update_penalty_reason": null,
     "outer_termination": null,
-    "event_sha256": "4a604c38f582c1e73eeb89cc8b7d82187128dbb39d65172d8b16b45f17fed916"
+    "event_sha256": "596b931dc21379cc2c5288cb6db013c50f9413cd0f5dd64a71ed51b02a76bb8f"
    },
    {
     "event": "on_outer_boundary",
@@ -2085,8 +2085,8 @@
       2
      ],
      "data": [
-      "0x0.0p+0",
-      "0x0.0p+0"
+      "0x1.7fb8cf6bea362p+0",
+      "0x1.fee33dafa8d7fp-2"
      ]
     },
     "multipliers": {
@@ -2095,11 +2095,11 @@
       2
      ],
      "data": [
-      "0x0.0p+0",
+      "0x1.0000000000000p-1",
       "0x0.0p+0"
      ]
     },
-    "penalty": "0x1.4000000000000p+3",
+    "penalty": "0x1.9000000000000p+6",
     "total_finite": true
    },
    {
@@ -2436,7 +2436,7 @@
     "action": "process_budget_exhausted",
     "dual_update_penalty_reason": null,
     "outer_termination": "process_budget_exhausted",
-    "event_sha256": "7358dfdd41f23edffc34360eecc4216d78e91170cb851e07e085d7f1f0a93b0e"
+    "event_sha256": "0d7b0af2ffd3f9a2684f323e18356faf42ef4a2babf1d6a6804316de2a452456"
    },
    {
     "event": "on_outer_boundary",
@@ -2490,8 +2490,8 @@
       "fields": {
        "x": {
         "$tuple": [
-         "0x0.0p+0",
-         "0x0.0p+0"
+         "0x1.3e287baff40efp+0",
+         "0x1.3e287baff40efp-1"
         ]
        },
        "evaluation": {
@@ -2520,8 +2520,8 @@
              "__alm_sequence__",
              {
               "$tuple": [
-               "-0x1.0000000000000p+2",
-               "-0x1.0000000000000p+1"
+               "-0x1.83af08a017e22p+0",
+               "-0x1.83af08a017e22p-1"
               ]
              }
             ]
@@ -2531,7 +2531,7 @@
          {
           "$tuple": [
            "base_value",
-           "0x1.4000000000000p+2"
+           "0x1.6ef0ab58841c8p-1"
           ]
          },
          {
@@ -2542,8 +2542,8 @@
              "__alm_sequence__",
              {
               "$tuple": [
-               "-0x1.0000000000000p+1",
-               "-0x0.0p+0"
+               "-0x1.161a33c08f4d0p-3",
+               "-0x1.3e287baff40efp+0"
               ]
              }
             ]
@@ -2558,8 +2558,8 @@
              "__alm_sequence__",
              {
               "$tuple": [
-               "-0x1.0000000000000p+1",
-               "-0x0.0p+0"
+               "-0x1.161a33c08f4d0p-3",
+               "-0x1.3e287baff40efp+0"
               ]
              }
             ]
@@ -2590,8 +2590,8 @@
              "__alm_sequence__",
              {
               "$tuple": [
-               "-0x1.0000000000000p+2",
-               "-0x1.0000000000000p+1"
+               "-0x1.83af08a017e22p+0",
+               "-0x1.83af08a017e22p-1"
               ]
              }
             ]
@@ -2629,13 +2629,13 @@
          {
           "$tuple": [
            "stationarity_norm",
-           "0x1.1e3779b97f4a8p+2"
+           "0x1.b1718e945a695p+0"
           ]
          },
          {
           "$tuple": [
            "total",
-           "0x1.4000000000000p+2"
+           "0x1.6ef0ab58841c8p-1"
           ]
          }
         ]
@@ -2718,8 +2718,8 @@
       "fields": {
        "x": {
         "$tuple": [
-         "0x0.0p+0",
-         "0x0.0p+0"
+         "0x1.7fb8cf6bea362p+0",
+         "0x1.fee33dafa8d7fp-2"
         ]
        },
        "evaluation": {
@@ -2732,7 +2732,7 @@
              "__alm_sequence__",
              {
               "$tuple": [
-               "0x0.0p+0",
+               "-0x1.bdc9bdaf9b79bp-11",
                "0x0.0p+0"
               ]
              }
@@ -2748,8 +2748,8 @@
              "__alm_sequence__",
              {
               "$tuple": [
-               "-0x1.0000000000000p+2",
-               "-0x1.0000000000000p+1"
+               "-0x1.008e61282b93cp+0",
+               "-0x1.008e61282b940p+0"
               ]
              }
             ]
@@ -2759,7 +2759,7 @@
          {
           "$tuple": [
            "base_value",
-           "0x1.4000000000000p+2"
+           "0x1.011d118044979p-1"
           ]
          },
          {
@@ -2770,8 +2770,8 @@
              "__alm_sequence__",
              {
               "$tuple": [
-               "-0x1.0000000000000p+1",
-               "-0x0.0p+0"
+               "-0x1.1cc2505727c00p-9",
+               "-0x1.7fb8cf6bea362p+0"
               ]
              }
             ]
@@ -2786,8 +2786,8 @@
              "__alm_sequence__",
              {
               "$tuple": [
-               "-0x1.0000000000000p+1",
-               "-0x0.0p+0"
+               "-0x1.1cc2505727c00p-9",
+               "-0x1.7fb8cf6bea362p+0"
               ]
              }
             ]
@@ -2818,8 +2818,8 @@
              "__alm_sequence__",
              {
               "$tuple": [
-               "-0x1.0000000000000p+2",
-               "-0x1.0000000000000p+1"
+               "-0x1.7058a9b262ae8p-1",
+               "-0x1.7058a9b262af0p-1"
               ]
              }
             ]
@@ -2846,7 +2846,7 @@
              "__alm_sequence__",
              {
               "$tuple": [
-               "0x0.0p+0",
+               "0x1.2188313be8f20p-2",
                "0x0.0p+0"
               ]
              }
@@ -2857,24 +2857,24 @@
          {
           "$tuple": [
            "stationarity_norm",
-           "0x1.1e3779b97f4a8p+2"
+           "0x1.0475cf4cb8d37p+0"
           ]
          },
          {
           "$tuple": [
            "total",
-           "0x1.4000000000000p+2"
+           "0x1.00ad9f10d8b0bp-1"
           ]
          }
         ]
        },
        "multipliers": {
         "$tuple": [
-         "0x0.0p+0",
+         "0x1.0000000000000p-1",
          "0x0.0p+0"
         ]
        },
-       "penalty": "0x1.4000000000000p+3",
+       "penalty": "0x1.9000000000000p+6",
        "accepted_state": null,
        "geometry_identity": null
       }
@@ -2946,8 +2946,8 @@
       "fields": {
        "x": {
         "$tuple": [
-         "0x0.0p+0",
-         "0x0.0p+0"
+         "0x1.7fb8cf6bea362p+0",
+         "0x1.fee33dafa8d7fp-2"
         ]
        },
        "evaluation": {
@@ -2960,7 +2960,7 @@
              "__alm_sequence__",
              {
               "$tuple": [
-               "0x0.0p+0",
+               "-0x1.bdc9bdaf9b79bp-11",
                "0x0.0p+0"
               ]
              }
@@ -2976,8 +2976,8 @@
              "__alm_sequence__",
              {
               "$tuple": [
-               "-0x1.0000000000000p+2",
-               "-0x1.0000000000000p+1"
+               "-0x1.008e61282b93cp+0",
+               "-0x1.008e61282b940p+0"
               ]
              }
             ]
@@ -2987,7 +2987,7 @@
          {
           "$tuple": [
            "base_value",
-           "0x1.4000000000000p+2"
+           "0x1.011d118044979p-1"
           ]
          },
          {
@@ -2998,8 +2998,8 @@
              "__alm_sequence__",
              {
               "$tuple": [
-               "-0x1.0000000000000p+1",
-               "-0x0.0p+0"
+               "-0x1.1cc2505727c00p-9",
+               "-0x1.7fb8cf6bea362p+0"
               ]
              }
             ]
@@ -3014,8 +3014,8 @@
              "__alm_sequence__",
              {
               "$tuple": [
-               "-0x1.0000000000000p+1",
-               "-0x0.0p+0"
+               "-0x1.1cc2505727c00p-9",
+               "-0x1.7fb8cf6bea362p+0"
               ]
              }
             ]
@@ -3046,8 +3046,8 @@
              "__alm_sequence__",
              {
               "$tuple": [
-               "-0x1.0000000000000p+2",
-               "-0x1.0000000000000p+1"
+               "-0x1.7058a9b262ae8p-1",
+               "-0x1.7058a9b262af0p-1"
               ]
              }
             ]
@@ -3074,7 +3074,7 @@
              "__alm_sequence__",
              {
               "$tuple": [
-               "0x0.0p+0",
+               "0x1.2188313be8f20p-2",
                "0x0.0p+0"
               ]
              }
@@ -3085,24 +3085,24 @@
          {
           "$tuple": [
            "stationarity_norm",
-           "0x1.1e3779b97f4a8p+2"
+           "0x1.0475cf4cb8d37p+0"
           ]
          },
          {
           "$tuple": [
            "total",
-           "0x1.4000000000000p+2"
+           "0x1.00ad9f10d8b0bp-1"
           ]
          }
         ]
        },
        "multipliers": {
         "$tuple": [
-         "0x0.0p+0",
+         "0x1.0000000000000p-1",
          "0x0.0p+0"
         ]
        },
-       "penalty": "0x1.4000000000000p+3",
+       "penalty": "0x1.9000000000000p+6",
        "accepted_state": null,
        "geometry_identity": null
       }
@@ -3174,8 +3174,8 @@
       "fields": {
        "x": {
         "$tuple": [
-         "0x0.0p+0",
-         "0x0.0p+0"
+         "0x1.7fb8cf6bea362p+0",
+         "0x1.fee33dafa8d7fp-2"
         ]
        },
        "evaluation": {
@@ -3188,7 +3188,7 @@
              "__alm_sequence__",
              {
               "$tuple": [
-               "0x0.0p+0",
+               "-0x1.bdc9bdaf9b79bp-11",
                "0x0.0p+0"
               ]
              }
@@ -3204,8 +3204,8 @@
              "__alm_sequence__",
              {
               "$tuple": [
-               "-0x1.0000000000000p+2",
-               "-0x1.0000000000000p+1"
+               "-0x1.008e61282b93cp+0",
+               "-0x1.008e61282b940p+0"
               ]
              }
             ]
@@ -3215,7 +3215,7 @@
          {
           "$tuple": [
            "base_value",
-           "0x1.4000000000000p+2"
+           "0x1.011d118044979p-1"
           ]
          },
          {
@@ -3226,8 +3226,8 @@
              "__alm_sequence__",
              {
               "$tuple": [
-               "-0x1.0000000000000p+1",
-               "-0x0.0p+0"
+               "-0x1.1cc2505727c00p-9",
+               "-0x1.7fb8cf6bea362p+0"
               ]
              }
             ]
@@ -3242,8 +3242,8 @@
              "__alm_sequence__",
              {
               "$tuple": [
-               "-0x1.0000000000000p+1",
-               "-0x0.0p+0"
+               "-0x1.1cc2505727c00p-9",
+               "-0x1.7fb8cf6bea362p+0"
               ]
              }
             ]
@@ -3274,8 +3274,8 @@
              "__alm_sequence__",
              {
               "$tuple": [
-               "-0x1.0000000000000p+2",
-               "-0x1.0000000000000p+1"
+               "-0x1.7058a9b262ae8p-1",
+               "-0x1.7058a9b262af0p-1"
               ]
              }
             ]
@@ -3302,7 +3302,7 @@
              "__alm_sequence__",
              {
               "$tuple": [
-               "0x0.0p+0",
+               "0x1.2188313be8f20p-2",
                "0x0.0p+0"
               ]
              }
@@ -3313,24 +3313,24 @@
          {
           "$tuple": [
            "stationarity_norm",
-           "0x1.1e3779b97f4a8p+2"
+           "0x1.0475cf4cb8d37p+0"
           ]
          },
          {
           "$tuple": [
            "total",
-           "0x1.4000000000000p+2"
+           "0x1.00ad9f10d8b0bp-1"
           ]
          }
         ]
        },
        "multipliers": {
         "$tuple": [
-         "0x0.0p+0",
+         "0x1.0000000000000p-1",
          "0x0.0p+0"
         ]
        },
-       "penalty": "0x1.4000000000000p+3",
+       "penalty": "0x1.9000000000000p+6",
        "accepted_state": null,
        "geometry_identity": null
       }
@@ -3402,8 +3402,8 @@
       "fields": {
        "x": {
         "$tuple": [
-         "0x0.0p+0",
-         "0x0.0p+0"
+         "0x1.7fb8cf6bea362p+0",
+         "0x1.fee33dafa8d7fp-2"
         ]
        },
        "evaluation": {
@@ -3416,7 +3416,7 @@
              "__alm_sequence__",
              {
               "$tuple": [
-               "0x0.0p+0",
+               "-0x1.bdc9bdaf9b79bp-11",
                "0x0.0p+0"
               ]
              }
@@ -3432,8 +3432,8 @@
              "__alm_sequence__",
              {
               "$tuple": [
-               "-0x1.0000000000000p+2",
-               "-0x1.0000000000000p+1"
+               "-0x1.008e61282b93cp+0",
+               "-0x1.008e61282b940p+0"
               ]
              }
             ]
@@ -3443,7 +3443,7 @@
          {
           "$tuple": [
            "base_value",
-           "0x1.4000000000000p+2"
+           "0x1.011d118044979p-1"
           ]
          },
          {
@@ -3454,8 +3454,8 @@
              "__alm_sequence__",
              {
               "$tuple": [
-               "-0x1.0000000000000p+1",
-               "-0x0.0p+0"
+               "-0x1.1cc2505727c00p-9",
+               "-0x1.7fb8cf6bea362p+0"
               ]
              }
             ]
@@ -3470,8 +3470,8 @@
              "__alm_sequence__",
              {
               "$tuple": [
-               "-0x1.0000000000000p+1",
-               "-0x0.0p+0"
+               "-0x1.1cc2505727c00p-9",
+               "-0x1.7fb8cf6bea362p+0"
               ]
              }
             ]
@@ -3502,8 +3502,8 @@
              "__alm_sequence__",
              {
               "$tuple": [
-               "-0x1.0000000000000p+2",
-               "-0x1.0000000000000p+1"
+               "-0x1.7058a9b262ae8p-1",
+               "-0x1.7058a9b262af0p-1"
               ]
              }
             ]
@@ -3530,7 +3530,7 @@
              "__alm_sequence__",
              {
               "$tuple": [
-               "0x0.0p+0",
+               "0x1.2188313be8f20p-2",
                "0x0.0p+0"
               ]
              }
@@ -3541,24 +3541,24 @@
          {
           "$tuple": [
            "stationarity_norm",
-           "0x1.1e3779b97f4a8p+2"
+           "0x1.0475cf4cb8d37p+0"
           ]
          },
          {
           "$tuple": [
            "total",
-           "0x1.4000000000000p+2"
+           "0x1.00ad9f10d8b0bp-1"
           ]
          }
         ]
        },
        "multipliers": {
         "$tuple": [
-         "0x0.0p+0",
+         "0x1.0000000000000p-1",
          "0x0.0p+0"
         ]
        },
-       "penalty": "0x1.4000000000000p+3",
+       "penalty": "0x1.9000000000000p+6",
        "accepted_state": null,
        "geometry_identity": null
       }
@@ -3592,8 +3592,8 @@
     "fields": {
      "x": {
       "$tuple": [
-       "0x0.0p+0",
-       "0x0.0p+0"
+       "0x1.7fbc836f34f15p+0",
+       "0x1.fef20dbcd3c4ep-2"
       ]
      },
      "accepted_state": null,
@@ -3608,11 +3608,11 @@
      "completed_outer_iterations": 6,
      "multipliers": {
       "$tuple": [
-       "0x0.0p+0",
+       "0x1.0000000000000p-1",
        "0x0.0p+0"
       ]
      },
-     "penalty": "0x1.4000000000000p+3",
+     "penalty": "0x1.f400000000000p+9",
      "update_feasibility_tol": "0x1.009b9cf334252p-1",
      "update_stationarity_tol": "0x1.0624dd2f1a9fcp-10",
      "trust_radius": null,
@@ -3630,8 +3630,8 @@
       "fields": {
        "x": {
         "$tuple": [
-         "0x0.0p+0",
-         "0x0.0p+0"
+         "0x1.7fbc836f34f15p+0",
+         "0x1.fef20dbcd3c4ep-2"
         ]
        },
        "evaluation": {
@@ -3644,7 +3644,7 @@
              "__alm_sequence__",
              {
               "$tuple": [
-               "0x0.0p+0",
+               "-0x1.0624dd2f1a9fcp-13",
                "0x0.0p+0"
               ]
              }
@@ -3660,8 +3660,8 @@
              "__alm_sequence__",
              {
               "$tuple": [
-               "-0x1.0000000000000p+2",
-               "-0x1.0000000000000p+1"
+               "-0x1.0086f921961d6p+0",
+               "-0x1.0086f921961d9p+0"
               ]
              }
             ]
@@ -3671,7 +3671,7 @@
          {
           "$tuple": [
            "base_value",
-           "0x1.4000000000000p+2"
+           "0x1.010e396cedd67p-1"
           ]
          },
          {
@@ -3682,8 +3682,8 @@
              "__alm_sequence__",
              {
               "$tuple": [
-               "-0x1.0000000000000p+1",
-               "-0x0.0p+0"
+               "-0x1.0df2432c3b000p-9",
+               "-0x1.7fbc836f34f15p+0"
               ]
              }
             ]
@@ -3698,8 +3698,8 @@
              "__alm_sequence__",
              {
               "$tuple": [
-               "-0x1.0000000000000p+1",
-               "-0x0.0p+0"
+               "-0x1.0df2432c3b000p-9",
+               "-0x1.7fbc836f34f15p+0"
               ]
              }
             ]
@@ -3730,8 +3730,8 @@
              "__alm_sequence__",
              {
               "$tuple": [
-               "-0x1.0000000000000p+2",
-               "-0x1.0000000000000p+1"
+               "-0x1.0086f921961d6p+0",
+               "-0x1.0086f921961d9p+0"
               ]
              }
             ]
@@ -3769,24 +3769,24 @@
          {
           "$tuple": [
            "stationarity_norm",
-           "0x1.1e3779b97f4a8p+2"
+           "0x1.6ac8c7e9aed3ap+0"
           ]
          },
          {
           "$tuple": [
            "total",
-           "0x1.4000000000000p+2"
+           "0x1.00fdd71f1ae4cp-1"
           ]
          }
         ]
        },
        "multipliers": {
         "$tuple": [
-         "0x0.0p+0",
+         "0x1.0000000000000p-1",
          "0x0.0p+0"
         ]
        },
-       "penalty": "0x1.4000000000000p+3",
+       "penalty": "0x1.f400000000000p+9",
        "accepted_state": null,
        "geometry_identity": null
       }

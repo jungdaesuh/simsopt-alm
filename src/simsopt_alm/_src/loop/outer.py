@@ -45,7 +45,7 @@ from ..inner.attempts import (
 from ..policy.decisions import ALMContinue, ALMConverge, ALMDualUpdateStep, ALMHold, ALMStepDecision, ALMStop
 from ..policy.default import DEFAULT_CONTINUATION_POLICY, ALMContinuationPolicy
 from ..policy.views import ALMPostInnerView, ALMPreInnerView
-from ..problem.evaluation import ALMEvaluator, _checked_evaluation, _incumbent_objective_value, _measure_iterate
+from ..problem.evaluation import ALMEvaluator, _checked_evaluation, _incumbent_objective_value, _measure_iterate, _search_step_rejected
 from ..public_api import set_module
 from ..settings.settings import ALMSettings
 from ..state import (
@@ -178,6 +178,7 @@ class _ALMRun(Generic[AcceptedStateT]):
     on_outer_boundary: Optional[Callable[[ALMOuterBoundary[AcceptedStateT]], None]]
     snapshot_accepted_state_fn: Optional[Callable[[], AcceptedStateT]]
     restore_incumbent_state_fn: Optional[Callable[[AcceptedStateT], None]]
+    snapshot_inner_state_fn: Optional[Callable[[np.ndarray], Optional[AcceptedStateT]]]
     constraint_names_tuple: Tuple[str, ...]
     constraint_blocks_tuple: Optional[Tuple[str, ...]]
     continuation_policy: ALMContinuationPolicy
@@ -1002,31 +1003,57 @@ def _improved_incumbent(
     best_feasible: Optional[ALMFeasibleIncumbent[AcceptedStateT]],
     *,
     x: np.ndarray,
-    measured: ALMIterateMeasurement,
+    evaluation: dict,
+    multipliers: np.ndarray,
+    penalty: float,
+    hard_max_violation: float,
     inner_result: Optional[object],
+    inner_iterate: bool = False,
 ) -> Optional[ALMFeasibleIncumbent[AcceptedStateT]]:
     """``best_feasible``, or the measured iterate ``x`` as the new incumbent
     when it is hard-feasible at ``feasibility_tol`` and ranks strictly better
     (``_incumbent_objective_value``); the caller's accepted state is
-    snapshotted only for a new incumbent. Only the HARD (certified) channel
-    counts: a surrogate can read feasible where the design is not."""
-    if measured.routing_state.hard_max_violation > run.settings.feasibility_tol or (
+    snapshotted only for a new incumbent, using the matching inner snapshot
+    for an inner accept. Only the HARD (certified) channel counts: a
+    surrogate can read feasible where the design is not. An inner snapshot
+    returning None vetoes that candidate without replacing the incumbent."""
+    if hard_max_violation > run.settings.feasibility_tol or (
         best_feasible is not None
-        and _incumbent_objective_value(measured.evaluation)
+        and _incumbent_objective_value(evaluation)
         >= _incumbent_objective_value(best_feasible.evaluation)
     ):
+        if (
+            not inner_iterate
+            and hard_max_violation <= run.settings.feasibility_tol
+            and best_feasible is not None
+            and inner_result is not None
+            and best_feasible.inner_result is None
+            and np.array_equal(x, best_feasible.x)
+            and np.array_equal(multipliers, best_feasible.multipliers)
+            and penalty == best_feasible.penalty
+            and _incumbent_objective_value(evaluation)
+            == _incumbent_objective_value(best_feasible.evaluation)
+        ):
+            # The retained callback point also became this subproblem's
+            # endpoint, so its optimizer result now belongs to the incumbent.
+            return replace(best_feasible, inner_result=inner_result)
         return best_feasible
+    if inner_iterate and run.snapshot_inner_state_fn is not None:
+        incumbent_state = run.snapshot_inner_state_fn(x.copy())
+        if incumbent_state is None:
+            return best_feasible
+    else:
+        incumbent_state = (
+            None if run.snapshot_accepted_state_fn is None
+            else run.snapshot_accepted_state_fn()
+        )
     return ALMFeasibleIncumbent(
         x=x.copy(),
-        evaluation=measured.evaluation,
-        multipliers=np.array(measured.multipliers, dtype=float),
-        penalty=float(measured.penalty),
+        evaluation=evaluation,
+        multipliers=np.array(multipliers, dtype=float),
+        penalty=float(penalty),
         inner_result=inner_result,
-        incumbent_state=(
-            None
-            if run.snapshot_accepted_state_fn is None
-            else run.snapshot_accepted_state_fn()
-        ),
+        incumbent_state=incumbent_state,
     )
 
 def _incumbent_at_step_start(
@@ -1071,6 +1098,7 @@ def _incumbent_at_step_start(
                 constraint_names_tuple=run.constraint_names_tuple,
                 constraint_blocks_tuple=run.constraint_blocks_tuple,
                 context="ALM best-feasible re-evaluation",
+                require_accepted=False,
             )
             if swap_state:
                 live_state = run.snapshot_accepted_state_fn()
@@ -1087,12 +1115,15 @@ def _incumbent_at_step_start(
                     restore_incumbent_state_fn(live_state)
             else:
                 evaluation = reevaluate()
-        still_feasible = _constraint_routing_state(
+        still_feasible = not _search_step_rejected(evaluation) and _constraint_routing_state(
             evaluation, best_feasible.multipliers, best_feasible.penalty, settings.feasibility_tol
         ).hard_max_violation <= settings.feasibility_tol
         best_feasible = replace(best_feasible, evaluation=evaluation) if still_feasible else None
     return _improved_incumbent(
-        run, best_feasible, x=live_x, measured=start, inner_result=last_result
+        run, best_feasible, x=live_x, evaluation=start.evaluation,
+        multipliers=start.multipliers, penalty=start.penalty,
+        hard_max_violation=start.routing_state.hard_max_violation,
+        inner_result=last_result,
     )
 
 def _inner_solve_outcome(
@@ -1233,6 +1264,21 @@ def _run_alm_continuation_step(
         problem_refreshed=problem_refreshed,
         last_result=run_state.last_result,
     )
+    def retain_inner_incumbent(
+        x: np.ndarray, evaluation: dict, hard_max_violation: float
+    ) -> None:
+        # A legacy outer-state snapshot cannot represent an inner iterate.
+        if run.snapshot_accepted_state_fn is not None and run.snapshot_inner_state_fn is None:
+            return
+        # Intermediate accepts have no optimizer result: the eventual result
+        # describes the endpoint, which can be a different, infeasible point.
+        run_state.best_feasible = _improved_incumbent(
+            run, run_state.best_feasible, x=x, evaluation=evaluation,
+            multipliers=run_state.multipliers, penalty=penalty_argument,
+            hard_max_violation=hard_max_violation,
+            inner_result=None, inner_iterate=True,
+        )
+
     inner_attempt = _run_alm_inner_attempts(
         ALMInnerAttemptRequest(
             x=run_state.x,
@@ -1253,6 +1299,7 @@ def _run_alm_continuation_step(
             constraint_names_tuple=run.constraint_names_tuple,
             constraint_blocks_tuple=run.constraint_blocks_tuple,
             continuation_policy=run.continuation_policy,
+            on_accepted_iterate=retain_inner_incumbent,
         )
     )
 
@@ -1321,7 +1368,10 @@ def _run_alm_continuation_step(
     )
 
     run_state.best_feasible = _improved_incumbent(
-        run, run_state.best_feasible, x=run_state.x, measured=measured, inner_result=result
+        run, run_state.best_feasible, x=run_state.x, evaluation=measured.evaluation,
+        multipliers=measured.multipliers, penalty=measured.penalty,
+        hard_max_violation=measured.routing_state.hard_max_violation,
+        inner_result=result,
     )
 
     # Every inner plan re-derives the staged values (gtol, profile caps)
@@ -1460,6 +1510,8 @@ def minimize_alm(
     on_outer_step: Optional[Callable[[ALMOuterStepEvent[AcceptedStateT]], None]] = None,
     on_outer_boundary: Optional[Callable[[ALMOuterBoundary[AcceptedStateT]], None]] = None,
     continuation_policy: ALMContinuationPolicy = DEFAULT_CONTINUATION_POLICY,
+    *,
+    snapshot_inner_state_fn: Optional[Callable[[np.ndarray], Optional[AcceptedStateT]]] = None,
 ) -> ALMResult:
     if resume_from is not None and (
         initial_multipliers is not None or initial_penalty is not None
@@ -1467,6 +1519,8 @@ def minimize_alm(
         raise ValueError(
             "resume_from cannot be combined with initial_multipliers or initial_penalty"
         )
+    if snapshot_inner_state_fn is not None and restore_incumbent_state_fn is None:
+        raise ValueError("snapshot_inner_state_fn requires restore_incumbent_state_fn")
     normalized = _normalize_alm_run_inputs(
         x0,
         constraint_names,
@@ -1518,13 +1572,6 @@ def minimize_alm(
                 "resume_from completed_outer_iterations must be less than "
                 "settings.max_outer_iterations"
             )
-        if resume_from.accepted_state is not None:
-            if restore_incumbent_state_fn is None:
-                raise ValueError(
-                    "resume_from carries accepted_state but no restore callback was provided"
-                )
-            # Live identity is restore_fn's contract; the boundary is unchanged.
-            restore_incumbent_state_fn(resume_from.accepted_state)
         run_state = ALMRunState(
             x=resume_x.copy(),
             multipliers=np.asarray(resumed.multipliers, dtype=float).copy(),
@@ -1560,6 +1607,17 @@ def minimize_alm(
         )
         first_outer_iteration = completed_outer + 1
         last_outer_iteration = completed_outer
+        if resumed.best_feasible is not None:
+            _require_alm_penalty_within_cap(
+                resumed.best_feasible.penalty, settings, label="resume best-feasible ALM penalty"
+            )
+        if resume_from.accepted_state is not None:
+            if restore_incumbent_state_fn is None:
+                raise ValueError(
+                    "resume_from carries accepted_state but no restore callback was provided"
+                )
+            # Live identity is restore_fn's contract; the boundary is unchanged.
+            restore_incumbent_state_fn(resume_from.accepted_state)
     else:
         run_state = ALMRunState(
             x=normalized.x,
@@ -1586,6 +1644,7 @@ def minimize_alm(
         on_outer_step=on_outer_step,
         on_outer_boundary=on_outer_boundary,
         snapshot_accepted_state_fn=snapshot_accepted_state_fn,
+        snapshot_inner_state_fn=snapshot_inner_state_fn,
         restore_incumbent_state_fn=restore_incumbent_state_fn,
         constraint_names_tuple=constraint_names_tuple,
         constraint_blocks_tuple=constraint_blocks_tuple,

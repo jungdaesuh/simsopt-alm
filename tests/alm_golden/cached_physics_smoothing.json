@@ -1330,7 +1330,7 @@
     "action": "dual_update",
     "dual_update_penalty_reason": null,
     "outer_termination": null,
-    "event_sha256": "320045fdbcfcc09f472d6b93b193863b704148791451f6ec797fc8852ef91d36"
+    "event_sha256": "4e1a524526501dfa309ad573b61bc98c3a565ffd17f4bd3794b48fdb1ffa294e"
    },
    {
     "event": "outer_state_callback",
@@ -1357,6 +1357,31 @@
      "data": [
       "0x1.e5fd04ce881c4p-1",
       "0x1.ea2074fe472c3p-1"
+     ]
+    },
+    "multipliers": {
+     "$ndarray": "<f8",
+     "shape": [
+      2
+     ],
+     "data": [
+      "0x0.0p+0",
+      "0x0.0p+0"
+     ]
+    },
+    "penalty": "0x1.4000000000000p+3",
+    "total_finite": true
+   },
+   {
+    "event": "evaluate_problem",
+    "x": {
+     "$ndarray": "<f8",
+     "shape": [
+      2
+     ],
+     "data": [
+      "0x1.f0a3d70a3d70ap-1",
+      "0x1.f0a3d70a3d70ap-1"
      ]
     },
     "multipliers": {
@@ -1606,7 +1631,7 @@
     "action": "dual_update",
     "dual_update_penalty_reason": null,
     "outer_termination": null,
-    "event_sha256": "f6b963d7f62242af85f0393569245a579038fc5df79660d6e38b34bfa655ff2d"
+    "event_sha256": "2fdcccd71341ff63cd8fde5eb62df53aa0c80b7526bc87c369fde2a06952c9c4"
    },
    {
     "event": "outer_state_callback",
@@ -1633,6 +1658,31 @@
      "data": [
       "0x1.ecac1e351b668p-1",
       "0x1.ef6dc4c4d2711p-1"
+     ]
+    },
+    "multipliers": {
+     "$ndarray": "<f8",
+     "shape": [
+      2
+     ],
+     "data": [
+      "0x0.0p+0",
+      "0x0.0p+0"
+     ]
+    },
+    "penalty": "0x1.4000000000000p+3",
+    "total_finite": true
+   },
+   {
+    "event": "evaluate_problem",
+    "x": {
+     "$ndarray": "<f8",
+     "shape": [
+      2
+     ],
+     "data": [
+      "0x1.f0a3d70a3d70ap-1",
+      "0x1.f0a3d70a3d70ap-1"
      ]
     },
     "multipliers": {
@@ -1945,7 +1995,7 @@
     "action": "dual_update",
     "dual_update_penalty_reason": null,
     "outer_termination": null,
-    "event_sha256": "c5641cdd8ce9b00d16153fcdd81127f5e2829dbd66740e65c5e7991bc36807a1"
+    "event_sha256": "cea1bf2f122f1658e1ab17816d59852a3284281dc92f2f0ac0808a99ff9e7204"
    },
    {
     "event": "outer_state_callback",
@@ -1972,6 +2022,31 @@
      "data": [
       "0x1.efcca4150688bp-1",
       "0x1.f071fe30aa2b6p-1"
+     ]
+    },
+    "multipliers": {
+     "$ndarray": "<f8",
+     "shape": [
+      2
+     ],
+     "data": [
+      "0x0.0p+0",
+      "0x0.0p+0"
+     ]
+    },
+    "penalty": "0x1.4000000000000p+3",
+    "total_finite": true
+   },
+   {
+    "event": "evaluate_problem",
+    "x": {
+     "$ndarray": "<f8",
+     "shape": [
+      2
+     ],
+     "data": [
+      "0x1.f0a3d70a3d70ap-1",
+      "0x1.f0a3d70a3d70ap-1"
      ]
     },
     "multipliers": {
@@ -2120,7 +2195,7 @@
     "action": "dual_update",
     "dual_update_penalty_reason": null,
     "outer_termination": null,
-    "event_sha256": "dc6509a3d7fa9a2acd553175578f92c6116a7f9d8984a6b2d44857991bce41ae"
+    "event_sha256": "ff6a3fe2194f35949fab957288cbf3486992b5c06febd129ee23594c542005ba"
    },
    {
     "event": "outer_state_callback",
@@ -2147,6 +2222,31 @@
      "data": [
       "0x1.f0a39ff2f46cdp-1",
       "0x1.f0a3ca4776617p-1"
+     ]
+    },
+    "multipliers": {
+     "$ndarray": "<f8",
+     "shape": [
+      2
+     ],
+     "data": [
+      "0x0.0p+0",
+      "0x0.0p+0"
+     ]
+    },
+    "penalty": "0x1.4000000000000p+3",
+    "total_finite": true
+   },
+   {
+    "event": "evaluate_problem",
+    "x": {
+     "$ndarray": "<f8",
+     "shape": [
+      2
+     ],
+     "data": [
+      "0x1.f0a3d70a3d70ap-1",
+      "0x1.f0a3d70a3d70ap-1"
      ]
     },
     "multipliers": {
@@ -2270,7 +2370,7 @@
     "action": "constraints_inactive_converged",
     "dual_update_penalty_reason": null,
     "outer_termination": null,
-    "event_sha256": "b15f2156ba1851927841c78d41df626bc08af942a16c7bb85558c1e06a172434"
+    "event_sha256": "f63b640d0f4fbdd402d11b9621a0184da99f1cb04bf02d2b41664df3c6e30fae"
    }
   ],
   "checkpoints": [],

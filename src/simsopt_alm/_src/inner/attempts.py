@@ -100,6 +100,8 @@ class ALMInnerAttemptRequest:
     # The caller's base bounds as normalized (lower, upper) pairs (None: none).
     base_bounds: Optional[List[Tuple[float, float]]] = None
     continuation_policy: ALMContinuationPolicy = DEFAULT_CONTINUATION_POLICY
+    # Observe usable L-BFGS-B accepted iterates, never line-search trials.
+    on_accepted_iterate: Optional[Callable[[np.ndarray, dict, float], None]] = None
 
 @dataclass(frozen=True)
 class ALMInnerAttemptResult:
@@ -184,7 +186,7 @@ class _ALMInnerAttemptEvaluator:
             # alter the candidate subsequently evaluated by ALM.
             self.request.inner_callback(inner_x_arr.copy())
         evaluation = self.evaluation_at(inner_x_arr)
-        if _search_step_rejected(evaluation):
+        if _search_step_rejected(evaluation) or evaluation.get("nonfinite_evaluation"):
             return
         (
             _solver_constraint_values,
@@ -198,6 +200,15 @@ class _ALMInnerAttemptEvaluator:
             self.request.penalty_argument,
             self.request.effective_feasibility_tol,
         )
+        if self.request.on_accepted_iterate is not None:
+            self.request.on_accepted_iterate(
+                inner_x_arr,
+                _attach_alm_constraint_metadata(
+                    evaluation, self.request.constraint_names_tuple,
+                    self.request.constraint_blocks_tuple,
+                ),
+                callback_routing_state.hard_max_violation,
+            )
         callback_stationarity_norm = _bound_reduced_stationarity_norm(
             evaluation, inner_x_arr, self.request.base_bounds
         )

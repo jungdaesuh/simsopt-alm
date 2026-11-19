@@ -188,6 +188,21 @@ class ALMBehaviorFixTests(unittest.TestCase):
             )
         self.assertEqual(calls, [], "invalid user state reached the evaluator or callbacks")
 
+    def test_rejected_stationary_start_is_never_accepted(self):
+        accepted = []
+
+        def reject(x, multipliers, penalty):
+            result = quadratic(x, multipliers, penalty)
+            result["search_step_success"] = False
+            return result
+
+        with self.assertRaisesRegex(ValueError, "outer iterate evaluation.*reject"):
+            minimize_alm(
+                np.zeros(1), [], reject, ALMSettings(), {"maxiter": 1},
+                accepted_callback=accepted.append, on_outer_boundary=accepted.append,
+            )
+        self.assertEqual(accepted, [])
+
     def test_reduced_resume_cap_is_rejected_before_restoring_caller_state(self):
         boundaries = []
         calls = []
@@ -202,7 +217,7 @@ class ALMBehaviorFixTests(unittest.TestCase):
 
         minimize_alm(
             np.array([0.0]), ["active"], evaluate,
-            ALMSettings(multiplier_max=3.0, max_outer_iterations=3,
+            ALMSettings(penalty_init=4.0, multiplier_max=3.0, max_outer_iterations=3,
                         max_subproblem_continuations=0),
             {"maxiter": 0}, initial_multipliers=np.array([2.0]),
             on_outer_boundary=boundaries.append,
@@ -210,17 +225,33 @@ class ALMBehaviorFixTests(unittest.TestCase):
             restore_incumbent_state_fn=lambda _state: calls.append("restore"),
         )
         boundary = next(b for b in boundaries if b.termination_reason is None)
-        calls.clear()
-        with self.assertRaisesRegex(ValueError, "resume.*multiplier.*multiplier_max"):
-            minimize_alm(
-                boundary.state.x, ["active"], evaluate,
-                ALMSettings(multiplier_max=1.0, max_outer_iterations=3),
-                {"maxiter": 0}, resume_from=boundary,
-                snapshot_accepted_state_fn=lambda: "accepted geometry",
-                restore_incumbent_state_fn=lambda _state: calls.append("restore"),
-                outer_state_callback=lambda *_args: calls.append("outer"),
-            )
-        self.assertEqual(calls, [], "changed-cap resume restored or evaluated invalid state")
+        live = {"state": "before resume"}
+
+        def restore(saved):
+            calls.append("restore")
+            live["state"] = saved
+
+        # A retained point can also be restored later and must obey the new cap.
+        low_live_penalty = dataclasses.replace(
+            boundary, state=dataclasses.replace(boundary.state, penalty=1.0)
+        )
+        for checkpoint, setting, cap in (
+            (boundary, "multiplier_max", 1.0), (boundary, "penalty_max", 2.0),
+            (low_live_penalty, "penalty_max", 2.0),
+        ):
+            with self.subTest(setting=setting, current_penalty=checkpoint.state.penalty):
+                calls.clear()
+                with self.assertRaisesRegex(ValueError, f"resume.*{setting}"):
+                    minimize_alm(
+                        boundary.state.x, ["active"], evaluate,
+                        ALMSettings(penalty_init=1.0, max_outer_iterations=3, **{setting: cap}),
+                        {"maxiter": 0}, resume_from=checkpoint,
+                        snapshot_accepted_state_fn=lambda: live["state"],
+                        restore_incumbent_state_fn=restore,
+                        outer_state_callback=lambda *_args: calls.append("outer"),
+                    )
+                self.assertEqual(calls, [])
+                self.assertEqual(live["state"], "before resume")
 
     def test_overflow_stop_is_finite_through_public_checkpoint_observer(self):
         settings = ALMSettings(penalty_init=1e200, penalty_scale=1e200,

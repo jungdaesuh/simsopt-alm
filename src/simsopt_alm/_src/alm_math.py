@@ -40,7 +40,7 @@ def augmented_inequality_objective(
     positive_shift = np.maximum(0.0, multipliers + penalty_values * constraint_values)
 
     total_value = float(base_value)
-    augmented_terms = _augmented_terms(positive_shift, multipliers, penalty_values)
+    augmented_terms = _augmented_terms(positive_shift, multipliers, penalty_values, constraint_values)
     if constraint_values.size > 0:
         total_value += float(np.sum(augmented_terms))
 
@@ -133,13 +133,41 @@ def _augmented_terms(
     positive_shift: np.ndarray,
     multipliers: np.ndarray,
     penalty_values: np.ndarray,
+    constraint_values: np.ndarray,
 ) -> np.ndarray:
-    return (
-        0.5
-        * (positive_shift - multipliers)
-        * (positive_shift + multipliers)
-        / penalty_values
+    """Evaluate PHR terms without subtracting rounded multiplier shifts.
+
+    Active rows use g * (lambda + rho*g/2); inactive rows use
+    -lambda**2/(2*rho). Binary exponent scaling keeps intermediate products
+    and quotients in range whenever the resulting term is representable.
+    """
+    terms = np.empty_like(positive_shift)
+    active = positive_shift > 0.0
+    multiplier_fraction, multiplier_exponent = np.frexp(multipliers)
+    penalty_fraction, penalty_exponent = np.frexp(penalty_values)
+    row_fraction, row_exponent = np.frexp(constraint_values[active])
+    half_product_exponent = penalty_exponent[active] + row_exponent - 1
+    common_exponent = np.where(
+        multipliers[active] == 0.0, half_product_exponent,
+        np.maximum(multiplier_exponent[active], half_product_exponent),
     )
+    scaled_coefficient = (
+        np.ldexp(multiplier_fraction[active], multiplier_exponent[active] - common_exponent)
+        + np.ldexp(
+            penalty_fraction[active] * row_fraction,
+            half_product_exponent - common_exponent,
+        )
+    )
+    terms[active] = np.ldexp(
+        row_fraction * scaled_coefficient, row_exponent + common_exponent,
+    )
+    inactive = ~active
+    terms[inactive] = np.ldexp(
+        -0.5 * multiplier_fraction[inactive] ** 2 / penalty_fraction[inactive],
+        2 * multiplier_exponent[inactive] - penalty_exponent[inactive],
+    )
+    terms[inactive & (multipliers == 0.0)] = 0.0
+    return terms
 
 def _positive_shift_and_augmented_terms(
     evaluation: dict,
@@ -163,6 +191,7 @@ def _positive_shift_and_augmented_terms(
         positive_shift,
         multiplier_array,
         penalty_values,
+        np.asarray(solver_constraint_values, dtype=float),
     )
 
 def _as_float_array(values) -> np.ndarray:

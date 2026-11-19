@@ -43,7 +43,67 @@
    33,
    34,
    35,
-   36
+   36,
+   37,
+   38,
+   39,
+   40,
+   41,
+   42,
+   43,
+   44,
+   45,
+   46,
+   47,
+   48,
+   49,
+   50,
+   51,
+   52,
+   53,
+   54,
+   55,
+   56,
+   57,
+   58,
+   59,
+   60,
+   61,
+   62,
+   63,
+   64,
+   65,
+   66,
+   67,
+   68,
+   69,
+   70,
+   71,
+   72,
+   73,
+   74,
+   75,
+   76,
+   77,
+   78,
+   79,
+   80,
+   81,
+   82,
+   83,
+   84,
+   85,
+   86,
+   87,
+   88,
+   89,
+   90,
+   91,
+   92,
+   93,
+   94,
+   95,
+   96
   ],
   "holdout_seeds": [
    100,
@@ -69,7 +129,31 @@
    120,
    121,
    122,
-   123
+   123,
+   200,
+   201,
+   202,
+   203,
+   204,
+   205,
+   206,
+   207,
+   208,
+   209,
+   210,
+   211,
+   212,
+   213,
+   214,
+   215,
+   216,
+   217,
+   218,
+   219,
+   220,
+   221,
+   222,
+   223
   ],
   "tolerance_factor": 10.0,
   "numeric_replay_ceiling": 1e-10
@@ -82,18 +166,18 @@
   "openblas_coretype": "Haswell"
  },
  "source_blob_ids": {
-  "simsopt_alm/__init__.py": "5d755241c7786d55a4d29e572feed33460c94c0c",
+  "simsopt_alm/__init__.py": "f0717de06a021cd1b6480e36a097318d8d142962",
   "simsopt_alm/_src/__init__.py": "0bd5544462ab6bb181e6dde0fbd232e2e1ff5e3f",
-  "simsopt_alm/_src/alm_math.py": "a37480403f4efac3c5db04b14a08e8b8d4060946",
+  "simsopt_alm/_src/alm_math.py": "9377a80578af8caf76d8eda157ca249e5ea59dd5",
   "simsopt_alm/_src/checkpoint/__init__.py": "6f71b30eb6583fb082b94f5db7b737e71fb409d6",
   "simsopt_alm/_src/checkpoint/boundary.py": "2367b970a8dfa39a86921568cf2e099c81db7e05",
   "simsopt_alm/_src/checkpoint/codec.py": "16ef8e1200cb7eed6956d9ea4ba1cf03bfc12715",
   "simsopt_alm/_src/checkpoint/snapshot.py": "0e011208f7c7411087fdab4ce87b6396c5242df7",
   "simsopt_alm/_src/inner/__init__.py": "31c6be3475674eb07fc51eac42f25530e5931ba8",
-  "simsopt_alm/_src/inner/attempts.py": "a90783761cef998b5f6f15cd8b72ade4fab96656",
+  "simsopt_alm/_src/inner/attempts.py": "b6d661946253dacd183ecc01de571beba7a3f086",
   "simsopt_alm/_src/loop/__init__.py": "d67e2ab6e9da81fe2952e2470f51f491541c7522",
   "simsopt_alm/_src/loop/history.py": "e034fb91eccbd158365165cfdb518c65bf77d697",
-  "simsopt_alm/_src/loop/outer.py": "67855fa84e55ebfbd19b647d2dbf80165d876a9a",
+  "simsopt_alm/_src/loop/outer.py": "1969ddb37a33279a182983e9178edec0a672c890",
   "simsopt_alm/_src/policy/__init__.py": "e4c89b84c830bf9f710d81fd0c38d3ec68a3722f",
   "simsopt_alm/_src/policy/decisions.py": "41674f5a5d693d7e1ee6300d9db57813524174d1",
   "simsopt_alm/_src/policy/default.py": "f6628a52689fec7030f0b61e8f1b72e1d9fdaa8d",
@@ -101,7 +185,7 @@
   "simsopt_alm/_src/policy/plan.py": "20789e0a6122192a29046f148ca8ba1208694216",
   "simsopt_alm/_src/policy/views.py": "a23cb3d68aab71876066fe8937df787480f07d79",
   "simsopt_alm/_src/problem/__init__.py": "4869ca8388a642f07cf0ebd08dacacbcd30db815",
-  "simsopt_alm/_src/problem/evaluation.py": "854579499a71a2b1c4415e14484889461fe38361",
+  "simsopt_alm/_src/problem/evaluation.py": "484cb1681598abd0f8ff5b1b443fb8c3edc3591f",
   "simsopt_alm/_src/problem/physics.py": "6366bffa62ddc83308ccffec0c6283ba8e8a3876",
   "simsopt_alm/_src/problem/taylor.py": "e1c6d8f819931ca7f53a3d98557297b59bb1c9d4",
   "simsopt_alm/_src/public_api.py": "060be8c19c6884b1d10407c378a113d64c499581",
@@ -112,9 +196,9 @@
   "simsopt_alm/checkpoint.py": "668c0e9f4c9b5e9972d5540dbaa7c5e818a4071f",
   "simsopt_alm/history.py": "405fbff4d635a553651a10f5669651bfdc5b8bf2",
   "simsopt_alm/policy.py": "b1c46ea4082e8a4df3258d40b0f4c13ffe03cc37",
-  "alm_golden_scenarios.py": "88f2d681708878f170670fd6c9e05d8e20625eb0",
+  "alm_golden_scenarios.py": "429485e4e0c7a894b4bb6cb2b08e6ff391783c3c",
   "generate_alm_golden.py": "c1b8f5215a49fef047c4bd627726995351cf89be",
-  "measure_alm_golden_sensitivity.py": "b5351309acfffcba9093e004accb67c128b82683"
+  "measure_alm_golden_sensitivity.py": "b2215ccbbdaae8f2689d569806d871f8ccdbdc39"
  },
  "scenarios": {
   "toy_convex": {
@@ -129,10 +213,10 @@
    ],
    "unstable_intended_outcomes": [],
    "spread": {
-    "x": 8.215650382226158e-15,
-    "objective": 9.71445146547012e-15,
-    "max_violation": 9.769962616701378e-15,
-    "multipliers": 3.115285807098189e-13,
+    "x": 1.1657341758564144e-14,
+    "objective": 1.3766765505351941e-14,
+    "max_violation": 1.332267624256232e-14,
+    "multipliers": 3.9013237085328e-13,
     "penalty": 0.0
    }
   },
@@ -178,9 +262,9 @@
     "termination:penalty_cap_reached"
    ],
    "spread": {
-    "x": 1.5276668818842153e-14,
-    "objective": 1.0484452812104589e-14,
-    "max_violation": 2.5017025488220195e-14,
+    "x": 2.007283228522283e-14,
+    "objective": 1.3389783109434776e-14,
+    "max_violation": 3.345472047537138e-14,
     "multipliers": 1.449507180950606e-14,
     "penalty": 0.0
    }
@@ -230,9 +314,9 @@
     "termination:penalty_cap_reached"
    ],
    "spread": {
-    "x": 1.5276668818842153e-14,
-    "objective": 1.0484452812104589e-14,
-    "max_violation": 2.5017025488220195e-14,
+    "x": 2.007283228522283e-14,
+    "objective": 1.3389783109434776e-14,
+    "max_violation": 3.345472047537138e-14,
     "multipliers": 1.449507180950606e-14,
     "penalty": 0.0
    }
@@ -273,8 +357,8 @@
    ],
    "unstable_intended_outcomes": [],
    "spread": {
-    "x": 2.220446049250313e-16,
-    "objective": 1.4005861280137303e-15,
+    "x": 4.440892098500626e-16,
+    "objective": 1.4273770507604513e-15,
     "max_violation": 1.7759231585312563e-15,
     "multipliers": 0.0,
     "penalty": 0.0
@@ -314,7 +398,7 @@
     "termination:max_outer_after_signal_mismatch_penalty_increase"
    ],
    "spread": {
-    "x": 2.220446049250313e-16,
+    "x": 4.440892098500626e-16,
     "objective": 1.4069782688129777e-15,
     "max_violation": 0.0,
     "multipliers": 0.0,
@@ -353,7 +437,7 @@
    ],
    "unstable_intended_outcomes": [],
    "spread": {
-    "x": 5.551115123125783e-16,
+    "x": 6.661338147750939e-16,
     "objective": 1.4006145734847024e-15,
     "max_violation": 1.817990202823694e-15,
     "multipliers": 0.0,
@@ -365,13 +449,16 @@
    "observed_outcomes": [
     "action:constraints_inactive_stall",
     "action:subproblem_continue",
+    "action:subproblem_limit_penalty_increase",
     "callback:accepted_callback",
     "callback:evaluate_problem",
     "callback:inner_callback",
     "callback:on_outer_boundary",
     "callback:on_outer_step",
     "callback:outer_state_callback",
+    "callback:restore_incumbent_state",
     "callback:snapshot_accepted_state",
+    "restored:final_iterate_worse_than_best_feasible",
     "termination:constraints_inactive_stall"
    ],
    "always_observed": [
@@ -394,7 +481,7 @@
    }
   },
   "plateau_restore_best_feasible": {
-   "label_only": "outcomes change under 1 ulp, seed 1: ['inner_attempts_retried']",
+   "label_only": "path changes under 1 ulp, seed 1: x: boundaries 4 != golden 3",
    "observed_outcomes": [
     "action:subproblem_continue",
     "action:subproblem_limit",
@@ -409,11 +496,11 @@
     "callback:snapshot_accepted_state",
     "inner_attempts_retried",
     "restored:final_iterate_worse_than_best_feasible",
+    "termination:max_outer_restored_best_feasible",
     "termination:plateau_stall"
    ],
    "always_observed": [
     "action:subproblem_continue",
-    "action:subproblem_limit",
     "action:subproblem_limit_penalty_increase",
     "callback:accepted_callback",
     "callback:evaluate_problem",
@@ -423,20 +510,22 @@
     "callback:outer_state_callback",
     "callback:restore_incumbent_state",
     "callback:snapshot_accepted_state",
-    "restored:final_iterate_worse_than_best_feasible",
+    "restored:final_iterate_worse_than_best_feasible"
+   ],
+   "unstable_intended_outcomes": [
+    "action:subproblem_limit",
     "termination:plateau_stall"
    ],
-   "unstable_intended_outcomes": [],
    "spread": {
-    "x": 2.220446049250313e-16,
-    "objective": 2.711829405027806e-16,
+    "x": 4.440892098500626e-16,
+    "objective": 1.2203232322625127e-15,
     "max_violation": 0.0,
     "multipliers": 0.0,
     "penalty": 0.0
    }
   },
   "resume_plateau_best_feasible": {
-   "label_only": "outcomes change under 1 ulp, seed 1: ['inner_attempts_retried']",
+   "label_only": "path changes under 1 ulp, seed 1: x: boundaries 4 != golden 3",
    "observed_outcomes": [
     "action:subproblem_continue",
     "action:subproblem_limit",
@@ -452,11 +541,11 @@
     "inner_attempts_retried",
     "restored:final_iterate_worse_than_best_feasible",
     "resumed",
+    "termination:max_outer_restored_best_feasible",
     "termination:plateau_stall"
    ],
    "always_observed": [
     "action:subproblem_continue",
-    "action:subproblem_limit",
     "action:subproblem_limit_penalty_increase",
     "callback:accepted_callback",
     "callback:evaluate_problem",
@@ -467,13 +556,14 @@
     "callback:restore_incumbent_state",
     "callback:snapshot_accepted_state",
     "restored:final_iterate_worse_than_best_feasible",
-    "resumed",
+    "resumed"
+   ],
+   "unstable_intended_outcomes": [
     "termination:plateau_stall"
    ],
-   "unstable_intended_outcomes": [],
    "spread": {
-    "x": 2.220446049250313e-16,
-    "objective": 2.711829405027806e-16,
+    "x": 4.440892098500626e-16,
+    "objective": 1.2203232322625127e-15,
     "max_violation": 0.0,
     "multipliers": 0.0,
     "penalty": 0.0
@@ -511,15 +601,15 @@
    ],
    "unstable_intended_outcomes": [],
    "spread": {
-    "x": 1.6153362172770276e-14,
-    "objective": 4.213863183438059e-15,
-    "max_violation": 1.6877124697778356e-14,
-    "multipliers": 9.260740322740028e-14,
+    "x": 1.9029988313126627e-14,
+    "objective": 4.565018448724565e-15,
+    "max_violation": 1.9320049032822695e-14,
+    "multipliers": 1.073037954787051e-13,
     "penalty": 0.0
    }
   },
   "frozen_warm_start_restore": {
-   "label_only": "outcomes change under 1 ulp, seed 1: ['action:infeasible_stall_penalty_increase', 'flag:infeasible_stall']",
+   "label_only": null,
    "observed_outcomes": [
     "action:dual_update",
     "action:infeasible_stall_penalty_increase",
@@ -535,13 +625,13 @@
     "callback:restore_incumbent_state",
     "callback:snapshot_accepted_state",
     "flag:infeasible_stall",
-    "flag:inner_false_success",
     "inner_attempts_retried",
     "restored:final_iterate_infeasible",
     "termination:penalty_cap_reached_restored_best_feasible"
    ],
    "always_observed": [
     "action:dual_update",
+    "action:infeasible_stall_penalty_increase",
     "action:penalty_cap_reached",
     "action:penalty_increase",
     "action:subproblem_continue",
@@ -553,18 +643,17 @@
     "callback:outer_state_callback",
     "callback:restore_incumbent_state",
     "callback:snapshot_accepted_state",
+    "flag:infeasible_stall",
     "inner_attempts_retried",
     "restored:final_iterate_infeasible",
     "termination:penalty_cap_reached_restored_best_feasible"
    ],
-   "unstable_intended_outcomes": [
-    "action:infeasible_stall_penalty_increase"
-   ],
+   "unstable_intended_outcomes": [],
    "spread": {
-    "x": 3.2085445411667046e-15,
-    "objective": 1.6427748050773514e-15,
-    "max_violation": 4.0245584642661925e-15,
-    "multipliers": 2.214524859785656e-14,
+    "x": 8.1157303100099e-15,
+    "objective": 2.737958008462252e-15,
+    "max_violation": 9.936496070395151e-15,
+    "multipliers": 5.355123751845314e-14,
     "penalty": 0.0
    }
   },
@@ -597,7 +686,7 @@
    "unstable_intended_outcomes": [],
    "spread": {
     "x": 1.641838998089895e-09,
-    "objective": 1.0104764247564901e-16,
+    "objective": 1.4062102177136993e-16,
     "max_violation": 0.0,
     "multipliers": 0.0,
     "penalty": 0.0
@@ -661,7 +750,8 @@
     "dual_update_penalty_raise",
     "flag:dual_update_penalty_increase",
     "inner_maxiter_budget_spent",
-    "termination:dual_update"
+    "restored:final_iterate_infeasible",
+    "termination:inner_budget_restored_best_feasible"
    ],
    "always_observed": [
     "action:dual_update",
@@ -674,14 +764,15 @@
     "dual_update_penalty_raise",
     "flag:dual_update_penalty_increase",
     "inner_maxiter_budget_spent",
-    "termination:dual_update"
+    "restored:final_iterate_infeasible",
+    "termination:inner_budget_restored_best_feasible"
    ],
    "unstable_intended_outcomes": [],
    "spread": {
-    "x": 1.2212453270876722e-15,
-    "objective": 3.3306690738754696e-15,
-    "max_violation": 3.552713678800501e-15,
-    "multipliers": 2.3081536681957004e-13,
+    "x": 2.886579864025407e-15,
+    "objective": 5.995204332975845e-15,
+    "max_violation": 3.58046925441613e-15,
+    "multipliers": 2.9753977059954195e-13,
     "penalty": 0.0
    }
   },
@@ -712,9 +803,9 @@
    "unstable_intended_outcomes": [],
    "spread": {
     "x": 1.2212453270876722e-15,
-    "objective": 3.4416913763379853e-15,
-    "max_violation": 3.552713678800501e-15,
-    "multipliers": 3.197442310920451e-14,
+    "objective": 3.6637359812630166e-15,
+    "max_violation": 3.566591466608315e-15,
+    "multipliers": 4.451994328746878e-14,
     "penalty": 0.0
    }
   },
@@ -741,7 +832,7 @@
    "unstable_intended_outcomes": [],
    "spread": {
     "x": 1.4802973661668753e-16,
-    "objective": 2.55351295663786e-15,
+    "objective": 2.7200464103316335e-15,
     "max_violation": 2.664535259100378e-15,
     "multipliers": 0.0,
     "penalty": 0.0
@@ -770,8 +861,8 @@
    "unstable_intended_outcomes": [],
    "spread": {
     "x": 5e-324,
-    "objective": 1.4210854715202005e-15,
-    "max_violation": 7.682579172156201e-16,
+    "objective": 1.5987211554602255e-15,
+    "max_violation": 8.645960870644428e-16,
     "multipliers": 0.0,
     "penalty": 0.0
    }

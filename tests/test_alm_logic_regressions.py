@@ -236,18 +236,24 @@ class RefreshedProblemIncumbentTests(unittest.TestCase):
         # incumbent when outer 1 ends at 7/3 (infeasible). Outer 2 moves the
         # cap; the evaluator follows the accepted x, so the incumbent is
         # evaluated in its restored state and the live state is put back.
-        for cap_after, incumbent_survives in ((-0.5, False), (0.5, True)):
-            with self.subTest(cap_after=cap_after):
+        for cap_after, rejects_start, incumbent_survives in (
+            (-0.5, False, False), (0.5, False, True), (0.5, True, False),
+        ):
+            with self.subTest(cap_after=cap_after, rejects_start=rejects_start):
                 cap = [1.0]
                 live = {"x": np.zeros(1)}
                 calls = []
 
                 def evaluate(x, multipliers, penalty):
                     calls.append((float(x[0]), float(live["x"][0])))
-                    return augmented_inequality_objective(
+                    evaluation = augmented_inequality_objective(
                         (x[0] - 3.0) ** 2, [2.0 * (x[0] - 3.0)], [x[0] - cap[0]], [[1.0]],
                         multipliers, penalty,
                     )
+
+                    if rejects_start and cap[0] == cap_after and x[0] == 0.0:
+                        evaluation["search_step_success"] = False
+                    return evaluation
 
                 def refresh(outer_iteration, multipliers, penalty):
                     cap[0] = 1.0 if outer_iteration == 1 else cap_after

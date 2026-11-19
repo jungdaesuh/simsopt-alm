@@ -657,7 +657,12 @@ class AcceptedStateGate:
             x_array = np.asarray(x, dtype=float)
             if self.step_norm_limit is not None:
                 step = float(np.linalg.norm(x_array - self.accepted_x))
-                if step > self.step_norm_limit:
+                step_limit = self.step_norm_limit
+                if step_limit == 0.0:
+                    # Frozen-state scenarios still admit the sensitivity
+                    # harness's last-bit perturbations of a valid iterate.
+                    step_limit = 8.0 * EPS * max(1.0, float(np.linalg.norm(self.accepted_x)))
+                if step > step_limit:
                     rejected = evaluate_at(self.accepted_x, multipliers, penalty)
                     rejected["total"] = float(rejected["total"]) + max(
                         abs(float(rejected["total"])), 1.0
