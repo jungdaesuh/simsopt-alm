@@ -149,19 +149,6 @@ class ALMRunState(Generic[AcceptedStateT]):
     final_eval: Optional[dict] = None
 
 @dataclass(frozen=True)
-class ALMPenaltyIncreaseResult:
-    """A penalty raise: the finite next penalty, the re-evaluation at it, and
-    the stop it forces (None: the run continues)."""
-
-    penalty: float
-    penalty_cap_reached: bool
-    penalty_cap_requested: Optional[float]
-    update_feasibility_tol: float
-    update_stationarity_tol: float
-    penalty_update_state: ALMIterateMeasurement
-    termination_reason: Optional[Literal["penalty_cap_reached", "penalty_overflow"]]
-
-@dataclass(frozen=True)
 class _ALMRun(Generic[AcceptedStateT]):
     """The inputs of one ``minimize_alm`` call that no step rebinds;
     ``call_start_inner_iterations`` counts the L-BFGS-B iterations a resumed
@@ -182,6 +169,18 @@ class _ALMRun(Generic[AcceptedStateT]):
     constraint_names_tuple: Tuple[str, ...]
     constraint_blocks_tuple: Optional[Tuple[str, ...]]
     continuation_policy: ALMContinuationPolicy
+
+    def evaluate_state(self, state: ALMRunState, penalty: float, *, context: str) -> dict:
+        """Evaluate this iterate against the constraint schema for the run."""
+        return _checked_evaluation(
+            self.evaluate_problem,
+            state.x,
+            state.multipliers,
+            penalty,
+            constraint_names_tuple=self.constraint_names_tuple,
+            constraint_blocks_tuple=self.constraint_blocks_tuple,
+            context=context,
+        )
 
 def _run_loop_state(
     run_state: ALMRunState[AcceptedStateT], result: Optional[ALMResult] = None
@@ -327,7 +326,7 @@ def _normalize_alm_run_inputs(
 
 def _apply_alm_penalty_increase(
     run: _ALMRun, run_state: ALMRunState
-) -> ALMPenaltyIncreaseResult:
+) -> Tuple[ALMIterateMeasurement, Optional[Literal["penalty_cap_reached", "penalty_overflow"]]]:
     """The next penalty and the re-evaluation at it (at ``run_state``'s x and
     multipliers). A request above ``penalty_max`` stops the run at the cap; one
     that overflows to inf keeps the penalty and stops it with
@@ -351,14 +350,8 @@ def _apply_alm_penalty_increase(
     )
     penalty_argument = float(next_penalty)
     penalty_update_state = _measure_iterate(
-        _checked_evaluation(
-            run.evaluate_problem,
-            run_state.x,
-            run_state.multipliers,
-            penalty_argument,
-            constraint_names_tuple=run.constraint_names_tuple,
-            constraint_blocks_tuple=run.constraint_blocks_tuple,
-            context="ALM penalty update evaluation",
+        run.evaluate_state(
+            run_state, penalty_argument, context="ALM penalty update evaluation"
         ),
         x=run_state.x,
         base_bounds=run_state.base_bounds,
@@ -368,19 +361,15 @@ def _apply_alm_penalty_increase(
         update_stationarity_tol=next_stationarity_tol,
         effective_feasibility_tol=next_effective_feasibility_tol,
     )
-    return ALMPenaltyIncreaseResult(
-        penalty=next_penalty,
-        penalty_cap_reached=bool(cap_hit),
-        penalty_cap_requested=requested_penalty if cap_hit else None,
-        update_feasibility_tol=next_feasibility_tol,
-        update_stationarity_tol=next_stationarity_tol,
-        penalty_update_state=penalty_update_state,
-        termination_reason=(
-            "penalty_overflow"
-            if requested_penalty is None
-            else "penalty_cap_reached" if cap_hit else None
-        ),
-    )
+    run_state.penalty = next_penalty
+    run_state.penalty_cap_reached = bool(cap_hit)
+    run_state.penalty_cap_requested = requested_penalty if cap_hit else None
+    run_state.update_feasibility_tol = next_feasibility_tol
+    run_state.update_stationarity_tol = next_stationarity_tol
+    run_state.final_eval = penalty_update_state.evaluation
+    if requested_penalty is None:
+        return penalty_update_state, "penalty_overflow"
+    return penalty_update_state, "penalty_cap_reached" if cap_hit else None
 
 @set_module("simsopt_alm")
 @dataclass(frozen=True)
@@ -781,6 +770,30 @@ def _emit_alm_stall_failure_step(
         ),
     )
 
+def _converged_step(
+    context: _ContinuationContext[AcceptedStateT],
+    run_state: ALMRunState[AcceptedStateT],
+    decision: ALMConverge,
+    measured: ALMIterateMeasurement,
+) -> _ALMContinuationStepResult:
+    return _ALMContinuationStepResult(
+        _ALMContinuationDecision.RETURN,
+        _build_alm_result(
+            run_state=run_state,
+            constraint_names_tuple=context.run.constraint_names_tuple,
+            success=True,
+            message=decision.message,
+            termination_reason=decision.termination_reason,
+            outer_iterations=context.outer_iteration,
+            evaluation=run_state.final_eval,
+            multipliers=run_state.multipliers,
+            penalty=run_state.penalty,
+            inner_result=run_state.last_result,
+            stationarity_norm=measured.stationarity_norm,
+            kkt_stationarity_norm=measured.kkt_stationarity_norm,
+        ),
+    )
+
 def _execute_step_decision(
     context: _ContinuationContext[AcceptedStateT],
     decision: ALMStepDecision,
@@ -795,23 +808,7 @@ def _execute_step_decision(
     measured = context.inner.measured
     if isinstance(decision, ALMConverge):
         _publish_outer_step(context, run_state, action=decision.action)
-        return _ALMContinuationStepResult(
-            _ALMContinuationDecision.RETURN,
-            _build_alm_result(
-                run_state=run_state,
-                constraint_names_tuple=context.run.constraint_names_tuple,
-                success=True,
-                message=decision.message,
-                termination_reason=decision.termination_reason,
-                outer_iterations=context.outer_iteration,
-                evaluation=run_state.final_eval,
-                multipliers=run_state.multipliers,
-                penalty=run_state.penalty,
-                inner_result=run_state.last_result,
-                stationarity_norm=measured.stationarity_norm,
-                kkt_stationarity_norm=measured.kkt_stationarity_norm,
-            ),
-        )
+        return _converged_step(context, run_state, decision, measured)
     if isinstance(decision, ALMStop):
         return _emit_alm_stall_failure_step(
             context,
@@ -880,14 +877,8 @@ def _execute_step_decision(
                 dual_update.multiplier_cap_binding_indices
             )
         if decision.penalty_reason is None:
-            run_state.final_eval = _checked_evaluation(
-                context.run.evaluate_problem,
-                run_state.x,
-                run_state.multipliers,
-                measured.penalty,
-                constraint_names_tuple=context.run.constraint_names_tuple,
-                constraint_blocks_tuple=context.run.constraint_blocks_tuple,
-                context="ALM final state evaluation",
+            run_state.final_eval = context.run.evaluate_state(
+                run_state, measured.penalty, context="ALM final state evaluation"
             )
             run_state.exhausted_termination = _exhausted_termination(
                 context,
@@ -913,14 +904,7 @@ def _execute_step_decision(
         dual_update_penalty_reason = None
 
     # Raise the penalty (with the dual update, or for a raise decision).
-    penalty_transition = _apply_alm_penalty_increase(context.run, run_state)
-    increase_termination = penalty_transition.termination_reason
-    run_state.penalty = penalty_transition.penalty
-    run_state.penalty_cap_reached = penalty_transition.penalty_cap_reached
-    run_state.penalty_cap_requested = penalty_transition.penalty_cap_requested
-    run_state.update_feasibility_tol = penalty_transition.update_feasibility_tol
-    run_state.update_stationarity_tol = penalty_transition.update_stationarity_tol
-    run_state.final_eval = penalty_transition.penalty_update_state.evaluation
+    penalty_update, increase_termination = _apply_alm_penalty_increase(context.run, run_state)
     run_state.exhausted_termination = _exhausted_termination(
         context, max_outer_termination=decision.max_outer_termination, action=action
     )
@@ -934,20 +918,20 @@ def _execute_step_decision(
         subproblem_limit_reason=subproblem_limit_reason,
         signal_mismatch_repair=signal_mismatch_repair,
         dual_update=dual_update,
-        penalty_update=penalty_transition.penalty_update_state,
+        penalty_update=penalty_update,
         dual_update_penalty_reason=dual_update_penalty_reason,
     )
     if increase_termination is None:
         return _ALMContinuationStepResult(_ALMContinuationDecision.BREAK_OUTER)
     return _ALMContinuationStepResult(
         _ALMContinuationDecision.RETURN,
-        _penalty_increase_stop_result(context, run_state, penalty_transition),
+        _penalty_increase_stop_result(context, run_state, increase_termination),
     )
 
 def _penalty_increase_stop_result(
     context: _ContinuationContext[AcceptedStateT],
     run_state: ALMRunState[AcceptedStateT],
-    penalty_transition: ALMPenaltyIncreaseResult,
+    termination_reason: str,
 ) -> ALMResult:
     """The failed result of a penalty raise that stops the run: the request
     exceeded ``penalty_max``, or overflowed to inf (the penalty kept)."""
@@ -957,7 +941,7 @@ def _penalty_increase_stop_result(
         run_state,
         last_outer_iteration=context.outer_iteration,
     )
-    if penalty_transition.termination_reason == "penalty_overflow":
+    if termination_reason == "penalty_overflow":
         return stop(
             termination_reason="penalty_overflow",
             message_prefix=(
@@ -973,7 +957,7 @@ def _penalty_increase_stop_result(
         termination_reason="penalty_cap_reached",
         message_prefix=(
             "ALM stopped after the requested penalty update "
-            f"{penalty_transition.penalty_cap_requested:.3e} exceeded "
+            f"{run_state.penalty_cap_requested:.3e} exceeded "
             f"the configured penalty cap {run_state.penalty:.3e}."
         ),
         restored_message_prefix=(
@@ -1177,14 +1161,8 @@ def _run_alm_continuation_step(
     inner_options = _call_inner_options(run, run_state)
     start_x = run_state.x.copy()
     penalty_argument = float(run_state.penalty)
-    current_eval = _checked_evaluation(
-        run.evaluate_problem,
-        run_state.x,
-        run_state.multipliers,
-        penalty_argument,
-        constraint_names_tuple=run.constraint_names_tuple,
-        constraint_blocks_tuple=run.constraint_blocks_tuple,
-        context="ALM outer iterate evaluation",
+    current_eval = run.evaluate_state(
+        run_state, penalty_argument, context="ALM outer iterate evaluation"
     )
     effective_feasibility_tol = _effective_feasibility_gate(
         settings, run_state.update_feasibility_tol
@@ -1238,23 +1216,7 @@ def _run_alm_continuation_step(
                 run_state.best_feasible, incumbent_state=run.snapshot_accepted_state_fn()
             )
         run_state.final_eval = current_eval
-        return _ALMContinuationStepResult(
-            _ALMContinuationDecision.RETURN,
-            _build_alm_result(
-                run_state=run_state,
-                constraint_names_tuple=run.constraint_names_tuple,
-                success=True,
-                message=converge.message,
-                termination_reason=converge.termination_reason,
-                outer_iterations=outer_iteration,
-                evaluation=current_eval,
-                multipliers=run_state.multipliers,
-                penalty=run_state.penalty,
-                inner_result=run_state.last_result,
-                stationarity_norm=start.stationarity_norm,
-                kkt_stationarity_norm=start.kkt_stationarity_norm,
-            ),
-        )
+        return _converged_step(context, run_state, converge, start)
 
     run_state.best_feasible = _incumbent_at_step_start(
         run,
@@ -1684,14 +1646,8 @@ def minimize_alm(
         # Only a resume whose budget was spent at its boundary ends without an
         # outer. The uninterrupted run's final evaluation was at this x with
         # these multipliers and penalty; there is no inner result.
-        run_state.final_eval = _checked_evaluation(
-            evaluate_problem,
-            run_state.x,
-            run_state.multipliers,
-            run_state.penalty,
-            constraint_names_tuple=constraint_names_tuple,
-            constraint_blocks_tuple=constraint_blocks_tuple,
-            context="ALM resumed final state evaluation",
+        run_state.final_eval = run.evaluate_state(
+            run_state, run_state.penalty, context="ALM resumed final state evaluation"
         )
 
     stop = partial(

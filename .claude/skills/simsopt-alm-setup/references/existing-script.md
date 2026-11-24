@@ -4,6 +4,56 @@ When the user's current optimization script should use the generated files
 (step 3.5 of `SKILL.md`), change it by this pattern, show the unified diff,
 and apply it only after the user approves.
 
+## Driver preflight
+
+Run this on the script or launcher the user will actually invoke. Use its
+resolved input files, configuration and Python environment, with a small
+budget and a fresh output directory. Record the command, the imported
+`simsopt` and `simsopt_alm` paths, and the effective settings after the
+driver applies defaults, flags and checkpoint overrides.
+
+1. **Verify the stage handoff.** Reload the previous stage's saved design in
+   the receiving stage. Compare the intended free and fixed variables,
+   target surface, units and signed constraint rows. For magnetic runs,
+   check which coils and currents are in the field model. Check current
+   polarity with the curve orientation and compare the signed field or
+   rotational transform (iota) with a reference in the same convention.
+   When a coil traversal is reversed, check its field with the new signed
+   current. Check that perturbing free coordinates leaves held physical
+   currents unchanged, including currents shared by multiple coils.
+   Measure both stages at the same geometry and with the same field
+   sources before treating an iota difference as a solver problem.
+   Probe important constraint rows on both sides of the threshold where
+   the physics permits.
+2. **Exercise the first multiplier or penalty change.** At a saved
+   accepted design, evaluate the objective, gradient and rows under the
+   old and new outer states. Force a known-invalid trial immediately
+   after the change. Confirm that the driver flags the rejection, leaves
+   the accepted point and warm start intact, and can still evaluate a
+   valid trial. Use the evaluator's rejection signal. Any driver-side
+   rejection score or cache that depends on the augmented objective must
+   use the current multipliers and penalty. An old accepted value can make
+   a failed trial look like an improvement. Compare saved candidates by
+   physical objective and constraint violations across outer iterations.
+3. **Check what the driver actually optimizes.** Record effective bounds,
+   fallback limits, and scaling in physical units for each variable group.
+   Check the first trial's displacement and which variables hit limits.
+   Log the physical objective, signed rows, multipliers and penalty
+   separately. On a run of at least two outer rounds, verify the actual
+   decisions and multiplier changes against the selected policy and
+   budget. Record trial evaluations, accepted steps and stop reason.
+   Use the same start, free variables, physical requirements and
+   evaluation budget when diagnosing a speed difference.
+4. **Reload and verify the output.** Apply the solver's returned point
+   and any restored state before saving. Reload the saved artifact and
+   recompute the objective and physical constraints with an independent
+   check where available. Compare with the solver summary and label a
+   budget stop separately from convergence. For a driver that resumes,
+   compare a short uninterrupted run with a split run through the
+   driver's checkpoint writer and reader. Check coordinates, active
+   state, rows and remaining budget. Report the first divergence and the
+   evidence from the driver before attributing the result to ALM.
+
 ## Pattern
 
 1. Put `<dir>` first on `sys.path` and import `build_problem` from the

@@ -26,9 +26,9 @@ The evaluator is stateful: every evaluation re-solves the Boozer surface by
 Newton's method, warm-started from a solution the solver accepted (never from
 a rejected line-search trial), so a second evaluation at the same coils can
 differ from the first. It is therefore NOT a ``cached_alm_evaluator``, and it
-hands ``minimize_alm`` the accepted solution through
-``snapshot_accepted_state_fn`` / ``restore_incumbent_state_fn``, so a returned
-best-feasible iterate or a resumed run re-solves from the solution it had.
+hands ``minimize_alm`` surface snapshots of accepted outer and inner points.
+The restore callback uses those snapshots to warm-start from the matching
+surface on best-feasible recovery or resume.
 A failed Newton solve returns a non-finite evaluation, and the line search
 backtracks.
 
@@ -397,6 +397,12 @@ class BoozerSingleStageProblem:
         """``snapshot_accepted_state_fn``."""
         return self.accepted
 
+    def snapshot_inner(self, coil_dofs) -> BoozerSolution:
+        """Save the accepted inner iterate without promoting outer state."""
+        if not np.array_equal(coil_dofs, self.iterate.coil_dofs):
+            raise RuntimeError("inner snapshot at coils other than the current iterate")
+        return self.iterate
+
     def restore_incumbent(self, solution: BoozerSolution) -> None:
         """``restore_incumbent_state_fn``: back to an earlier accepted solution."""
         self.accepted = self.iterate = solution
@@ -408,6 +414,7 @@ class BoozerSingleStageProblem:
             "inner_callback": self.accept_inner_iterate,
             "accepted_callback": self.accept_outer_iterate,
             "snapshot_accepted_state_fn": self.snapshot_accepted,
+            "snapshot_inner_state_fn": self.snapshot_inner,
             "restore_incumbent_state_fn": self.restore_incumbent,
         }
 

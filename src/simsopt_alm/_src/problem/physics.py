@@ -12,7 +12,6 @@ penalty; :func:`cached_alm_evaluator` reuses it when ``minimize_alm`` revisits a
 from __future__ import annotations
 
 from dataclasses import dataclass, field
-from types import MappingProxyType
 from typing import Callable, Mapping, Protocol, Tuple
 
 import numpy as np
@@ -98,7 +97,7 @@ class ALMPhysics:
                     tuple(np.asarray(grad, dtype=float) for grad in self.constraint_grads), {}
                 ),
             ),
-            ("extras", _frozen_event_value(MappingProxyType(dict(self.extras)), {})),
+            ("extras", _frozen_event_value(dict(self.extras), {})),
         ):
             object.__setattr__(self, name, value)
 

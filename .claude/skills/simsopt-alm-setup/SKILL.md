@@ -1,6 +1,6 @@
 ---
 name: simsopt-alm-setup
-description: "Install the augmented-Lagrangian solver package simsopt-alm (import simsopt_alm) beside a user's own simsopt and set up a constrained optimization min f(x) s.t. g_i(x) <= 0 for their case: Stage-2 coils, Boozer single-stage, or a custom problem. Detects the Python, the simsopt and the package install and picks an install route (pip install from the simsopt-alm repository, or an editable clone), interviews the user (objective, constraints, stateful evaluator, hybrid signals), generates a problem module and a runner from tested templates, verifies gradients, constraint signs and scales plus a smoke run, and explains termination reasons. Use when the user says 'set up ALM', 'install the ALM solver', 'constrained coil optimization in simsopt', 'replace penalty weights with constraints', 'minimize_alm', or asks what an ALM termination_reason means or how to tune ALMSettings."
+description: "Install the augmented-Lagrangian solver package simsopt-alm (import simsopt_alm) beside a user's own simsopt and set up constrained optimization for Stage-2 coils, Boozer single-stage, or a custom problem. Generate a problem and runner from tested templates, or check an existing driver through its real entry point. Verify gradients, constraint signs, rejected trials after multiplier and penalty changes, the saved result, and resume where used. Use for ALM setup, adapting penalty scripts, diagnosing apparent ALM failures in a custom driver, or interpreting ALM settings and termination."
 ---
 
 # Set up simsopt's ALM solver
@@ -89,6 +89,11 @@ before the answers arrive.
    optimization script), and whether an existing script should call the new
    files (then step 3.5 applies).
 
+For an existing driver, get its launch command, input or checkpoint, and the
+paths it writes. If the user wants to keep its current integration, go to
+[the driver preflight](references/existing-script.md#driver-preflight)
+once the environment is verified. Use the actual driver for the checks.
+
 For a custom problem also ask for points where the user knows, from the
 physics, that a row is violated or satisfied: they become the sign probes.
 
@@ -100,7 +105,7 @@ physics, that a row is violated or satisfied: they become the sign probes.
 | 1(b) | [boozer_single_stage.py](templates/boozer_single_stage.py) |
 | 1(c) | [generic.py](templates/generic.py) |
 | 4(a) | Keep `cached_alm_evaluator(self.physics)`. |
-| 4(b) with 1(c) | Evaluate without a cache and warm-start only from accepted solutions: copy the state pattern of the Boozer template (`solve`, `accept_inner_iterate`, `accept_outer_iterate`, `snapshot_accepted`, `restore_incumbent`, and `solver_callbacks` returning all four callbacks). |
+| 4(b) with 1(c) | Evaluate without a cache and warm-start from accepted solutions. Follow the Boozer template's `solver_callbacks`, including the snapshot of the accepted inner point. |
 | 3, coil length | Set `MAX_LENGTH` (Stage 2) or `LENGTH_MAX` (Boozer) and `LENGTH_SCOPE` to the answer. |
 | 5(b) with 1(a) | Set `HYBRID_QUARTET = True`. |
 | 5(b) with 1(b) or 1(c) | Add the quartet to `physics` as in [api.md](references/api.md) (Hybrid quartet), hard values from each kernel's third item. |
@@ -158,13 +163,20 @@ Run each from any directory; all three must pass before the real run.
 3. `cd <dir> && <python> run_alm.py --smoke` must print an `ALM_RESULT` line.
    Report its `termination_reason`, `max_violation` and `multipliers`. Any
    termination reason is acceptable for the smoke run; an exception is not.
+4. For an existing driver or a different entry point, run a bounded smoke
+   through that entry point with the intended configuration and a fresh
+   output directory. Apply [the driver preflight](references/existing-script.md#driver-preflight)
+   before declaring that driver ready. Report any driver checks that could
+   not run and the configuration they would exercise.
 
 Then give the user the full-run command,
 `cd <dir> && <python> run_alm.py [--history history.json] [--checkpoints checkpoints]`.
 
 ## 5. Interpret and tune
 
-1. Look up the run's `termination_reason` in
+1. For a custom driver's stall or failed solve, check the first failing
+   stage handoff or outer iteration against the driver preflight before
+   tuning the solver. Look up the run's `termination_reason` in
    [termination.md](references/termination.md) and apply its action. Check
    `restored_best_feasible` too: a restored `x` is feasible and usable, and
    can be the start itself when no later iterate was feasible;

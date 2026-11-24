@@ -359,12 +359,10 @@ _INNER_OPTION_RULES = (
 def _staged_inner_options(
     inner_options: Mapping[str, object],
     update_stationarity_tol: float,
-    *,
-    default_maxls: int = 20,
 ) -> dict:
     """Validated L-BFGS-B options. ``gtol`` is at least
     ``min(1e-4, 0.1 * update_stationarity_tol)``, so an inner solve stops near
-    the outer stationarity target; ``maxls`` defaults to ``default_maxls``."""
+    the outer stationarity target; ``maxls`` defaults to 20."""
     options = dict(inner_options)
     for key, parse, none_passes in _INNER_OPTION_RULES:
         if key in options and not (none_passes and options[key] is None):
@@ -378,6 +376,6 @@ def _staged_inner_options(
     options["gtol"] = max(base_gtol, staged_gtol)
     options["maxls"] = _positive_alm_integer(
         "inner_options.maxls",
-        options.get("maxls", default_maxls),
+        options.get("maxls", 20),
     )
     return options
