@@ -102,6 +102,11 @@ Ask these multiple-choice questions in one message and wait for the answers.
    optimization script), and whether an existing script should call the new
    files (then step 3.5 applies).
 
+For an existing driver, get its launch command, input or checkpoint, and the
+paths it writes. If the user wants to keep its current integration, go to
+[the driver preflight](#driver-preflight)
+once the environment is verified. Use the actual driver for the checks.
+
 For a custom problem also ask for points where the user knows, from the
 physics, that a row is violated or satisfied: they become the sign probes.
 
@@ -113,7 +118,7 @@ physics, that a row is violated or satisfied: they become the sign probes.
 | 1(b) | [boozer_single_stage.py](../.claude/skills/simsopt-alm-setup/templates/boozer_single_stage.py) |
 | 1(c) | [generic.py](../.claude/skills/simsopt-alm-setup/templates/generic.py) |
 | 4(a) | Keep `cached_alm_evaluator(self.physics)`. |
-| 4(b) with 1(c) | Evaluate without a cache and warm-start only from accepted solutions: copy the state pattern of the Boozer template (`solve`, `accept_inner_iterate`, `accept_outer_iterate`, `snapshot_accepted`, `restore_incumbent`, and `solver_callbacks` returning all four callbacks). |
+| 4(b) with 1(c) | Evaluate without a cache and warm-start from accepted solutions. Follow the Boozer template's `solver_callbacks`, including the snapshot of the accepted inner point. |
 | 3, coil length | Set `MAX_LENGTH` (Stage 2) or `LENGTH_MAX` (Boozer) and `LENGTH_SCOPE` to the answer. |
 | 5(b) with 1(a) | Set `HYBRID_QUARTET = True`. |
 | 5(b) with 1(b) or 1(c) | Add the quartet to `physics` as in [API](#api) (Hybrid quartet), hard values from each kernel's third item. |
@@ -171,13 +176,20 @@ Run each from any directory; all three must pass before the real run.
 3. `cd <dir> && <python> run_alm.py --smoke` must print an `ALM_RESULT` line.
    Report its `termination_reason`, `max_violation` and `multipliers`. Any
    termination reason is acceptable for the smoke run; an exception is not.
+4. For an existing driver or a different entry point, run a bounded smoke
+   through that entry point with the intended configuration and a fresh
+   output directory. Apply [the driver preflight](#driver-preflight)
+   before declaring that driver ready. Report any driver checks that could
+   not run and the configuration they would exercise.
 
 Then give the user the full-run command,
 `cd <dir> && <python> run_alm.py [--history history.json] [--checkpoints checkpoints]`.
 
 ### 5. Interpret and tune
 
-1. Look up the run's `termination_reason` in
+1. For a custom driver's stall or failed solve, check the first failing
+   stage handoff or outer iteration against the driver preflight before
+   tuning the solver. Look up the run's `termination_reason` in
    [Termination reasons](#termination-reasons) and apply its action. Check
    `restored_best_feasible` too: a restored `x` is feasible and usable, and
    can be the start itself when no later iterate was feasible;
@@ -379,7 +391,8 @@ of the one-per-row `constraint_grads` must have x's shape, and
 Bands route rows and feed diagnostics only; the convergence test's
 complementarity gap uses each row's actual slack
 ([Termination reasons](#termination-reasons)). The optional
-`search_step_success` (False rejects the trial step; absent means accepted)
+`search_step_success` (False rejects the trial step and raises `ValueError`
+at an outer iterate; absent means accepted)
 must be a `bool` or `numpy.bool_`: 0, None or any other type raises
 `ValueError`. A non-finite value, or `nonfinite_evaluation=True`, at a trial
 point rejects the trial (the line search backtracks); at an outer iterate
@@ -400,10 +413,11 @@ evaluator may return arrays and diagnostics it reuses or refills in place
   solutions the solver accepted, and pass `snapshot_accepted_state_fn() ->
   state` together with `restore_incumbent_state_fn(state)` (both or neither),
   plus `inner_callback(x)` (L-BFGS-B moved to x) and `accepted_callback(x)`
-  (the solver accepted the subproblem's x) to track them. The Boozer template
-  (`BoozerSingleStageProblem.solve`, `accept_inner_iterate`,
-  `accept_outer_iterate`, `snapshot_accepted`, `restore_incumbent`) is the
-  worked pattern.
+  (the solver accepted the subproblem's x) to track them. Supply
+  `snapshot_inner_state_fn(x)` to retain improving feasible inner iterates.
+  Return restorable state for that accepted x, or `None` to skip it.
+  Keep the outer accepted state until the outer callback promotes it. The
+  Boozer template is the worked pattern.
 
 ### Hybrid quartet
 
@@ -469,6 +483,8 @@ def hybrid_physics(base_value, base_grad, surrogate, hard, constraint_grads):
   restored state, the live state put back after) and drops it if it is no
   longer hard-feasible, so a restored result is judged by the final problem.
 - `snapshot_accepted_state_fn`, `restore_incumbent_state_fn`: stateful physics.
+- `snapshot_inner_state_fn(x)`: optional state capture for an improving,
+  feasible inner iterate. Requires the restore callback.
 - `initial_multipliers` (nonnegative, one per row, at most
   `settings.multiplier_max`: `ValueError` otherwise, never clamped),
   `initial_penalty` (one positive scalar, shared by every row): warm start
@@ -544,6 +560,56 @@ says so.
 When the user's current optimization script should use the generated files
 (step 3.5 of `SKILL.md`), change it by this pattern, show the unified diff,
 and apply it only after the user approves.
+
+### Driver preflight
+
+Run this on the script or launcher the user will actually invoke. Use its
+resolved input files, configuration and Python environment, with a small
+budget and a fresh output directory. Record the command, the imported
+`simsopt` and `simsopt_alm` paths, and the effective settings after the
+driver applies defaults, flags and checkpoint overrides.
+
+1. **Verify the stage handoff.** Reload the previous stage's saved design in
+   the receiving stage. Compare the intended free and fixed variables,
+   target surface, units and signed constraint rows. For magnetic runs,
+   check which coils and currents are in the field model. Check current
+   polarity with the curve orientation and compare the signed field or
+   rotational transform (iota) with a reference in the same convention.
+   When a coil traversal is reversed, check its field with the new signed
+   current. Check that perturbing free coordinates leaves held physical
+   currents unchanged, including currents shared by multiple coils.
+   Measure both stages at the same geometry and with the same field
+   sources before treating an iota difference as a solver problem.
+   Probe important constraint rows on both sides of the threshold where
+   the physics permits.
+2. **Exercise the first multiplier or penalty change.** At a saved
+   accepted design, evaluate the objective, gradient and rows under the
+   old and new outer states. Force a known-invalid trial immediately
+   after the change. Confirm that the driver flags the rejection, leaves
+   the accepted point and warm start intact, and can still evaluate a
+   valid trial. Use the evaluator's rejection signal. Any driver-side
+   rejection score or cache that depends on the augmented objective must
+   use the current multipliers and penalty. An old accepted value can make
+   a failed trial look like an improvement. Compare saved candidates by
+   physical objective and constraint violations across outer iterations.
+3. **Check what the driver actually optimizes.** Record effective bounds,
+   fallback limits, and scaling in physical units for each variable group.
+   Check the first trial's displacement and which variables hit limits.
+   Log the physical objective, signed rows, multipliers and penalty
+   separately. On a run of at least two outer rounds, verify the actual
+   decisions and multiplier changes against the selected policy and
+   budget. Record trial evaluations, accepted steps and stop reason.
+   Use the same start, free variables, physical requirements and
+   evaluation budget when diagnosing a speed difference.
+4. **Reload and verify the output.** Apply the solver's returned point
+   and any restored state before saving. Reload the saved artifact and
+   recompute the objective and physical constraints with an independent
+   check where available. Compare with the solver summary and label a
+   budget stop separately from convergence. For a driver that resumes,
+   compare a short uninterrupted run with a split run through the
+   driver's checkpoint writer and reader. Check coordinates, active
+   state, rows and remaining budget. Report the first divergence and the
+   evidence from the driver before attributing the result to ALM.
 
 ### Pattern
 
@@ -758,8 +824,13 @@ The fifth `minimize_alm` argument is the options dict of scipy's L-BFGS-B:
   norm test, unless a trust box (`trust_radius_init`) held the stop, whose
   projected gradient then drops the components pushing through the box's
   faces (the history flags it `inner_trust_box_limited`).
-- `maxls`: line-search steps, default 20. `maxcor`, `ftol`, `maxfun`: passed
-  through (validated positive).
+- `maxls` defaults to 20 line-search steps. `ftol` and `maxfun` are passed
+  through after validation. `maxcor` sets how many correction pairs L-BFGS-B
+  can keep (SciPy defaults to 10). Each inner attempt caps the effective
+  history at its own positive iteration limit, after continuation and
+  remaining-budget adjustments. The cap reduces workspace for short
+  attempts. It preserves the requested setting in the caller's options and
+  checkpoints. History records the options used by the attempt.
 
 ### Presets in the templates
 
@@ -1128,9 +1199,9 @@ The evaluator is stateful: every evaluation re-solves the Boozer surface by
 Newton's method, warm-started from a solution the solver accepted (never from
 a rejected line-search trial), so a second evaluation at the same coils can
 differ from the first. It is therefore NOT a ``cached_alm_evaluator``, and it
-hands ``minimize_alm`` the accepted solution through
-``snapshot_accepted_state_fn`` / ``restore_incumbent_state_fn``, so a returned
-best-feasible iterate or a resumed run re-solves from the solution it had.
+hands ``minimize_alm`` surface snapshots of accepted outer and inner points.
+The restore callback uses those snapshots to warm-start from the matching
+surface on best-feasible recovery or resume.
 A failed Newton solve returns a non-finite evaluation, and the line search
 backtracks.
 

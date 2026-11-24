@@ -1446,6 +1446,70 @@ class TemplateSmokeTests(unittest.TestCase):
         self.assertEqual(len(summary["constraint_values"]), 12)
         self.assertTrue(summary["finish"]["surface_solved"])
 
+    def test_boozer_driver_restores_the_feasible_inner_surface_on_resume(self):
+        generate_problem(self.scratch, "boozer_single_stage")
+        # Substitute deterministic physics and optimizer trials. Exercise the
+        # generated callbacks, real outer loop and runner's checkpoint files.
+        completed = run_python(["-c", """\
+from pathlib import Path
+from types import SimpleNamespace
+from unittest.mock import patch
+
+import numpy as np
+
+from alm_problem import BoozerSingleStageProblem, BoozerSolution
+from run_alm import run
+from simsopt_alm import ALMSettings, augmented_inequality_objective
+
+
+def solution(x):
+    return BoozerSolution(x.copy(), x + 10.0, 0.4, 1.0)
+
+
+def problem(maxiter):
+    driver = BoozerSingleStageProblem.__new__(BoozerSingleStageProblem)
+    driver.x0 = np.array([-2.0])
+    driver.accepted = driver.iterate = solution(driver.x0)
+    surface = SimpleNamespace(x=driver.accepted.surface_dofs.copy())
+    driver.boozer_surface = SimpleNamespace(surface=surface)
+    driver.constraint_names = ("upper",)
+    driver.settings = ALMSettings(max_outer_iterations=2, max_subproblem_continuations=0)
+    driver.inner_options = {"maxiter": maxiter}
+
+    def evaluate(x, multipliers, penalty):
+        driver.solved = solution(x)
+        return augmented_inequality_objective(
+            (x[0] - 1.0) ** 2, [2.0 * (x[0] - 1.0)],
+            x, [[1.0]], multipliers, penalty,
+        )
+
+    def finish(result):
+        return {"x": result.x.tolist(), "surface": surface.x.tolist()}
+
+    driver.evaluator = evaluate
+    driver.finish = finish
+    return driver
+
+
+def inner(fun, x, callback, **kwargs):
+    for value in (-1.0, 0.5):
+        point = np.array([value])
+        fun(point)
+        callback(point)
+    return SimpleNamespace(x=point, nit=2, success=True)
+
+
+checkpoints = Path("checkpoints")
+with patch("simsopt_alm._src.inner.attempts.minimize", inner):
+    full = run(problem(100), checkpoints=checkpoints)
+# The first round spent both iterations. Recovery must use the saved incumbent.
+resumed = run(problem(2), resume=checkpoints / "outer_001.pkl")
+for result in (full, resumed):
+    assert result["restored_best_feasible"], result
+    assert result["finish"] == {"x": [-1.0], "surface": [9.0]}, result
+"""], cwd=self.scratch)
+        self.assertEqual(completed.returncode, 0, completed.stderr[-4000:])
+
     def test_boozer_template_gradients_pass_at_seed_3(self):
         """R5-4: the Boozer template's gradient check exited 1 at seed 3."""
         generate_problem(self.scratch, "boozer_single_stage")

@@ -96,7 +96,8 @@ of the one-per-row `constraint_grads` must have x's shape, and
 Bands route rows and feed diagnostics only; the convergence test's
 complementarity gap uses each row's actual slack
 ([termination.md](termination.md)). The optional
-`search_step_success` (False rejects the trial step; absent means accepted)
+`search_step_success` (False rejects the trial step and raises `ValueError`
+at an outer iterate; absent means accepted)
 must be a `bool` or `numpy.bool_`: 0, None or any other type raises
 `ValueError`. A non-finite value, or `nonfinite_evaluation=True`, at a trial
 point rejects the trial (the line search backtracks); at an outer iterate
@@ -117,10 +118,11 @@ evaluator may return arrays and diagnostics it reuses or refills in place
   solutions the solver accepted, and pass `snapshot_accepted_state_fn() ->
   state` together with `restore_incumbent_state_fn(state)` (both or neither),
   plus `inner_callback(x)` (L-BFGS-B moved to x) and `accepted_callback(x)`
-  (the solver accepted the subproblem's x) to track them. The Boozer template
-  (`BoozerSingleStageProblem.solve`, `accept_inner_iterate`,
-  `accept_outer_iterate`, `snapshot_accepted`, `restore_incumbent`) is the
-  worked pattern.
+  (the solver accepted the subproblem's x) to track them. Supply
+  `snapshot_inner_state_fn(x)` to retain improving feasible inner iterates.
+  Return restorable state for that accepted x, or `None` to skip it.
+  Keep the outer accepted state until the outer callback promotes it. The
+  Boozer template is the worked pattern.
 
 ## Hybrid quartet
 
@@ -186,6 +188,8 @@ def hybrid_physics(base_value, base_grad, surrogate, hard, constraint_grads):
   restored state, the live state put back after) and drops it if it is no
   longer hard-feasible, so a restored result is judged by the final problem.
 - `snapshot_accepted_state_fn`, `restore_incumbent_state_fn`: stateful physics.
+- `snapshot_inner_state_fn(x)`: optional state capture for an improving,
+  feasible inner iterate. Requires the restore callback.
 - `initial_multipliers` (nonnegative, one per row, at most
   `settings.multiplier_max`: `ValueError` otherwise, never clamped),
   `initial_penalty` (one positive scalar, shared by every row): warm start

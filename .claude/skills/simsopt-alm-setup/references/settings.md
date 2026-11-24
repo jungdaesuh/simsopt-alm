@@ -58,8 +58,13 @@ The fifth `minimize_alm` argument is the options dict of scipy's L-BFGS-B:
   norm test, unless a trust box (`trust_radius_init`) held the stop, whose
   projected gradient then drops the components pushing through the box's
   faces (the history flags it `inner_trust_box_limited`).
-- `maxls`: line-search steps, default 20. `maxcor`, `ftol`, `maxfun`: passed
-  through (validated positive).
+- `maxls` defaults to 20 line-search steps. `ftol` and `maxfun` are passed
+  through after validation. `maxcor` sets how many correction pairs L-BFGS-B
+  can keep (SciPy defaults to 10). Each inner attempt caps the effective
+  history at its own positive iteration limit, after continuation and
+  remaining-budget adjustments. The cap reduces workspace for short
+  attempts. It preserves the requested setting in the caller's options and
+  checkpoints. History records the options used by the attempt.
 
 ## Presets in the templates
 
